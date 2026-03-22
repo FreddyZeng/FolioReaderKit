@@ -47,15 +47,6 @@
         }
       },
       {
-        "package": "ZipArchive",
-        "repositoryURL": "https://github.com/drearycold/ZipArchive.git",
-        "state": {
-          "branch": null,
-          "revision": "e89da439287b5382f666c70dd47fa36413296aac",
-          "version": "2.2.5"
-        }
-      },
-      {
         "package": "ZIPFoundation",
         "repositoryURL": "https://github.com/weichsel/ZIPFoundation.git",
         "state": {

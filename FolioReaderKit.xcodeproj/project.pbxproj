@@ -11,7 +11,6 @@
 		1A65DDD51DA744410033C277 /* QuoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A65DDD41DA744410033C277 /* QuoteImage.swift */; };
 		1A65DDD71DA7450A0033C277 /* FolioReaderQuoteShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A65DDD61DA7450A0033C277 /* FolioReaderQuoteShare.swift */; };
 		1A958F911D397BE900D56699 /* FRBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F051D397BE900D56699 /* FRBook.swift */; };
-		1A958F921D397BE900D56699 /* FREpubParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F061D397BE900D56699 /* FREpubParser.swift */; };
 		1A958F941D397BE900D56699 /* FRMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F081D397BE900D56699 /* FRMetadata.swift */; };
 		1A958F951D397BE900D56699 /* FRResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F091D397BE900D56699 /* FRResource.swift */; };
 		1A958F961D397BE900D56699 /* FRResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F0A1D397BE900D56699 /* FRResources.swift */; };
@@ -80,7 +79,6 @@
 		2AEE912C26F0939200B012B0 /* CenterLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE912A26F0939200B012B0 /* CenterLayout.swift */; };
 		3A27F08E1FD9BE5800D84A57 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A27F08B1FD9BE5800D84A57 /* Extensions.swift */; };
 		3A27F09D1FD9C24A00D84A57 /* FRBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F051D397BE900D56699 /* FRBook.swift */; };
-		3A27F09E1FD9C24A00D84A57 /* FREpubParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F061D397BE900D56699 /* FREpubParser.swift */; };
 		3A27F0A01FD9C24A00D84A57 /* FRMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F081D397BE900D56699 /* FRMetadata.swift */; };
 		3A27F0A11FD9C24A00D84A57 /* FRResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F091D397BE900D56699 /* FRResource.swift */; };
 		3A27F0A21FD9C24A00D84A57 /* FRResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F0A1D397BE900D56699 /* FRResources.swift */; };
@@ -148,9 +146,7 @@
 		1A65DDD41DA744410033C277 /* QuoteImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuoteImage.swift; sourceTree = "<group>"; };
 		1A65DDD61DA7450A0033C277 /* FolioReaderQuoteShare.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolioReaderQuoteShare.swift; sourceTree = "<group>"; };
 		1A958F051D397BE900D56699 /* FRBook.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRBook.swift; sourceTree = "<group>"; };
-		1A958F061D397BE900D56699 /* FREpubParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FREpubParser.swift; sourceTree = "<group>"; };
-		1A958F081D397BE900D56699 /* FRMetadata.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRMetadata.swift; sourceTree = "<group>"; };
-		1A958F091D397BE900D56699 /* FRResource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRResource.swift; sourceTree = "<group>"; };
+		1A958F081D397BE900D56699 /* FRMetadata.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRMetadata.swift; sourceTree = "<group>"; };		1A958F091D397BE900D56699 /* FRResource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRResource.swift; sourceTree = "<group>"; };
 		1A958F0A1D397BE900D56699 /* FRResources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRResources.swift; sourceTree = "<group>"; };
 		1A958F0B1D397BE900D56699 /* FRSmilElement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRSmilElement.swift; sourceTree = "<group>"; };
 		1A958F0C1D397BE900D56699 /* FRSmils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FRSmils.swift; sourceTree = "<group>"; };
@@ -204,9 +200,6 @@
 		6EBDDAB4266E0FB7008E888D /* AEXML.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = AEXML.xcframework; path = ../../Build/AEXML.xcframework; sourceTree = "<group>"; };
 		6EBDDAB6266E0FEE008E888D /* FontBlaster.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = FontBlaster.xcframework; path = ../../Build/FontBlaster.xcframework; sourceTree = "<group>"; };
 		6EBDDAB8266E100B008E888D /* ZIPFoundation.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ZIPFoundation.xcframework; path = ../../Build/ZIPFoundation.xcframework; sourceTree = "<group>"; };
-		6EBDDABA266E1093008E888D /* SSZipArchive.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSZipArchive.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		6EBDDABC266E10DF008E888D /* SSZipArchive.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSZipArchive.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		6EBDDAC0266E133F008E888D /* ZipArchive.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ZipArchive.xcframework; path = ../../Build/ZipArchive.xcframework; sourceTree = "<group>"; };
 		B0D6990B1D035FA2003B4CCD /* FolioReaderKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FolioReaderKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0D699101D035FA2003B4CCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B0D699151D035FA2003B4CCD /* FolioReaderKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioReaderKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -258,9 +251,6 @@
 				6EBDDAB4266E0FB7008E888D /* AEXML.xcframework */,
 				6EBDDAB6266E0FEE008E888D /* FontBlaster.xcframework */,
 				6EBDDAAE266E0F7E008E888D /* MenuItemKit.xcframework */,
-				6EBDDABC266E10DF008E888D /* SSZipArchive.framework */,
-				6EBDDABA266E1093008E888D /* SSZipArchive.framework */,
-				6EBDDAC0266E133F008E888D /* ZipArchive.xcframework */,
 				6EBDDAB8266E100B008E888D /* ZIPFoundation.xcframework */,
 			);
 			name = Frameworks;
@@ -279,7 +269,6 @@
 			children = (
 				1A41E8902031E22300A8F70C /* MediaType.swift */,
 				1A958F051D397BE900D56699 /* FRBook.swift */,
-				1A958F061D397BE900D56699 /* FREpubParser.swift */,
 				1A958F081D397BE900D56699 /* FRMetadata.swift */,
 				1A958F091D397BE900D56699 /* FRResource.swift */,
 				1A958F0A1D397BE900D56699 /* FRResources.swift */,
@@ -633,7 +622,6 @@
 				1A958FA21D397BE900D56699 /* FolioReaderHighlightList.swift in Sources */,
 				2AA1D56326FC11CC00F8CAB2 /* FolioReaderHighlightProvider.swift in Sources */,
 				256AE60B20A1D4DD00EAD746 /* FolioReaderAddHighlightNote.swift in Sources */,
-				1A958F921D397BE900D56699 /* FREpubParser.swift in Sources */,
 				E7EA4E102841EDF0006F79C9 /* FolioReaderResourceListCell.swift in Sources */,
 				2AEE910A26F03D7F00B012B0 /* PageDelegation.swift in Sources */,
 				E7858D7728D8216C00D875B3 /* FolioReaderHistoryListCell.swift in Sources */,
@@ -724,7 +712,6 @@
 				3A27F0C31FD9C25C00D84A57 /* QuoteImage.swift in Sources */,
 				2AEE912026F0435E00B012B0 /* SubViews.swift in Sources */,
 				3A27F0B71FD9C25500D84A57 /* FolioReaderHighlightList.swift in Sources */,
-				3A27F09E1FD9C24A00D84A57 /* FREpubParser.swift in Sources */,
 				2AEE912626F062E500B012B0 /* CenterViewModel.swift in Sources */,
 				1AC255D32202193700841FA2 /* SMSegment.swift in Sources */,
 				3A27F0A21FD9C24A00D84A57 /* FRResources.swift in Sources */,

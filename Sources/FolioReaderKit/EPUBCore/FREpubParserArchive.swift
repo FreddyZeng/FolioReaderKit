@@ -10,7 +10,7 @@ import UIKit
 import AEXML
 import ZIPFoundation
 
-class FREpubParserArchive: NSObject {
+open class FREpubParserArchive: NSObject {
     static let ContainerPath = "META-INF/container.xml"
 
     let book: FRBook
@@ -20,6 +20,73 @@ class FREpubParserArchive: NSObject {
         self.book = book
         self.archive = archive
     }
+
+    /// Parse the Cover Image from an epub file.
+    ///
+    /// - Parameters:
+    ///   - epubPath: Epub path on the disk.
+    /// - Returns: The book cover as UIImage object
+    /// - Throws: `FolioReaderError`
+    public static func parseCoverImage(_ epubPath: String) throws -> UIImage {
+        guard let archive = Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read) else {
+            throw FolioReaderError.bookNotAvailable
+        }
+        let book = try FREpubParserArchive(book: FRBook(), archive: archive).readEpub(epubPath: epubPath)
+        guard let coverImage = book.coverImage else {
+            throw FolioReaderError.coverNotAvailable
+        }
+
+        guard let opfPath = book.opfResource.href,
+              let coverEntry = archive[opfPath.deletingLastPathComponent.appendingPathComponent(coverImage.href)] else {
+            throw FolioReaderError.coverNotAvailable
+        }
+
+        var coverData = Data(capacity: Int(coverEntry.uncompressedSize))
+        let _ = try archive.extract(coverEntry) { data in
+            coverData.append(data)
+        }
+
+        guard let image = UIImage(data: coverData) else {
+            throw FolioReaderError.invalidImage(path: coverImage.href)
+        }
+
+        return image
+    }
+
+    /// Parse the book title from an epub file.
+    ///
+    /// - Parameters:
+    ///   - epubPath: Epub path on the disk.
+    /// - Returns: The book title
+    /// - Throws: `FolioReaderError`
+    public static func parseTitle(_ epubPath: String) throws -> String {
+        guard let archive = Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read) else {
+            throw FolioReaderError.bookNotAvailable
+        }
+        let book = try FREpubParserArchive(book: FRBook(), archive: archive).readEpubLight(epubPath: epubPath)
+        guard let title = book.title else {
+             throw FolioReaderError.titleNotAvailable
+        }
+        return title
+    }
+
+
+    /// Parse the book Author name from an epub file.
+    ///
+    /// - Parameters:
+    ///   - epubPath: Epub path on the disk.
+    /// - Returns: The author name
+    /// - Throws: `FolioReaderError`
+    public static func parseAuthorName(_ epubPath: String) throws -> String {
+        guard let archive = Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read) else {
+            throw FolioReaderError.bookNotAvailable
+        }
+        let book = try FREpubParserArchive(book: FRBook(), archive: archive).readEpub(epubPath: epubPath)
+        guard let authorName = book.authorName else {
+            throw FolioReaderError.authorNameNotAvailable
+        }
+        return authorName
+    }
     
     /// Unzip, delete and read an epub file.
     ///
@@ -27,7 +94,7 @@ class FREpubParserArchive: NSObject {
     ///   - withEpubPath: Epub path on the disk
     /// - Returns: `FRBook` Object
     /// - Throws: `FolioReaderError`
-    func readEpub(epubPath withEpubPath: String) throws -> FRBook {
+    open func readEpub(epubPath withEpubPath: String) throws -> FRBook {
         guard FileManager.default.fileExists(atPath: withEpubPath) else {
             throw FolioReaderError.bookNotAvailable
         }

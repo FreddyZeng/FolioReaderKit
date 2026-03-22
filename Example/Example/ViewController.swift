@@ -74,7 +74,7 @@ class ViewController: UIViewController {
         }
 
         do {
-            let image = try FREpubParser().parseCoverImage(bookPath)
+            let image = try FREpubParserArchive.parseCoverImage(bookPath)
             button?.setBackgroundImage(image, for: .normal)
         } catch {
             print(error.localizedDescription)

@@ -29,7 +29,6 @@ Pod::Spec.new do |s|
   s.public_header_files = 'Source/*.h'
 
   s.libraries  = "z"
-  s.dependency 'SSZipArchive', '2.1.1'
   s.dependency 'MenuItemKit', '~> 4.0'
   s.dependency 'AEXML', '~> 4.0'
   s.dependency 'FontBlaster', '~> 5.0'
