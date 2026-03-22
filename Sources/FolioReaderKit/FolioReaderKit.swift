@@ -761,16 +761,18 @@ extension FolioReader {
         return style
     }
     
-    static let CssLevelTags : [StyleOverrideTypes: String] = [.PNode: "p", .PlusTD: "td", .PlusSPAN: "span", .AllText: " "]
+    static let CssLevelTags : [StyleOverrideTypes: String] = [.PNode: "p", .PlusTD: "td", .PlusSPAN: "span", .AllText: ""]
     static func CssLevels(type: String, def: String) -> [String] {
         CssLevelTags.map {
-            ".folioStyleL\($0.rawValue)\(type) \($1) { \(def) }"
+            let separator = $1.isEmpty ? "" : " "
+            return "html body.folioStyleL\($0.rawValue)\(type) \($1), body.folioStyleL\($0.rawValue)\(type)\(separator)\($1) { \(def) }"
         }.sorted()
     }
     
     static func CssImgLevels(type: String, def: String) -> [String] {
         CssLevelTags.map {
-            ".folioStyleL\($0.rawValue)\(type) \($1) img.folioImg { \(def) }"
+            let separator = $1.isEmpty ? "" : " "
+            return "html body.folioStyleL\($0.rawValue)\(type) \($1) img.folioImg, body.folioStyleL\($0.rawValue)\(type)\(separator)\($1) img.folioImg { \(def) }"
         }.sorted()
     }
     

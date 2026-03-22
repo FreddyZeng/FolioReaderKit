@@ -47,15 +47,6 @@
         }
       },
       {
-        "package": "ZFDragableModalTransition",
-        "repositoryURL": "https://github.com/drearycold/ZFDragableModalTransition.git",
-        "state": {
-          "branch": null,
-          "revision": "5af96245281764eb3b3227bbc96208a5a7068900",
-          "version": "0.6.5"
-        }
-      },
-      {
         "package": "ZipArchive",
         "repositoryURL": "https://github.com/drearycold/ZipArchive.git",
         "state": {

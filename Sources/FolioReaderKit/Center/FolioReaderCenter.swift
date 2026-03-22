@@ -8,7 +8,6 @@
 
 import UIKit
 import WebKit
-import ZFDragableModalTransition
 
 
 /// The base reader class
@@ -34,7 +33,7 @@ open class FolioReaderCenter: UIViewController {
     var totalPages: Int = 0
     var tempFragment: String?
     var tempOffset: CGPoint?
-    var animator: ZFModalTransitionAnimator!
+    var animator: FolioModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator?
     var pageIndicatorHeight: CGFloat = 20
     var recentlyScrolled = false

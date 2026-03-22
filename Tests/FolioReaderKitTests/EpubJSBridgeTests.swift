@@ -29,7 +29,7 @@ class EpubJSBridgeTests: XCTestCase {
         
         wait(for: [expectation], timeout: 1.0)
         
-        XCTAssertEqual(delegate.lastCommand, .bridgeFinished)
+        XCTAssertEqual(delegate.lastCommand, EpubJSBridge.JSCommand.bridgeFinished)
         XCTAssertEqual(delegate.lastMessage, "<html>body</html>")
     }
     
@@ -46,7 +46,7 @@ class EpubJSBridgeTests: XCTestCase {
         
         wait(for: [expectation], timeout: 1.0)
         
-        XCTAssertEqual(delegate.lastCommand, .writingMode)
+        XCTAssertEqual(delegate.lastCommand, EpubJSBridge.JSCommand.writingMode)
         XCTAssertEqual(delegate.lastMessage, "vertical-rl")
     }
 }
