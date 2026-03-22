@@ -52,7 +52,6 @@
 		2AA1D56226FC11CC00F8CAB2 /* FolioReaderPlayerMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA1D55926FC11CC00F8CAB2 /* FolioReaderPlayerMenu.swift */; };
 		2AA1D56326FC11CC00F8CAB2 /* FolioReaderHighlightProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA1D55B26FC11CC00F8CAB2 /* FolioReaderHighlightProvider.swift */; };
 		2AA1D56426FC11CC00F8CAB2 /* FolioReaderPreferenceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA1D55C26FC11CC00F8CAB2 /* FolioReaderPreferenceProvider.swift */; };
-		2ABB909C261C28A3004AA7C0 /* StarDictView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABB909A261C28A3004AA7C0 /* StarDictView.swift */; };
 		2AEE90EA26EF9F5500B012B0 /* UICollectionViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE90E926EF9F5500B012B0 /* UICollectionViewDelegation.swift */; };
 		2AEE90EB26EF9F5500B012B0 /* UICollectionViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE90E926EF9F5500B012B0 /* UICollectionViewDelegation.swift */; };
 		2AEE910726F03D1C00B012B0 /* ListViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE910626F03D1C00B012B0 /* ListViewDelegation.swift */; };
@@ -187,7 +186,6 @@
 		2AA1D55926FC11CC00F8CAB2 /* FolioReaderPlayerMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolioReaderPlayerMenu.swift; sourceTree = "<group>"; };
 		2AA1D55B26FC11CC00F8CAB2 /* FolioReaderHighlightProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolioReaderHighlightProvider.swift; sourceTree = "<group>"; };
 		2AA1D55C26FC11CC00F8CAB2 /* FolioReaderPreferenceProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolioReaderPreferenceProvider.swift; sourceTree = "<group>"; };
-		2ABB909A261C28A3004AA7C0 /* StarDictView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StarDictView.swift; sourceTree = "<group>"; };
 		2AEE90E926EF9F5500B012B0 /* UICollectionViewDelegation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UICollectionViewDelegation.swift; sourceTree = "<group>"; };
 		2AEE910626F03D1C00B012B0 /* ListViewDelegation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewDelegation.swift; sourceTree = "<group>"; };
 		2AEE910926F03D7F00B012B0 /* PageDelegation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageDelegation.swift; sourceTree = "<group>"; };
@@ -365,7 +363,6 @@
 				1A65DDD41DA744410033C277 /* QuoteImage.swift */,
 				2A61339A262192180022FC04 /* Resources */,
 				1A958F901D397BE900D56699 /* ScrollScrubber.swift */,
-				2ABB909A261C28A3004AA7C0 /* StarDictView.swift */,
 				B0D69C421D0387F7003B4CCD /* Vendor */,
 			);
 			path = FolioReaderKit;
@@ -655,7 +652,6 @@
 				2AA1D56026FC11CC00F8CAB2 /* FolioReaderFontsMenu.swift in Sources */,
 				1A958F981D397BE900D56699 /* FRSmils.swift in Sources */,
 				1A958F971D397BE900D56699 /* FRSmilElement.swift in Sources */,
-				2ABB909C261C28A3004AA7C0 /* StarDictView.swift in Sources */,
 				1A41E8912031E22300A8F70C /* MediaType.swift in Sources */,
 				2AEE912B26F0939200B012B0 /* CenterLayout.swift in Sources */,
 				E7968BEA289CFA8500E8CC14 /* FolioReaderBookList.swift in Sources */,
