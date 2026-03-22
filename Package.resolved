@@ -1,0 +1,79 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AEXML",
+        "repositoryURL": "https://github.com/tadija/AEXML.git",
+        "state": {
+          "branch": null,
+          "revision": "db806756c989760b35108146381535aec231092b",
+          "version": "4.7.0"
+        }
+      },
+      {
+        "package": "FontBlaster",
+        "repositoryURL": "https://github.com/ArtSabintsev/FontBlaster.git",
+        "state": {
+          "branch": null,
+          "revision": "09fffe9cf20293fce81ce7154b46f8e60291baa8",
+          "version": "5.3.0"
+        }
+      },
+      {
+        "package": "GCDWebServer",
+        "repositoryURL": "https://github.com/SlaunchaMan/GCDWebServer.git",
+        "state": {
+          "branch": "swift-package-manager",
+          "revision": "935e2736044e71e5341663c3cc9a335ba6867a2b",
+          "version": null
+        }
+      },
+      {
+        "package": "MenuItemKit",
+        "repositoryURL": "https://github.com/cxa/MenuItemKit.git",
+        "state": {
+          "branch": null,
+          "revision": "3f832b3d2a6075e1e6b7db06c498dd710c773e6f",
+          "version": "3.2.2"
+        }
+      },
+      {
+        "package": "SwiftSoup",
+        "repositoryURL": "https://github.com/scinfu/SwiftSoup.git",
+        "state": {
+          "branch": null,
+          "revision": "fd541c4b3fa7dcec2e7cfe049505b6e4382cd66b",
+          "version": "2.13.2"
+        }
+      },
+      {
+        "package": "ZFDragableModalTransition",
+        "repositoryURL": "https://github.com/drearycold/ZFDragableModalTransition.git",
+        "state": {
+          "branch": null,
+          "revision": "5af96245281764eb3b3227bbc96208a5a7068900",
+          "version": "0.6.5"
+        }
+      },
+      {
+        "package": "ZipArchive",
+        "repositoryURL": "https://github.com/drearycold/ZipArchive.git",
+        "state": {
+          "branch": null,
+          "revision": "e89da439287b5382f666c70dd47fa36413296aac",
+          "version": "2.2.5"
+        }
+      },
+      {
+        "package": "ZIPFoundation",
+        "repositoryURL": "https://github.com/weichsel/ZIPFoundation.git",
+        "state": {
+          "branch": null,
+          "revision": "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+          "version": "0.9.20"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

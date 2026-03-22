@@ -3,12 +3,10 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1473049ECE0BDC1E4A71FDB0 /* Pods_MultipleInstance_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D1DAF2BE2EE636ECDA35486 /* Pods_MultipleInstance_Example.framework */; };
-		1983380C24BB0837778E045F /* Pods_FolioReaderTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87AB2D6CF0D17E6FD207CD68 /* Pods_FolioReaderTests.framework */; };
 		1A42C28D1C0E3882000F2137 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A42C28C1C0E3882000F2137 /* AppDelegate.swift */; };
 		1A42C28F1C0E3882000F2137 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A42C28E1C0E3882000F2137 /* ViewController.swift */; };
 		1A42C2921C0E3883000F2137 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A42C2901C0E3883000F2137 /* Main.storyboard */; };
@@ -41,8 +39,13 @@
 		751F8CF81ECD20110050A2CF /* Epub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751F8CF51ECD20110050A2CF /* Epub.swift */; };
 		CA10C1341C572A4B0049165D /* FolioReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA10C1331C572A4B0049165D /* FolioReaderTests.swift */; };
 		CAF233291C57E1F400CB930C /* SharingProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF233281C57E1F400CB930C /* SharingProviderTests.swift */; };
-		E1B5C653FF7B50EA4F808E3C /* Pods_Storyboard_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AC52E2FEE5E1E521DEEDCAF /* Pods_Storyboard_Example.framework */; };
-		F10F87DDEA2955D45B5D8460 /* Pods_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 436870FA9DC7B5083CB54559 /* Pods_Example.framework */; };
+		E73092EF2F6F870300B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
+		E73092F32F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		E73092F42F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
+		E73092F52F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		E73092F62F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
+		E73092F72F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		E73092F82F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,15 +64,12 @@
 		1A42C2911C0E3883000F2137 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		1A42C2981C0E3883000F2137 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1A42C2A11C0E3A8D000F2137 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		1AC52E2FEE5E1E521DEEDCAF /* Pods_Storyboard_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Storyboard_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		260C4F2E01E1EABBC772D6D4 /* Pods-Storyboard-Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Storyboard-Example.debug.xcconfig"; path = "Target Support Files/Pods-Storyboard-Example/Pods-Storyboard-Example.debug.xcconfig"; sourceTree = "<group>"; };
 		2A61344D2621950C0022FC04 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A61345226219B8B0022FC04 /* 1984.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1984.epub; sourceTree = "<group>"; };
 		2A73B8FA26DCBE2D004B001D /* FolioReaderUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolioReaderUserDefaults.swift; sourceTree = "<group>"; };
 		2AC340D42648D61400A477ED /* Storyboard-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Storyboard-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AC340D52648D61400A477ED /* MultipleInstance-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MultipleInstance-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AC340D62648D61400A477ED /* FolioReaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioReaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		38E90B9CD07606DE87B950AE /* Pods-MultipleInstance-Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MultipleInstance-Example.release.xcconfig"; path = "Target Support Files/Pods-MultipleInstance-Example/Pods-MultipleInstance-Example.release.xcconfig"; sourceTree = "<group>"; };
 		3A8E86F21E9F80CB00CD844C /* CodeExampleViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeExampleViewController.swift; sourceTree = "<group>"; };
 		3A8E86F41E9F80CB00CD844C /* BaseExampleFolioReaderContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseExampleFolioReaderContainer.swift; sourceTree = "<group>"; };
 		3A8E86F51E9F80CB00CD844C /* BookOneExampleFolioReaderContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BookOneExampleFolioReaderContainer.swift; sourceTree = "<group>"; };
@@ -86,17 +86,8 @@
 		3AAA8B9C1E9BB94B00A47E5A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3AAA8B9E1E9BB94B00A47E5A /* The Adventures Of Sherlock Holmes - Adventure I.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Adventures Of Sherlock Holmes - Adventure I.epub"; sourceTree = "<group>"; };
 		3AAA8B9F1E9BB94B00A47E5A /* The Silver Chair.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Silver Chair.epub"; sourceTree = "<group>"; };
-		436870FA9DC7B5083CB54559 /* Pods_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E7733BA266478C0008318C3 /* Population.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = Population.epub; sourceTree = "<group>"; };
 		751F8CF51ECD20110050A2CF /* Epub.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Epub.swift; sourceTree = "<group>"; };
-		87AB2D6CF0D17E6FD207CD68 /* Pods_FolioReaderTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FolioReaderTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8850D9ABFC376D9DC83DAE66 /* Pods-FolioReaderTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FolioReaderTests.debug.xcconfig"; path = "Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests.debug.xcconfig"; sourceTree = "<group>"; };
-		96DD9E46A73D3243FA56B911 /* Pods-Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.debug.xcconfig"; path = "Target Support Files/Pods-Example/Pods-Example.debug.xcconfig"; sourceTree = "<group>"; };
-		9C230C3B1EBF06DB16DA509E /* Pods-FolioReaderTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FolioReaderTests.release.xcconfig"; path = "Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests.release.xcconfig"; sourceTree = "<group>"; };
-		9D1DAF2BE2EE636ECDA35486 /* Pods_MultipleInstance_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MultipleInstance_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F3B082C13E09E1E55B09C2D /* Pods-Storyboard-Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Storyboard-Example.release.xcconfig"; path = "Target Support Files/Pods-Storyboard-Example/Pods-Storyboard-Example.release.xcconfig"; sourceTree = "<group>"; };
-		A654454849BAFDEA4AEA5FB9 /* Pods-MultipleInstance-Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MultipleInstance-Example.debug.xcconfig"; path = "Target Support Files/Pods-MultipleInstance-Example/Pods-MultipleInstance-Example.debug.xcconfig"; sourceTree = "<group>"; };
-		B7916E543A31AF8508852D51 /* Pods-Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.release.xcconfig"; path = "Target Support Files/Pods-Example/Pods-Example.release.xcconfig"; sourceTree = "<group>"; };
 		CA10C1331C572A4B0049165D /* FolioReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolioReaderTests.swift; sourceTree = "<group>"; };
 		CA10C1351C572A4B0049165D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CAF233281C57E1F400CB930C /* SharingProviderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SharingProviderTests.swift; sourceTree = "<group>"; };
@@ -107,7 +98,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F10F87DDEA2955D45B5D8460 /* Pods_Example.framework in Frameworks */,
+				E73092EF2F6F870300B4C322 /* FolioReaderKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,7 +106,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1473049ECE0BDC1E4A71FDB0 /* Pods_MultipleInstance_Example.framework in Frameworks */,
+				E73092F62F6F87A600B4C322 /* FolioReaderKit in Frameworks */,
+				E73092F52F6F87A600B4C322 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -123,7 +115,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1983380C24BB0837778E045F /* Pods_FolioReaderTests.framework in Frameworks */,
+				E73092F82F6F87A600B4C322 /* FolioReaderKit in Frameworks */,
+				E73092F72F6F87A600B4C322 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,28 +124,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1B5C653FF7B50EA4F808E3C /* Pods_Storyboard_Example.framework in Frameworks */,
+				E73092F42F6F87A600B4C322 /* FolioReaderKit in Frameworks */,
+				E73092F32F6F87A600B4C322 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		045914FFF02929FA2C64F8EC /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				96DD9E46A73D3243FA56B911 /* Pods-Example.debug.xcconfig */,
-				B7916E543A31AF8508852D51 /* Pods-Example.release.xcconfig */,
-				8850D9ABFC376D9DC83DAE66 /* Pods-FolioReaderTests.debug.xcconfig */,
-				9C230C3B1EBF06DB16DA509E /* Pods-FolioReaderTests.release.xcconfig */,
-				A654454849BAFDEA4AEA5FB9 /* Pods-MultipleInstance-Example.debug.xcconfig */,
-				38E90B9CD07606DE87B950AE /* Pods-MultipleInstance-Example.release.xcconfig */,
-				260C4F2E01E1EABBC772D6D4 /* Pods-Storyboard-Example.debug.xcconfig */,
-				9F3B082C13E09E1E55B09C2D /* Pods-Storyboard-Example.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		1A42C2801C0E3882000F2137 = {
 			isa = PBXGroup;
 			children = (
@@ -165,8 +144,6 @@
 				2AC340D42648D61400A477ED /* Storyboard-Example.app */,
 				2AC340D52648D61400A477ED /* MultipleInstance-Example.app */,
 				2AC340D62648D61400A477ED /* FolioReaderTests.xctest */,
-				045914FFF02929FA2C64F8EC /* Pods */,
-				B3C800F237A20440D888186A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -247,17 +224,6 @@
 			path = "Sample eBooks";
 			sourceTree = "<group>";
 		};
-		B3C800F237A20440D888186A /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				436870FA9DC7B5083CB54559 /* Pods_Example.framework */,
-				87AB2D6CF0D17E6FD207CD68 /* Pods_FolioReaderTests.framework */,
-				9D1DAF2BE2EE636ECDA35486 /* Pods_MultipleInstance_Example.framework */,
-				1AC52E2FEE5E1E521DEEDCAF /* Pods_Storyboard_Example.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		CA10C1321C572A4B0049165D /* FolioReaderTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -275,17 +241,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1A42C29B1C0E3883000F2137 /* Build configuration list for PBXNativeTarget "Example" */;
 			buildPhases = (
-				F1374654B68DF0CB2916CE70 /* [CP] Check Pods Manifest.lock */,
 				1A42C2851C0E3882000F2137 /* Sources */,
 				1A42C2861C0E3882000F2137 /* Frameworks */,
 				1A42C2871C0E3882000F2137 /* Resources */,
-				D74E81941CF234DD817BCEEF /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = Example;
+			packageProductDependencies = (
+				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
+			);
 			productName = Example;
 			productReference = 2A61344D2621950C0022FC04 /* Example.app */;
 			productType = "com.apple.product-type.application";
@@ -294,17 +261,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3AAA8B771E9BB78B00A47E5A /* Build configuration list for PBXNativeTarget "MultipleInstance-Example" */;
 			buildPhases = (
-				3AAA8B681E9BB78B00A47E5A /* [CP] Check Pods Manifest.lock */,
 				3AAA8B691E9BB78B00A47E5A /* Sources */,
 				3AAA8B6C1E9BB78B00A47E5A /* Frameworks */,
 				3AAA8B6E1E9BB78B00A47E5A /* Resources */,
-				3AAA8B751E9BB78B00A47E5A /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = "MultipleInstance-Example";
+			packageProductDependencies = (
+				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
+			);
 			productName = StoryboardExample;
 			productReference = 2AC340D52648D61400A477ED /* MultipleInstance-Example.app */;
 			productType = "com.apple.product-type.application";
@@ -313,12 +281,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CA10C1381C572A4B0049165D /* Build configuration list for PBXNativeTarget "FolioReaderTests" */;
 			buildPhases = (
-				0642B6A6EF0631B5697FC382 /* [CP] Check Pods Manifest.lock */,
-				1D8126CC73301F2413345444 /* [CP] Check Pods Manifest.lock */,
 				CA10C12D1C572A4B0049165D /* Sources */,
 				CA10C12E1C572A4B0049165D /* Frameworks */,
 				CA10C12F1C572A4B0049165D /* Resources */,
-				C1392FF51E4FD15EBB5AA8DD /* [CP] Embed Pods Frameworks */,
 				E82F486563C1547E0775A59F /* 📦 Embed Pods Frameworks */,
 			);
 			buildRules = (
@@ -327,6 +292,9 @@
 				CA10C1371C572A4B0049165D /* PBXTargetDependency */,
 			);
 			name = FolioReaderTests;
+			packageProductDependencies = (
+				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
+			);
 			productName = FolioReaderTests;
 			productReference = 2AC340D62648D61400A477ED /* FolioReaderTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -335,17 +303,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D12066741D65FABE006E1D18 /* Build configuration list for PBXNativeTarget "Storyboard-Example" */;
 			buildPhases = (
-				244846C72E9B5C5622D08585 /* [CP] Check Pods Manifest.lock */,
 				D120665F1D65FABD006E1D18 /* Sources */,
 				D12066601D65FABD006E1D18 /* Frameworks */,
 				D12066611D65FABD006E1D18 /* Resources */,
-				ACD2A7368ACAFB17422DAA7F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = "Storyboard-Example";
+			packageProductDependencies = (
+				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
+			);
 			productName = StoryboardExample;
 			productReference = 2AC340D42648D61400A477ED /* Storyboard-Example.app */;
 			productType = "com.apple.product-type.application";
@@ -399,6 +368,9 @@
 				Base,
 			);
 			mainGroup = 1A42C2801C0E3882000F2137;
+			packageReferences = (
+				E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */,
+			);
 			productRefGroup = 1A42C2801C0E3882000F2137;
 			projectDirPath = "";
 			projectRoot = "";
@@ -460,207 +432,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0642B6A6EF0631B5697FC382 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-FolioReaderTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		1D8126CC73301F2413345444 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		244846C72E9B5C5622D08585 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Storyboard-Example-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		3AAA8B681E9BB78B00A47E5A /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MultipleInstance-Example-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		3AAA8B751E9BB78B00A47E5A /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MultipleInstance-Example/Pods-MultipleInstance-Example-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AEXML/AEXML.framework",
-				"${BUILT_PRODUCTS_DIR}/FolioReaderKit/FolioReaderKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FontBlaster/FontBlaster.framework",
-				"${BUILT_PRODUCTS_DIR}/MenuItemKit/MenuItemKit.framework",
-				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
-				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/SSZipArchive/SSZipArchive.framework",
-				"${BUILT_PRODUCTS_DIR}/ZFDragableModalTransition/ZFDragableModalTransition.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AEXML.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FolioReaderKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FontBlaster.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MenuItemKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SSZipArchive.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZFDragableModalTransition.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MultipleInstance-Example/Pods-MultipleInstance-Example-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		ACD2A7368ACAFB17422DAA7F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Storyboard-Example/Pods-Storyboard-Example-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AEXML/AEXML.framework",
-				"${BUILT_PRODUCTS_DIR}/FolioReaderKit/FolioReaderKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FontBlaster/FontBlaster.framework",
-				"${BUILT_PRODUCTS_DIR}/MenuItemKit/MenuItemKit.framework",
-				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
-				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/SSZipArchive/SSZipArchive.framework",
-				"${BUILT_PRODUCTS_DIR}/ZFDragableModalTransition/ZFDragableModalTransition.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AEXML.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FolioReaderKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FontBlaster.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MenuItemKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SSZipArchive.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZFDragableModalTransition.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Storyboard-Example/Pods-Storyboard-Example-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C1392FF51E4FD15EBB5AA8DD /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AEXML/AEXML.framework",
-				"${BUILT_PRODUCTS_DIR}/FolioReaderKit/FolioReaderKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FontBlaster/FontBlaster.framework",
-				"${BUILT_PRODUCTS_DIR}/MenuItemKit/MenuItemKit.framework",
-				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
-				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/SSZipArchive/SSZipArchive.framework",
-				"${BUILT_PRODUCTS_DIR}/ZFDragableModalTransition/ZFDragableModalTransition.framework",
-				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
-				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AEXML.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FolioReaderKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FontBlaster.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MenuItemKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SSZipArchive.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZFDragableModalTransition.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Quick.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		D74E81941CF234DD817BCEEF /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Example/Pods-Example-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AEXML/AEXML.framework",
-				"${BUILT_PRODUCTS_DIR}/FolioReaderKit/FolioReaderKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FontBlaster/FontBlaster.framework",
-				"${BUILT_PRODUCTS_DIR}/MenuItemKit/MenuItemKit.framework",
-				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
-				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/SSZipArchive/SSZipArchive.framework",
-				"${BUILT_PRODUCTS_DIR}/ZFDragableModalTransition/ZFDragableModalTransition.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AEXML.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FolioReaderKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FontBlaster.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MenuItemKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SSZipArchive.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZFDragableModalTransition.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Example/Pods-Example-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		E82F486563C1547E0775A59F /* 📦 Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -674,28 +445,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F1374654B68DF0CB2916CE70 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Example-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -905,7 +654,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -914,15 +664,17 @@
 		};
 		1A42C29C1C0E3883000F2137 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 96DD9E46A73D3243FA56B911 /* Pods-Example.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = L8WKJ3U7UT;
 				INFOPLIST_FILE = Example/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.roswen9.FolioReaderExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -933,15 +685,17 @@
 		};
 		1A42C29D1C0E3883000F2137 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B7916E543A31AF8508852D51 /* Pods-Example.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = L8WKJ3U7UT;
 				INFOPLIST_FILE = Example/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.roswen9.FolioReaderExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -952,7 +706,6 @@
 		};
 		3AAA8B781E9BB78B00A47E5A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A654454849BAFDEA4AEA5FB9 /* Pods-MultipleInstance-Example.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -960,7 +713,10 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = "MultipleInstances-Example/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.example.multipleinstances;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -971,7 +727,6 @@
 		};
 		3AAA8B791E9BB78B00A47E5A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 38E90B9CD07606DE87B950AE /* Pods-MultipleInstance-Example.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -979,7 +734,10 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = "MultipleInstances-Example/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.example.multipleinstances;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = 2;
@@ -988,7 +746,6 @@
 		};
 		CA10C1391C572A4B0049165D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8850D9ABFC376D9DC83DAE66 /* Pods-FolioReaderTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -996,7 +753,11 @@
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = FolioReaderTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.FolioReaderTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -1006,7 +767,6 @@
 		};
 		CA10C13A1C572A4B0049165D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9C230C3B1EBF06DB16DA509E /* Pods-FolioReaderTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1014,7 +774,11 @@
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = FolioReaderTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.FolioReaderTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -1024,7 +788,6 @@
 		};
 		D12066721D65FABE006E1D18 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 260C4F2E01E1EABBC772D6D4 /* Pods-Storyboard-Example.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -1032,7 +795,11 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = "Storyboard-Example/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.example.storyboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1040,7 +807,6 @@
 		};
 		D12066731D65FABE006E1D18 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9F3B082C13E09E1E55B09C2D /* Pods-Storyboard-Example.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -1048,7 +814,11 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = "Storyboard-Example/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.example.storyboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1103,6 +873,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../FolioReaderKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E73092EE2F6F870300B4C322 /* FolioReaderKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */;
+			productName = FolioReaderKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1A42C2811C0E3882000F2137 /* Project object */;
 }

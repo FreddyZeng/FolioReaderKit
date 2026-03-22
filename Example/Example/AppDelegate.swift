@@ -7,7 +7,7 @@
 //
 
 import UIKit
-//import FolioReaderKit
+import FolioReaderKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

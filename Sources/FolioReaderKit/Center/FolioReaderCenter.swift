@@ -103,6 +103,14 @@ open class FolioReaderCenter: UIViewController {
         return readerContainer.readerConfig
     }
 
+    lazy var paginationEngine: ReaderPaginationEngine = {
+        return ReaderPaginationEngine(center: self)
+    }()
+
+    lazy var scrollHandler: ReaderScrollDelegateHandler = {
+        return ReaderScrollDelegateHandler(center: self)
+    }()
+
     var book: FRBook {
         guard let readerContainer = readerContainer else { return FRBook() }
         return readerContainer.book
@@ -162,14 +170,13 @@ open class FolioReaderCenter: UIViewController {
         let background = self.readerConfig.themeModeBackground[folioReader.themeMode]
         view.backgroundColor = background
 
-        // CollectionView
+        //CollectionView
         let collectionViewFrame = frameForCollectionView(outerBounds: screenBounds)
         collectionView = UICollectionView(frame: collectionViewFrame, collectionViewLayout: collectionViewLayout)
-        //collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        collectionView.autoresizingMask = .init(rawValue: 0)
-        collectionView.delegate = self
+        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        collectionView.delegate = self.scrollHandler
         collectionView.dataSource = self
-        
+
         collectionView.isPagingEnabled = true
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false

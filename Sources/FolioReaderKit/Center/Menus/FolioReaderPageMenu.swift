@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 class FolioReaderPageMenu: FolioReaderMenu, SMSegmentViewDelegate {
     let dayNightSegment = SMSegmentView()

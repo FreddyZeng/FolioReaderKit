@@ -7,6 +7,7 @@
 //
 
 import WebKit
+import UIKit
 
 public typealias JSCallback = (String?) ->()
 

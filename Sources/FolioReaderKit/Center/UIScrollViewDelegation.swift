@@ -6,107 +6,110 @@
 //  Copyright © 2021 FolioReader. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import WebKit
 
-extension FolioReaderCenter: UIScrollViewDelegate {
+class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionViewDelegate {
+    private weak var center: FolioReaderCenter?
+
+    init(center: FolioReaderCenter) {
+        self.center = center
+    }
+
+    private var readerConfig: FolioReaderConfig {
+        return center?.readerConfig ?? FolioReaderConfig()
+    }
+
+    private var folioReader: FolioReader {
+        return center?.folioReader ?? FolioReader()
+    }
+
     open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        self.isScrolling = true
-        clearRecentlyScrolled()
-        recentlyScrolled = true
-        pointNow = scrollView.contentOffset
+        center.isScrolling = true
+        center.clearRecentlyScrolled()
+        center.recentlyScrolled = true
+        center.pointNow = scrollView.contentOffset
         
-        if (scrollView is UICollectionView) {
-//            scrollView.isUserInteractionEnabled = false
-        }
-
-        if let currentPage = currentPage {
+        if let currentPage = center.currentPage {
             currentPage.webView?.createMenu(onHighlight: false)
             currentPage.webView?.setMenuVisible(false)
         }
 
-        scrollScrubber?.scrollViewWillBeginDragging(scrollView)
+        center.scrollScrubber?.scrollViewWillBeginDragging(scrollView)
     }
 
     open func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER"); }
 
-        if (navigationController?.isNavigationBarHidden == false) {
-            self.toggleBars()
+        if (center.navigationController?.isNavigationBarHidden == false) {
+            center.toggleBars()
         }
 
-        scrollScrubber?.scrollViewDidScroll(scrollView)
+        center.scrollScrubber?.scrollViewDidScroll(scrollView)
 
         let isCollectionScrollView = (scrollView is UICollectionView)
         let scrollType: ScrollType = ((isCollectionScrollView == true) ? .chapter : .page)
 
         // Update current reading page
-        self.updatePageScrollDirection(inScrollView: scrollView, forScrollType: scrollType)
+        center.updatePageScrollDirection(inScrollView: scrollView, forScrollType: scrollType)
         
-        if (isCollectionScrollView == false), let page = currentPage, page.layoutAdapting == nil {
+        if (isCollectionScrollView == false), let page = center.currentPage, page.layoutAdapting == nil {
             page.updatePages(updateWebViewScrollPosition: false)
             
-            self.delegate?.pageItemChanged?(page.currentPage)
+            center.delegate?.pageItemChanged?(page.currentPage)
         }
     }
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        self.isScrolling = false
+        center.isScrolling = false
         
-        if (scrollView is UICollectionView) {
-//            scrollView.isUserInteractionEnabled = true
-        }
-
         // Perform the page after a short delay as the collection view hasn't completed it's transition if this method is called (the index paths aren't right during fast scrolls).
-        delay(0.2, closure: { [weak self] in
-//            if (self?.readerConfig.scrollDirection == .horizontalWithVerticalContent),
-//                let cell = ((scrollView.superview as? WKWebView)?.navigationDelegate as? FolioReaderPage) {
-//                let currentIndexPathRow = cell.pageNumber - 1
-//                self?.currentWebViewScrollPositions[currentIndexPathRow] = scrollView.contentOffset
-//            }
+        delay(0.2, closure: { [weak center] in
+            guard let center = center else { return }
 
             if (scrollView is UICollectionView) {
-                guard let instance = self,
-                      instance.totalPages > 0,
-                      let page = instance.currentPage
+                guard center.totalPages > 0,
+                      let page = center.currentPage
                 else {
                     return
                 }
                 
                 page.waitForLayoutFinish {
                     page.updatePageInfo {
-//                        defer {
-//                            if let currentPage = instance.currentPage {
-//                                currentPage.delegate?.pageDidLoad?(currentPage)
-//                            }
-//                        }
-                        guard instance.currentPageNumber == page.pageNumber else { return }
-                        instance.delegate?.pageItemChanged?(page.currentPage)
+                        guard center.currentPageNumber == page.pageNumber else { return }
+                        center.delegate?.pageItemChanged?(page.currentPage)
                     }
                 }
             } else {
-                self?.scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
+                center.scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
             }
         })
     }
 
     open func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        recentlyScrolledTimer = Timer(timeInterval:recentlyScrolledDelay, target: self, selector: #selector(FolioReaderCenter.clearRecentlyScrolled), userInfo: nil, repeats: false)
-        RunLoop.current.add(recentlyScrolledTimer, forMode: RunLoop.Mode.common)
+        center.recentlyScrolledTimer = Timer(timeInterval:center.recentlyScrolledDelay, target: center, selector: #selector(FolioReaderCenter.clearRecentlyScrolled), userInfo: nil, repeats: false)
+        RunLoop.current.add(center.recentlyScrolledTimer, forMode: RunLoop.Mode.common)
     }
 
     open func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        scrollScrubber?.scrollViewDidEndScrollingAnimation(scrollView)
+        center.scrollScrubber?.scrollViewDidEndScrollingAnimation(scrollView)
     }
+}
 
+extension FolioReaderCenter {
     func updatePageScrollDirection(inScrollView scrollView: UIScrollView, forScrollType scrollType: ScrollType) {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 

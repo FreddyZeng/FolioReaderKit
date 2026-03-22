@@ -55,13 +55,6 @@
 		2ABB909C261C28A3004AA7C0 /* StarDictView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABB909A261C28A3004AA7C0 /* StarDictView.swift */; };
 		2AEE90EA26EF9F5500B012B0 /* UICollectionViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE90E926EF9F5500B012B0 /* UICollectionViewDelegation.swift */; };
 		2AEE90EB26EF9F5500B012B0 /* UICollectionViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE90E926EF9F5500B012B0 /* UICollectionViewDelegation.swift */; };
-		2AEE90EE26F0343A00B012B0 /* ZIPFoundation.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AEE90EC26F0343A00B012B0 /* ZIPFoundation.xcframework */; };
-		2AEE90F526F0360C00B012B0 /* AEXML.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC585926EF981900338D1F /* AEXML.xcframework */; };
-		2AEE90F726F0360C00B012B0 /* FontBlaster.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC585C26EF982D00338D1F /* FontBlaster.xcframework */; };
-		2AEE90F926F0360C00B012B0 /* MenuItemKit.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC585F26EF983300338D1F /* MenuItemKit.xcframework */; };
-		2AEE90FF26F0360C00B012B0 /* ZFDragableModalTransition.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC586826EF984600338D1F /* ZFDragableModalTransition.xcframework */; };
-		2AEE910126F0360C00B012B0 /* ZipArchive.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC586B26EF984D00338D1F /* ZipArchive.xcframework */; };
-		2AEE910326F0360C00B012B0 /* ZIPFoundation.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AEE90EC26F0343A00B012B0 /* ZIPFoundation.xcframework */; };
 		2AEE910726F03D1C00B012B0 /* ListViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE910626F03D1C00B012B0 /* ListViewDelegation.swift */; };
 		2AEE910826F03D1C00B012B0 /* ListViewDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE910626F03D1C00B012B0 /* ListViewDelegation.swift */; };
 		2AEE910A26F03D7F00B012B0 /* PageDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE910926F03D7F00B012B0 /* PageDelegation.swift */; };
@@ -86,11 +79,6 @@
 		2AEE912926F0932600B012B0 /* CenterCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE912726F0932600B012B0 /* CenterCollection.swift */; };
 		2AEE912B26F0939200B012B0 /* CenterLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE912A26F0939200B012B0 /* CenterLayout.swift */; };
 		2AEE912C26F0939200B012B0 /* CenterLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEE912A26F0939200B012B0 /* CenterLayout.swift */; };
-		2AFC585B26EF981900338D1F /* AEXML.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC585926EF981900338D1F /* AEXML.xcframework */; };
-		2AFC585E26EF982E00338D1F /* FontBlaster.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC585C26EF982D00338D1F /* FontBlaster.xcframework */; };
-		2AFC586126EF983300338D1F /* MenuItemKit.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC585F26EF983300338D1F /* MenuItemKit.xcframework */; };
-		2AFC586A26EF984600338D1F /* ZFDragableModalTransition.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC586826EF984600338D1F /* ZFDragableModalTransition.xcframework */; };
-		2AFC586D26EF984D00338D1F /* ZipArchive.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AFC586B26EF984D00338D1F /* ZipArchive.xcframework */; };
 		3A27F08E1FD9BE5800D84A57 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A27F08B1FD9BE5800D84A57 /* Extensions.swift */; };
 		3A27F09D1FD9C24A00D84A57 /* FRBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F051D397BE900D56699 /* FRBook.swift */; };
 		3A27F09E1FD9C24A00D84A57 /* FREpubParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A958F061D397BE900D56699 /* FREpubParser.swift */; };
@@ -201,7 +189,6 @@
 		2AA1D55C26FC11CC00F8CAB2 /* FolioReaderPreferenceProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolioReaderPreferenceProvider.swift; sourceTree = "<group>"; };
 		2ABB909A261C28A3004AA7C0 /* StarDictView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StarDictView.swift; sourceTree = "<group>"; };
 		2AEE90E926EF9F5500B012B0 /* UICollectionViewDelegation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UICollectionViewDelegation.swift; sourceTree = "<group>"; };
-		2AEE90EC26F0343A00B012B0 /* ZIPFoundation.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ZIPFoundation.xcframework; path = Carthage/Build/ZIPFoundation.xcframework; sourceTree = "<group>"; };
 		2AEE910626F03D1C00B012B0 /* ListViewDelegation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewDelegation.swift; sourceTree = "<group>"; };
 		2AEE910926F03D7F00B012B0 /* PageDelegation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageDelegation.swift; sourceTree = "<group>"; };
 		2AEE910C26F03ED900B012B0 /* Presentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Presentation.swift; sourceTree = "<group>"; };
@@ -214,11 +201,6 @@
 		2AEE912426F062E500B012B0 /* CenterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenterViewModel.swift; sourceTree = "<group>"; };
 		2AEE912726F0932600B012B0 /* CenterCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenterCollection.swift; sourceTree = "<group>"; };
 		2AEE912A26F0939200B012B0 /* CenterLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CenterLayout.swift; sourceTree = "<group>"; };
-		2AFC585926EF981900338D1F /* AEXML.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = AEXML.xcframework; path = Carthage/Build/AEXML.xcframework; sourceTree = "<group>"; };
-		2AFC585C26EF982D00338D1F /* FontBlaster.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = FontBlaster.xcframework; path = Carthage/Build/FontBlaster.xcframework; sourceTree = "<group>"; };
-		2AFC585F26EF983300338D1F /* MenuItemKit.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MenuItemKit.xcframework; path = Carthage/Build/MenuItemKit.xcframework; sourceTree = "<group>"; };
-		2AFC586826EF984600338D1F /* ZFDragableModalTransition.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ZFDragableModalTransition.xcframework; path = Carthage/Build/ZFDragableModalTransition.xcframework; sourceTree = "<group>"; };
-		2AFC586B26EF984D00338D1F /* ZipArchive.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ZipArchive.xcframework; path = Carthage/Build/ZipArchive.xcframework; sourceTree = "<group>"; };
 		3A27F08B1FD9BE5800D84A57 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		3AD5EEB81D9433C100E42810 /* FolioReaderWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolioReaderWebView.swift; sourceTree = "<group>"; };
 		6EBDDAAE266E0F7E008E888D /* MenuItemKit.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MenuItemKit.xcframework; path = ../../Build/MenuItemKit.xcframework; sourceTree = "<group>"; };
@@ -261,12 +243,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2AEE90FF26F0360C00B012B0 /* ZFDragableModalTransition.xcframework in Frameworks */,
-				2AEE910126F0360C00B012B0 /* ZipArchive.xcframework in Frameworks */,
-				2AEE910326F0360C00B012B0 /* ZIPFoundation.xcframework in Frameworks */,
-				2AEE90F726F0360C00B012B0 /* FontBlaster.xcframework in Frameworks */,
-				2AEE90F926F0360C00B012B0 /* MenuItemKit.xcframework in Frameworks */,
-				2AEE90F526F0360C00B012B0 /* AEXML.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,12 +251,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B0D699161D035FA2003B4CCD /* FolioReaderKit.framework in Frameworks */,
-				2AFC586D26EF984D00338D1F /* ZipArchive.xcframework in Frameworks */,
-				2AFC585B26EF981900338D1F /* AEXML.xcframework in Frameworks */,
-				2AFC586126EF983300338D1F /* MenuItemKit.xcframework in Frameworks */,
-				2AFC585E26EF982E00338D1F /* FontBlaster.xcframework in Frameworks */,
-				2AFC586A26EF984600338D1F /* ZFDragableModalTransition.xcframework in Frameworks */,
-				2AEE90EE26F0343A00B012B0 /* ZIPFoundation.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,20 +260,14 @@
 		1A65DDCA1DA73F8C0033C277 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2AFC585926EF981900338D1F /* AEXML.xcframework */,
 				6EBDDAB4266E0FB7008E888D /* AEXML.xcframework */,
 				6EBDDAB6266E0FEE008E888D /* FontBlaster.xcframework */,
-				2AFC585C26EF982D00338D1F /* FontBlaster.xcframework */,
 				6EBDDAAE266E0F7E008E888D /* MenuItemKit.xcframework */,
-				2AFC585F26EF983300338D1F /* MenuItemKit.xcframework */,
 				6EBDDABC266E10DF008E888D /* SSZipArchive.framework */,
 				6EBDDABA266E1093008E888D /* SSZipArchive.framework */,
 				6EBDDAC4266E1363008E888D /* ZFDragableModalTransition.xcframework */,
-				2AFC586826EF984600338D1F /* ZFDragableModalTransition.xcframework */,
-				2AFC586B26EF984D00338D1F /* ZipArchive.xcframework */,
 				6EBDDAC0266E133F008E888D /* ZipArchive.xcframework */,
 				6EBDDAB8266E100B008E888D /* ZIPFoundation.xcframework */,
-				2AEE90EC26F0343A00B012B0 /* ZIPFoundation.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -913,13 +877,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = FolioReaderKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -945,13 +906,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = FolioReaderKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -971,10 +929,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEVELOPMENT_TEAM = 32F2T8EJ6G;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = FolioReaderKitTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -992,10 +947,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEVELOPMENT_TEAM = 32F2T8EJ6G;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Carthage/Build/iOS",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = FolioReaderKitTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

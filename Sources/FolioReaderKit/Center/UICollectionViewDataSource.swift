@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 extension FolioReaderCenter: UICollectionViewDataSource {
     
@@ -40,7 +41,7 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         cell.pageNumber = indexPath.row+1
         cell.layoutAdapting = "Initializing..."
         
-        cell.webView?.scrollView.delegate = self
+        cell.webView?.scrollView.delegate = self.scrollHandler
         if #available(iOS 11.0, *) {
             cell.webView?.scrollView.contentInsetAdjustmentBehavior = .never
         }

@@ -39,9 +39,15 @@ import WebKit
     @objc optional func pageStyleChanged(_ page: FolioReaderPage, _ reader: FolioReader)
 }
 
-open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestureRecognizerDelegate, WKScriptMessageHandler {
+open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestureRecognizerDelegate, EpubJSBridgeDelegate {
     weak var delegate: FolioReaderPageDelegate?
     weak var readerContainer: FolioReaderContainer?
+
+    lazy var jsBridge: EpubJSBridge = {
+        let bridge = EpubJSBridge()
+        bridge.delegate = self
+        return bridge
+    }()
 
     /// The index of the current page. Note: The index start at 1!
     open var pageNumber: Int! {
@@ -146,7 +152,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             webView?.scrollView.showsHorizontalScrollIndicator = false
             webView?.scrollView.scrollsToTop = false
             webView?.backgroundColor = .clear
-            webView?.configuration.userContentController.add(self, name: "FolioReaderPage")
+            webView?.configuration.userContentController.add(self.jsBridge, name: "FolioReaderPage")
             self.contentView.addSubview(webView!)
             if readerConfig.debug.contains(.borderHighlight) {
                 webView?.layer.borderWidth = 10
@@ -1585,34 +1591,27 @@ writingMode
         return nil
     }
 
-    // MARK: WKScriptMessageHandler
-    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        //This function handles the events coming from javascript. We'll configure the javascript side of this later.
-        //We can access properties through the message body, like this:
-        guard let response = message.body as? String else { return }
+    // MARK: EpubJSBridgeDelegate
+    func epubJSBridge(_ bridge: EpubJSBridge, didReceiveCommand command: EpubJSBridge.JSCommand, message: String) {
         if self.readerConfig.debug.contains(.htmlStyling) {
-            print("userContentController response\n\(response)")
+            print("epubJSBridge response \(command.rawValue) \n\(message)")
         }
-        if response.starts(with: "bridgeFinished") {
+
+        switch command {
+        case .bridgeFinished:
             let tempDir = FileManager.default.temporaryDirectory
             let tempFile = tempDir.appendingPathComponent(self.book.spine.spineReferences[self.pageNumber-1].resource.href.lastPathComponent)
             print("\(#function) tempDir=\(tempDir.absoluteString) tempFile=\(tempFile.absoluteString)")
             try? FileManager.default.removeItem(atPath: tempFile.path)
-            FileManager.default.createFile(atPath: tempFile.path, contents: response.suffix(response.count - "bridgeFinished ".count).data(using: .utf8), attributes: nil)
+            FileManager.default.createFile(atPath: tempFile.path, contents: message.data(using: .utf8), attributes: nil)
+        case .writingMode:
+            print("writingMode \(message)")
+        case .getComputedStyle:
+            // Handle if needed
+            break
+        case .unknown:
+            break
         }
-        var prefix = [String]();
-        prefix.append("__DUMMY__")      //supress warning
-//        prefix.append("getVisibleCFI")
-//        prefix.append("injectHighlight")
-//        prefix.append("highlightStringCFI")
-//        prefix.append("getAnchorOffset")
-        
-        prefix.forEach {
-            if response.starts(with: $0) {
-                print("userContentController response \(response)")
-            }
-        }
-
     }
     
     func injectHighlights(completion: (() -> Void)? = nil) {

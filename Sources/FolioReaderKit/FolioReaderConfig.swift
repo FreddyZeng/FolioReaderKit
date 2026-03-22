@@ -92,6 +92,9 @@ public struct ClassBasedOnClickListener {
  */
 open class FolioReaderConfig: NSObject {
 
+    /// The port used by the local web server.
+    open var serverPort: Int = 0
+
     // MARK: ClassBasedOnClickListener
 
     /**
@@ -225,8 +228,6 @@ open class FolioReaderConfig: NSObject {
     open var useReaderMenuController = true
 
     open var enableMDictViewer = false
-    
-    open var serverPort = 0
     
     /// Used to distinguish between multiple or different reader instances. The content of the user defaults (font settings etc.) depends on this identifier. The default is `nil`.
     open var identifier: String?

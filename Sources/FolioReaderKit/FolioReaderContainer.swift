@@ -9,6 +9,7 @@
 import UIKit
 import FontBlaster
 import ZIPFoundation
+import GCDWebServer
 
 /// Reader container
 open class FolioReaderContainer: UIViewController {
@@ -26,6 +27,10 @@ open class FolioReaderContainer: UIViewController {
     public var folioReader: FolioReader
 
     fileprivate var errorOnLoad = false
+    
+    let webServer = GCDWebServer()
+    let dateFormatter = DateFormatter()
+    var epubArchive: Archive?
 
     // MARK: - Init
 
@@ -206,6 +211,10 @@ open class FolioReaderContainer: UIViewController {
                     
                     self.folioReader.delegate?.folioReader?(self.folioReader, didFinishedLoading: self.book)
                     
+                    self.epubArchive = archive
+                    self.initializeWebServer()
+                    self.readerConfig.serverPort = Int(self.webServer.port)
+
                     self.centerViewController.reloadData()
                     self.folioReader.isReaderReady = true
                 }
@@ -220,6 +229,11 @@ open class FolioReaderContainer: UIViewController {
         }
     }
     
+    override open func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopWebServer()
+    }
+
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
@@ -286,7 +300,106 @@ open class FolioReaderContainer: UIViewController {
     override open var preferredStatusBarStyle: UIStatusBarStyle {
         return self.folioReader.isNight(.lightContent, .default)
     }
-}
+
+    // MARK: - Web Server
+
+    open func initializeWebServer() {
+        dateFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+        dateFormatter.locale = Locale(identifier: "en_US")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        webServer.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self) { [weak self] request in
+            guard let self = self, let path = request.path.removingPercentEncoding else { return GCDWebServerErrorResponse() }
+
+            var pathSegs = path.split(separator: "/")
+            guard pathSegs.count > 1 else { return GCDWebServerErrorResponse() }
+            pathSegs.removeFirst()
+            let resourcePath = pathSegs.joined(separator: "/")
+
+            guard let archiveURL = self.epubArchive?.url,
+                  let archive = try? Archive(url: archiveURL, accessMode: .read),
+                  let entry = archive[resourcePath] else { return GCDWebServerErrorResponse() }
+
+            var contentType = GCDWebServerGetMimeTypeForExtension((resourcePath as NSString).pathExtension, nil) ?? "application/octet-stream"
+            if contentType.contains("text/") {
+                contentType += ";charset=utf-8"
+            }
+
+            var dataQueue = [Data]()
+            var isError = false
+
+            let streamResponse = GCDWebServerStreamedResponse(
+                contentType: contentType,
+                asyncStreamBlock: { block in
+                    DispatchQueue.global(qos: .userInteractive).async {
+                        while( dataQueue.isEmpty && isError == false ) {
+                            Thread.sleep(forTimeInterval: 0.001)
+                        }
+
+                        DispatchQueue.main.async {
+                            if isError {
+                                block(nil, NSError(domain: "FolioReaderKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Uncompress Error"]))
+                            } else {
+                                block(dataQueue.removeFirst(), nil)
+                            }
+                        }
+                    }
+                }
+            )
+
+            if let modificationDate = entry.fileAttributes[.modificationDate] as? Date {
+                streamResponse.setValue(self.dateFormatter.string(from: modificationDate), forAdditionalHeader: "Last-Modified")
+                streamResponse.cacheControlMaxAge = 60
+            }
+
+            var totalCount = 0
+            let entrySize = entry.uncompressedSize
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let _ = try archive.extract(entry) { data in
+                        while( dataQueue.count > 4) {
+                            Thread.sleep(forTimeInterval: 0.001)
+                        }
+                        let d = Data(data)
+                        DispatchQueue.main.async {
+                            dataQueue.append(d)
+                            totalCount += data.count
+                            if totalCount >= entrySize {
+                                dataQueue.append(Data())
+                            }
+                        }
+                    }
+                } catch {
+                    isError = true
+                }
+            }
+
+            return streamResponse
+        }
+
+        webServer.addHandler(forMethod: "GET", pathRegex: "^/_fonts/.+?(otf|ttf)$", request: GCDWebServerRequest.self) { request in
+            let fileName = (request.path as NSString).lastPathComponent
+
+            guard let documentDirectory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            else { return nil }
+
+            let fontFileURL = documentDirectory.appendingPathComponent("Fonts",  isDirectory: true).appendingPathComponent(fileName, isDirectory: false)
+            guard FileManager.default.fileExists(atPath: fontFileURL.path) else { return GCDWebServerErrorResponse() }
+
+            return GCDWebServerFileResponse(file: fontFileURL.path)
+        }
+
+        try? webServer.start(options: [
+            GCDWebServerOption_BindToLocalhost: true
+        ])
+    }
+
+    open func stopWebServer() {
+        if webServer.isRunning {
+            webServer.stop()
+        }
+    }
+    }
 
 extension FolioReaderContainer {
     func alert(message: String) {

@@ -43,7 +43,7 @@ On [AppSight](https://www.appsight.io/sdk/folio-reader-kit) you can see apps tha
 
 ## Installation
 
-**FolioReaderKit** is available through [CocoaPods](http://cocoapods.org) and [Carthage](https://github.com/Carthage/Carthage). 
+**FolioReaderKit** is available through [CocoaPods](http://cocoapods.org). 
 
 ### Cocoapods
 
@@ -76,22 +76,6 @@ Alternatively to give it a test run, run the command:
 ```bash
 $ pod try FolioReaderKit
 ```
-
-### Carthage
-
-Add the following to your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile)
-
-```ruby
-github "FolioReader/FolioReaderKit"
-```
-
-Run the following command:
-
-```bash
-$ carthage update --platform iOS --no-use-binaries
-```
-
-Then, follow the steps as described in Carthage's [README](https://github.com/Carthage/Carthage#adding-frameworks-to-an-application).
 
 ## Requirements
 

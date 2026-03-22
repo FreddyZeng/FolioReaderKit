@@ -124,252 +124,252 @@ import Foundation
     @objc func preference(removeProfile name: String)
 }
 
-public class FolioReaderDummyPreferenceProvider: FolioReaderPreferenceProvider {
-    let folioReader: FolioReader
+open class FolioReaderDummyPreferenceProvider: FolioReaderPreferenceProvider {
+    public let folioReader: FolioReader
     
     public init(_ folioReader: FolioReader) {
         self.folioReader = folioReader
     }
 
-    public func preference(nightMode defaults: Bool) -> Bool {
+    open func preference(nightMode defaults: Bool) -> Bool {
         return defaults
     }
     
-    public func preference(setNightMode value: Bool) {
+    open func preference(setNightMode value: Bool) {
         
     }
     
-    public func preference(themeMode defaults: Int) -> Int {
-        return defaults
-
-    }
-    
-    public func preference(setThemeMode defaults: Int) {
-        
-    }
-    
-    public func preference(currentFont defaults: String) -> String {
+    open func preference(themeMode defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentFont value: String) {
+    open func preference(setThemeMode defaults: Int) {
         
     }
     
-    public func preference(currentFontSize defaults: String) -> String {
+    open func preference(currentFont defaults: String) -> String {
         return defaults
 
     }
     
-    public func preference(setCurrentFontSize value: String) {
+    open func preference(setCurrentFont value: String) {
         
     }
     
-    public func preference(currentFontWeight defaults: String) -> String {
+    open func preference(currentFontSize defaults: String) -> String {
         return defaults
 
     }
     
-    public func preference(setCurrentFontWeight value: String) {
+    open func preference(setCurrentFontSize value: String) {
         
     }
     
-    public func preference(currentAudioRate defaults: Int) -> Int {
+    open func preference(currentFontWeight defaults: String) -> String {
         return defaults
 
     }
     
-    public func preference(setCurrentAudioRate value: Int) {
+    open func preference(setCurrentFontWeight value: String) {
         
     }
     
-    public func preference(currentHighlightStyle defaults: Int) -> Int {
+    open func preference(currentAudioRate defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentHighlightStyle value: Int) {
+    open func preference(setCurrentAudioRate value: Int) {
         
     }
     
-    public func preference(currentMediaOverlayStyle defaults: Int) -> Int {
+    open func preference(currentHighlightStyle defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentMediaOverlayStyle value: Int) {
+    open func preference(setCurrentHighlightStyle value: Int) {
         
     }
     
-    public func preference(currentScrollDirection defaults: Int) -> Int {
+    open func preference(currentMediaOverlayStyle defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentScrollDirection value: Int) {
+    open func preference(setCurrentMediaOverlayStyle value: Int) {
         
     }
     
-    public func preference(currentNavigationMenuIndex defaults: Int) -> Int {
+    open func preference(currentScrollDirection defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentNavigationMenuIndex value: Int) {
-        
-    }
-
-    public func preference(currentAnnotationMenuIndex defaults: Int) -> Int {
-        return defaults
-    }
-    
-    public func preference(setCurrentAnnotationMenuIndex value: Int) {
+    open func preference(setCurrentScrollDirection value: Int) {
         
     }
     
-    public func preference(currentNavigationMenuBookListSyle defaults: Int) -> Int {
-        return defaults
-    }
-    
-    public func preference(setCurrentNavigationMenuBookListStyle value: Int) {
-        
-    }
-    
-    public func preference(currentMarginTop defaults: Int) -> Int {
+    open func preference(currentNavigationMenuIndex defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(currentVMarginLinked defaults: Bool) -> Bool {
+    open func preference(setCurrentNavigationMenuIndex value: Int) {
+        
+    }
+
+    open func preference(currentAnnotationMenuIndex defaults: Int) -> Int {
         return defaults
     }
     
-    public func preference(setCurrentVMarginLinked value: Bool) {
+    open func preference(setCurrentAnnotationMenuIndex value: Int) {
         
     }
     
-    public func preference(setCurrentMarginTop value: Int) {
+    open func preference(currentNavigationMenuBookListSyle defaults: Int) -> Int {
+        return defaults
+    }
+    
+    open func preference(setCurrentNavigationMenuBookListStyle value: Int) {
         
     }
     
-    public func preference(currentMarginBottom defaults: Int) -> Int {
+    open func preference(currentMarginTop defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentMarginBottom value: Int) {
+    open func preference(currentVMarginLinked defaults: Bool) -> Bool {
+        return defaults
+    }
+    
+    open func preference(setCurrentVMarginLinked value: Bool) {
         
     }
     
-    public func preference(currentMarginLeft defaults: Int) -> Int {
+    open func preference(setCurrentMarginTop value: Int) {
+        
+    }
+    
+    open func preference(currentMarginBottom defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentMarginLeft value: Int) {
+    open func preference(setCurrentMarginBottom value: Int) {
         
     }
     
-    public func preference(currentMarginRight defaults: Int) -> Int {
+    open func preference(currentMarginLeft defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentMarginRight value: Int) {
+    open func preference(setCurrentMarginLeft value: Int) {
         
     }
     
-    public func preference(currentHMarginLinked defaults: Bool) -> Bool {
-        return defaults
-    }
-    
-    public func preference(setCurrentHMarginLinked value: Bool) {
-        
-    }
-    
-    public func preference(currentLetterSpacing defaults: Int) -> Int {
+    open func preference(currentMarginRight defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentLetterSpacing value: Int) {
+    open func preference(setCurrentMarginRight value: Int) {
         
     }
     
-    public func preference(currentLineHeight defaults: Int) -> Int {
+    open func preference(currentHMarginLinked defaults: Bool) -> Bool {
+        return defaults
+    }
+    
+    open func preference(setCurrentHMarginLinked value: Bool) {
+        
+    }
+    
+    open func preference(currentLetterSpacing defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setCurrentLineHeight value: Int) {
+    open func preference(setCurrentLetterSpacing value: Int) {
         
     }
     
-    public func preference(currentTextIndent defaults: Int) -> Int {
-        return defaults
-    }
-    
-    public func preference(setCurrentTextIndent value: Int) {
-        
-    }
-    public func preference(doWrapPara defaults: Bool) -> Bool {
+    open func preference(currentLineHeight defaults: Int) -> Int {
         return defaults
 
     }
     
-    public func preference(setDoWrapPara value: Bool) {
+    open func preference(setCurrentLineHeight value: Int) {
         
     }
     
-    public func preference(doClearClass defaults: Bool) -> Bool {
+    open func preference(currentTextIndent defaults: Int) -> Int {
+        return defaults
+    }
+    
+    open func preference(setCurrentTextIndent value: Int) {
+        
+    }
+    open func preference(doWrapPara defaults: Bool) -> Bool {
         return defaults
 
     }
     
-    public func preference(setDoClearClass value: Bool) {
+    open func preference(setDoWrapPara value: Bool) {
         
     }
     
-    public func preference(styleOverride defaults: Int) -> Int {
+    open func preference(doClearClass defaults: Bool) -> Bool {
+        return defaults
+
+    }
+    
+    open func preference(setDoClearClass value: Bool) {
+        
+    }
+    
+    open func preference(styleOverride defaults: Int) -> Int {
         return defaults
     }
     
-    public func preference(setStyleOverride value: Int) {
+    open func preference(setStyleOverride value: Int) {
         
     }
     
-    public func preference(structuralStyle defaults: Int) -> Int {
+    open func preference(structuralStyle defaults: Int) -> Int {
         return defaults
     }
     
-    public func preference(setStructuralTocLevel value: Int) {
+    open func preference(setStructuralTocLevel value: Int) {
         
     }
     
-    public func preference(structuralTocLevel defaults: Int) -> Int {
+    open func preference(structuralTocLevel defaults: Int) -> Int {
         return defaults
     }
     
-    public func preference(setStructuralStyle value: Int) {
+    open func preference(setStructuralStyle value: Int) {
         
     }
     
-    public func preference(listProfile filter: String?) -> [String] {
+    open func preference(listProfile filter: String?) -> [String] {
         return ["Default"]
     }
     
     
     
-    public func preference(saveProfile name: String) {
+    open func preference(saveProfile name: String) {
         
     }
     
-    public func preference(loadProfile name: String) {
+    open func preference(loadProfile name: String) {
         
     }
     
-    public func preference(removeProfile name: String) {
+    open func preference(removeProfile name: String) {
         
     }
 }

@@ -15,9 +15,9 @@ import ZipArchive
 #endif
 
 @available(*, deprecated, message: "use FREpubParserArchive instead")
-class FREpubParser: NSObject, SSZipArchiveDelegate {
+open class FREpubParser: NSObject, SSZipArchiveDelegate {
 
-    let book = FRBook()
+    public let book = FRBook()
     private var resourcesBasePath = ""
     private var shouldRemoveEpub = true
     private var epubPathToRemove: String?
@@ -29,7 +29,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: The book cover as UIImage object
     /// - Throws: `FolioReaderError`
-    func parseCoverImage(_ epubPath: String, unzipPath: String? = nil) throws -> UIImage {
+    open func parseCoverImage(_ epubPath: String, unzipPath: String? = nil) throws -> UIImage {
         guard let book = try? readEpub(epubPath: epubPath, removeEpub: false, unzipPath: unzipPath),
             let coverImage = book.coverImage else {
                 throw FolioReaderError.coverNotAvailable
@@ -49,7 +49,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: The book title
     /// - Throws: `FolioReaderError`
-    func parseTitle(_ epubPath: String, unzipPath: String? = nil) throws -> String {
+    open func parseTitle(_ epubPath: String, unzipPath: String? = nil) throws -> String {
         guard let book = try? readEpub(epubPath: epubPath, removeEpub: false, unzipPath: unzipPath), let title = book.title else {
              throw FolioReaderError.titleNotAvailable
         }
@@ -64,7 +64,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: The author name
     /// - Throws: `FolioReaderError`
-    func parseAuthorName(_ epubPath: String, unzipPath: String? = nil) throws -> String {
+    open func parseAuthorName(_ epubPath: String, unzipPath: String? = nil) throws -> String {
         guard let book = try? readEpub(epubPath: epubPath, removeEpub: false, unzipPath: unzipPath), let authorName = book.authorName else {
             throw FolioReaderError.authorNameNotAvailable
         }
@@ -79,7 +79,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     ///   - unzipPath: Path to unzip the compressed epub.
     /// - Returns: `FRBook` Object
     /// - Throws: `FolioReaderError`
-    func readEpub(epubPath withEpubPath: String, removeEpub: Bool = true, unzipPath: String? = nil) throws -> FRBook {
+    open func readEpub(epubPath withEpubPath: String, removeEpub: Bool = true, unzipPath: String? = nil) throws -> FRBook {
         epubPathToRemove = withEpubPath
         shouldRemoveEpub = removeEpub
 
@@ -164,8 +164,8 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
             resource.mediaType = MediaType.by(name: $0.attributes["media-type"] ?? "", fileName: resource.href)
             resource.mediaOverlay = $0.attributes["media-overlay"]
             
-            resource.size = (try? FileManager.default.attributesOfItem(atPath: resource.fullHref)[.size] as? NSNumber)?.intValue
-            
+            resource.size = (try? FileManager.default.attributesOfItem(atPath: resource.fullHref)[.size] as? NSNumber)?.uint64Value
+
             // if a .smil file is listed in resources, go parse that file now and save it on book model
             if (resource.mediaType != nil && resource.mediaType == .smil) {
                 readSmilFile(resource)
@@ -391,6 +391,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
 
         item.children.forEach {
             tocItems.append($0)
+            tocItems.append(contentsOf: countTocChild($0))
         }
         return tocItems
     }
@@ -503,7 +504,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
 
     // MARK: - SSZipArchive delegate
 
-    func zipArchiveWillUnzipArchive(atPath path: String, zipInfo: unz_global_info) {
+    public func zipArchiveWillUnzipArchive(atPath path: String, zipInfo: unz_global_info) {
         guard shouldRemoveEpub else { return }
         guard let epubPathToRemove = epubPathToRemove else { return }
         try? FileManager.default.removeItem(atPath: epubPathToRemove)

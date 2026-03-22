@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftSoup
+import UIKit
 
 class FolioReaderAnchorPreview: UIViewController {
     let folioReader: FolioReader

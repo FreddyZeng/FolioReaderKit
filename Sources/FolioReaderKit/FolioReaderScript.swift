@@ -25,21 +25,31 @@ class FolioReaderScript: WKUserScript {
     }
     
     static let bridgeJS: FolioReaderScript = {
-        let jsURL = Bundle.frameworkBundle().url(forResource: "Bridge", withExtension: "js")!
-        let jsSource = try! String(contentsOf: jsURL)
+        guard let jsURL = Bundle.frameworkBundle().url(forResource: "Bridge", withExtension: "js"),
+              let jsSource = try? String(contentsOf: jsURL) else {
+            print("ERROR: Could not find Bridge.js in bundle \(Bundle.frameworkBundle())")
+            return FolioReaderScript(source: "")
+        }
         return FolioReaderScript(source: jsSource)
     }()
     
     static let readiumCFIJS: FolioReaderScript = {
-        let jsURL = Bundle.frameworkBundle().url(forResource: "readium-cfi.umd", withExtension: "js")!
-        let jsSource = try! String(contentsOf: jsURL)
+        guard let jsURL = Bundle.frameworkBundle().url(forResource: "readium-cfi.umd", withExtension: "js"),
+              let jsSource = try? String(contentsOf: jsURL) else {
+            print("ERROR: Could not find readium-cfi.umd.js in bundle \(Bundle.frameworkBundle())")
+            return FolioReaderScript(source: "")
+        }
         return FolioReaderScript(source: jsSource)
     }()
     
     static let cssInjection: FolioReaderScript = {
-        let cssURL = Bundle.frameworkBundle().url(forResource: "Style", withExtension: "css")!
         var cssStrings = [String]()
-        cssStrings.append(try! String(contentsOf: cssURL))
+        if let cssURL = Bundle.frameworkBundle().url(forResource: "Style", withExtension: "css"),
+           let cssSource = try? String(contentsOf: cssURL) {
+            cssStrings.append(cssSource)
+        } else {
+            print("ERROR: Could not find Style.css in bundle \(Bundle.frameworkBundle())")
+        }
         
         cssStrings.append(
             contentsOf: FolioReader.FontSizes.map {

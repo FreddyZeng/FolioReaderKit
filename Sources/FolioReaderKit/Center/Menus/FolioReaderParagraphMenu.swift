@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 class FolioReaderParagraphMenu: FolioReaderMenu {
     let safeAreaHeight = CGFloat(90)    //including padding between elements
