@@ -16,10 +16,10 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
     
     let fontPickerView = UITableView()
    
-    let styleSlider = HADiscreteSlider()
+    let styleSlider = FolioDiscreteSlider()
     let styleSliderHeight = CGFloat(40)
     
-    let weightSlider = HADiscreteSlider()
+    let weightSlider = FolioDiscreteSlider()
     let weightSliderHeight = CGFloat(40)
 
     var fontFamilies = [FontFamilyInfo]()
@@ -101,11 +101,11 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
         
         
         // Font size slider
-        styleSlider.tickStyle = ComponentStyle.rounded
+        styleSlider.tickStyle = .rounded
         styleSlider.tickCount = FolioReader.FontSizes.count
         styleSlider.tickSize = CGSize(width: 8, height: 8)
 
-        styleSlider.thumbStyle = ComponentStyle.rounded
+        styleSlider.thumbStyle = .rounded
         styleSlider.thumbSize = CGSize(width: 28, height: 28)
         styleSlider.thumbShadowOffset = CGSize(width: 0, height: 2)
         styleSlider.thumbShadowRadius = 3
@@ -116,11 +116,6 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
         styleSlider.minimumValue = 0
         styleSlider.value = CGFloat(FolioReader.FontSizes.firstIndex(of: self.folioReader.currentFontSize) ?? 4)
         styleSlider.addTarget(self, action: #selector(FolioReaderFontsMenu.styleSliderValueChanged(_:)), for: UIControl.Event.valueChanged)
-
-        // Force remove fill color
-        styleSlider.layer.sublayers?.forEach({ layer in
-            layer.backgroundColor = UIColor.clear.cgColor
-        })
 
         styleSlider.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(styleSlider)
@@ -167,11 +162,11 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
             fontBigView.heightAnchor.constraint(equalToConstant: 30)
         ])
         
-        weightSlider.tickStyle = ComponentStyle.rounded
+        weightSlider.tickStyle = .rounded
         weightSlider.tickCount = 9
         weightSlider.tickSize = CGSize(width: 8, height: 8)
 
-        weightSlider.thumbStyle = ComponentStyle.rounded
+        weightSlider.thumbStyle = .rounded
         weightSlider.thumbSize = CGSize(width: 28, height: 28)
         weightSlider.thumbShadowOffset = CGSize(width: 0, height: 2)
         weightSlider.thumbShadowRadius = 3
@@ -183,10 +178,6 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
         weightSlider.value = CGFloat(Int(self.folioReader.currentFontWeight)! / 100 - 1)
         weightSlider.addTarget(self, action: #selector(FolioReaderFontsMenu.weightSliderValueChanged(_:)), for: UIControl.Event.valueChanged)
 
-        // Force remove fill color
-        weightSlider.layer.sublayers?.forEach({ layer in
-            layer.backgroundColor = UIColor.clear.cgColor
-        })
         weightSlider.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(weightSlider)
         NSLayoutConstraint.activate([
@@ -303,11 +294,11 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
     
     // MARK: - Font slider changed
     
-    @objc func styleSliderValueChanged(_ sender: HADiscreteSlider) {
+    @objc func styleSliderValueChanged(_ sender: FolioDiscreteSlider) {
         self.folioReader.currentFontSize = FolioReader.FontSizes[Int(sender.value)]
     }
     
-    @objc func weightSliderValueChanged(_ sender: HADiscreteSlider) {
+    @objc func weightSliderValueChanged(_ sender: FolioDiscreteSlider) {
         self.folioReader.currentFontWeight = ((Int(sender.value) + 1) * 100).description
     }
 
