@@ -1,5 +1,5 @@
 {
-  "originHash" : "ab0ca8b89d8873267b3204d5a1a1516966d30528c687c43a703a0b4b15205e39",
+  "originHash" : "27c92a313bac8ce1934cd96b615076a7a8c29b529efcf55672eb9c083b9e49d3",
   "pins" : [
     {
       "identity" : "aexml",
@@ -44,24 +44,6 @@
       "state" : {
         "revision" : "fd541c4b3fa7dcec2e7cfe049505b6e4382cd66b",
         "version" : "2.13.2"
-      }
-    },
-    {
-      "identity" : "zfdragablemodaltransition",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/drearycold/ZFDragableModalTransition.git",
-      "state" : {
-        "revision" : "5af96245281764eb3b3227bbc96208a5a7068900",
-        "version" : "0.6.5"
-      }
-    },
-    {
-      "identity" : "ziparchive",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/drearycold/ZipArchive.git",
-      "state" : {
-        "revision" : "e89da439287b5382f666c70dd47fa36413296aac",
-        "version" : "2.2.5"
       }
     },
     {

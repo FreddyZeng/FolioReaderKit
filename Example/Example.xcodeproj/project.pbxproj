@@ -37,8 +37,6 @@
 		751F8CF61ECD20110050A2CF /* Epub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751F8CF51ECD20110050A2CF /* Epub.swift */; };
 		751F8CF71ECD20110050A2CF /* Epub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751F8CF51ECD20110050A2CF /* Epub.swift */; };
 		751F8CF81ECD20110050A2CF /* Epub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751F8CF51ECD20110050A2CF /* Epub.swift */; };
-		CA10C1341C572A4B0049165D /* FolioReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA10C1331C572A4B0049165D /* FolioReaderTests.swift */; };
-		CAF233291C57E1F400CB930C /* SharingProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF233281C57E1F400CB930C /* SharingProviderTests.swift */; };
 		E73092EF2F6F870300B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
 		E73092F32F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		E73092F42F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
@@ -46,16 +44,15 @@
 		E73092F62F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
 		E73092F72F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		E73092F82F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
+		E73093202F7115D200B4C322 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F22F6F870300B4C326 /* SwiftSoup */; };
+		E73093212F7115D200B4C322 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F32F6F870300B4C327 /* ZIPFoundation */; };
+		E73093222F7115D200B4C322 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F42F6F870300B4C328 /* GCDWebServer */; };
+		E73093232F7115D200B4C322 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F22F6F870300B4C326 /* SwiftSoup */; };
+		E73093242F7115D200B4C322 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F32F6F870300B4C327 /* ZIPFoundation */; };
+		E73093252F7115D200B4C322 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F42F6F870300B4C328 /* GCDWebServer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		CA10C1361C572A4B0049165D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1A42C2811C0E3882000F2137 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 1A42C2881C0E3882000F2137;
-			remoteInfo = Example;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -69,7 +66,6 @@
 		2A73B8FA26DCBE2D004B001D /* FolioReaderUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolioReaderUserDefaults.swift; sourceTree = "<group>"; };
 		2AC340D42648D61400A477ED /* Storyboard-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Storyboard-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AC340D52648D61400A477ED /* MultipleInstance-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MultipleInstance-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2AC340D62648D61400A477ED /* FolioReaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioReaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A8E86F21E9F80CB00CD844C /* CodeExampleViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeExampleViewController.swift; sourceTree = "<group>"; };
 		3A8E86F41E9F80CB00CD844C /* BaseExampleFolioReaderContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseExampleFolioReaderContainer.swift; sourceTree = "<group>"; };
 		3A8E86F51E9F80CB00CD844C /* BookOneExampleFolioReaderContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BookOneExampleFolioReaderContainer.swift; sourceTree = "<group>"; };
@@ -88,9 +84,6 @@
 		3AAA8B9F1E9BB94B00A47E5A /* The Silver Chair.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Silver Chair.epub"; sourceTree = "<group>"; };
 		6E7733BA266478C0008318C3 /* Population.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = Population.epub; sourceTree = "<group>"; };
 		751F8CF51ECD20110050A2CF /* Epub.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Epub.swift; sourceTree = "<group>"; };
-		CA10C1331C572A4B0049165D /* FolioReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolioReaderTests.swift; sourceTree = "<group>"; };
-		CA10C1351C572A4B0049165D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CAF233281C57E1F400CB930C /* SharingProviderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SharingProviderTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +91,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E73093222F7115D200B4C322 /* GCDWebServer in Frameworks */,
+				E73093212F7115D200B4C322 /* ZIPFoundation in Frameworks */,
+				E73093202F7115D200B4C322 /* SwiftSoup in Frameworks */,
 				E73092EF2F6F870300B4C322 /* FolioReaderKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -117,6 +113,9 @@
 			files = (
 				E73092F82F6F87A600B4C322 /* FolioReaderKit in Frameworks */,
 				E73092F72F6F87A600B4C322 /* (null) in Frameworks */,
+				E73093252F7115D200B4C322 /* GCDWebServer in Frameworks */,
+				E73093232F7115D200B4C322 /* SwiftSoup in Frameworks */,
+				E73093242F7115D200B4C322 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,11 +138,9 @@
 				1A42C28B1C0E3882000F2137 /* Example */,
 				3AAA8B7D1E9BB8B700A47E5A /* Storyboard-Example */,
 				3AAA8B8C1E9BB8CD00A47E5A /* MultipleInstances-Example */,
-				CA10C1321C572A4B0049165D /* FolioReaderTests */,
 				2A61344D2621950C0022FC04 /* Example.app */,
 				2AC340D42648D61400A477ED /* Storyboard-Example.app */,
 				2AC340D52648D61400A477ED /* MultipleInstance-Example.app */,
-				2AC340D62648D61400A477ED /* FolioReaderTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -224,16 +221,6 @@
 			path = "Sample eBooks";
 			sourceTree = "<group>";
 		};
-		CA10C1321C572A4B0049165D /* FolioReaderTests */ = {
-			isa = PBXGroup;
-			children = (
-				CA10C1331C572A4B0049165D /* FolioReaderTests.swift */,
-				CAF233281C57E1F400CB930C /* SharingProviderTests.swift */,
-				CA10C1351C572A4B0049165D /* Info.plist */,
-			);
-			path = FolioReaderTests;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -252,6 +239,9 @@
 			name = Example;
 			packageProductDependencies = (
 				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
+				E73092F22F6F870300B4C326 /* SwiftSoup */,
+				E73092F32F6F870300B4C327 /* ZIPFoundation */,
+				E73092F42F6F870300B4C328 /* GCDWebServer */,
 			);
 			productName = Example;
 			productReference = 2A61344D2621950C0022FC04 /* Example.app */;
@@ -276,28 +266,6 @@
 			productName = StoryboardExample;
 			productReference = 2AC340D52648D61400A477ED /* MultipleInstance-Example.app */;
 			productType = "com.apple.product-type.application";
-		};
-		CA10C1301C572A4B0049165D /* FolioReaderTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = CA10C1381C572A4B0049165D /* Build configuration list for PBXNativeTarget "FolioReaderTests" */;
-			buildPhases = (
-				CA10C12D1C572A4B0049165D /* Sources */,
-				CA10C12E1C572A4B0049165D /* Frameworks */,
-				CA10C12F1C572A4B0049165D /* Resources */,
-				E82F486563C1547E0775A59F /* 📦 Embed Pods Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				CA10C1371C572A4B0049165D /* PBXTargetDependency */,
-			);
-			name = FolioReaderTests;
-			packageProductDependencies = (
-				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
-			);
-			productName = FolioReaderTests;
-			productReference = 2AC340D62648D61400A477ED /* FolioReaderTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		D12066621D65FABD006E1D18 /* Storyboard-Example */ = {
 			isa = PBXNativeTarget;
@@ -344,13 +312,6 @@
 						DevelopmentTeam = 99AHAA343Q;
 						ProvisioningStyle = Automatic;
 					};
-					CA10C1301C572A4B0049165D = {
-						CreatedOnToolsVersion = 7.3;
-						DevelopmentTeam = 99AHAA343Q;
-						LastSwiftMigration = 1010;
-						ProvisioningStyle = Automatic;
-						TestTargetID = 1A42C2881C0E3882000F2137;
-					};
 					D12066621D65FABD006E1D18 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = 99AHAA343Q;
@@ -370,6 +331,9 @@
 			mainGroup = 1A42C2801C0E3882000F2137;
 			packageReferences = (
 				E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */,
+				E73092EF2F6F84FE00B4C323 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+				E73092F02F6F84FE00B4C324 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				E73092F12F6F84FE00B4C325 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
 			);
 			productRefGroup = 1A42C2801C0E3882000F2137;
 			projectDirPath = "";
@@ -378,7 +342,6 @@
 				1A42C2881C0E3882000F2137 /* Example */,
 				D12066621D65FABD006E1D18 /* Storyboard-Example */,
 				3AAA8B671E9BB78B00A47E5A /* MultipleInstance-Example */,
-				CA10C1301C572A4B0049165D /* FolioReaderTests */,
 			);
 		};
 /* End PBXProject section */
@@ -432,21 +395,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		E82F486563C1547E0775A59F /* 📦 Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "📦 Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -478,8 +426,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CA10C1341C572A4B0049165D /* FolioReaderTests.swift in Sources */,
-				CAF233291C57E1F400CB930C /* SharingProviderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,11 +442,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		CA10C1371C572A4B0049165D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 1A42C2881C0E3882000F2137 /* Example */;
-			targetProxy = CA10C1361C572A4B0049165D /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -601,7 +542,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -651,7 +592,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -665,7 +606,6 @@
 		1A42C29C1C0E3883000F2137 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = L8WKJ3U7UT;
@@ -686,7 +626,6 @@
 		1A42C29D1C0E3883000F2137 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = L8WKJ3U7UT;
@@ -707,12 +646,12 @@
 		3AAA8B781E9BB78B00A47E5A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = "MultipleInstances-Example/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -728,12 +667,12 @@
 		3AAA8B791E9BB78B00A47E5A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 99AHAA343Q;
 				INFOPLIST_FILE = "MultipleInstances-Example/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -744,52 +683,9 @@
 			};
 			name = Release;
 		};
-		CA10C1391C572A4B0049165D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = 99AHAA343Q;
-				INFOPLIST_FILE = FolioReaderTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.FolioReaderTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Example.app/Example";
-			};
-			name = Debug;
-		};
-		CA10C13A1C572A4B0049165D /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = 99AHAA343Q;
-				INFOPLIST_FILE = FolioReaderTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.FolioReaderTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Example.app/Example";
-			};
-			name = Release;
-		};
 		D12066721D65FABE006E1D18 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -808,7 +704,6 @@
 		D12066731D65FABE006E1D18 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -854,15 +749,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CA10C1381C572A4B0049165D /* Build configuration list for PBXNativeTarget "FolioReaderTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				CA10C1391C572A4B0049165D /* Debug */,
-				CA10C13A1C572A4B0049165D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D12066741D65FABE006E1D18 /* Build configuration list for PBXNativeTarget "Storyboard-Example" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -881,11 +767,53 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E73092EF2F6F84FE00B4C323 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.2;
+			};
+		};
+		E73092F02F6F84FE00B4C324 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.11;
+			};
+		};
+		E73092F12F6F84FE00B4C325 /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SlaunchaMan/GCDWebServer.git";
+			requirement = {
+				branch = "swift-package-manager";
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		E73092EE2F6F870300B4C322 /* FolioReaderKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */;
 			productName = FolioReaderKit;
+		};
+		E73092F22F6F870300B4C326 /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E73092EF2F6F84FE00B4C323 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+		E73092F32F6F870300B4C327 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E73092F02F6F84FE00B4C324 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+		E73092F42F6F870300B4C328 /* GCDWebServer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E73092F12F6F84FE00B4C325 /* XCRemoteSwiftPackageReference "GCDWebServer" */;
+			productName = GCDWebServer;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
