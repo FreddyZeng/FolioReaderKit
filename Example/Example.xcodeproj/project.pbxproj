@@ -42,18 +42,7 @@
 		E73092F42F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
 		E73092F52F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		E73092F62F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
-		E73092F72F6F87A600B4C322 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		E73092F82F6F87A600B4C322 /* FolioReaderKit in Frameworks */ = {isa = PBXBuildFile; productRef = E73092EE2F6F870300B4C322 /* FolioReaderKit */; };
-		E73093202F7115D200B4C322 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F22F6F870300B4C326 /* SwiftSoup */; };
-		E73093212F7115D200B4C322 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F32F6F870300B4C327 /* ZIPFoundation */; };
-		E73093222F7115D200B4C322 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F42F6F870300B4C328 /* GCDWebServer */; };
-		E73093232F7115D200B4C322 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F22F6F870300B4C326 /* SwiftSoup */; };
-		E73093242F7115D200B4C322 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F32F6F870300B4C327 /* ZIPFoundation */; };
-		E73093252F7115D200B4C322 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = E73092F42F6F870300B4C328 /* GCDWebServer */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		1A42C28C1C0E3882000F2137 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -91,9 +80,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E73093222F7115D200B4C322 /* GCDWebServer in Frameworks */,
-				E73093212F7115D200B4C322 /* ZIPFoundation in Frameworks */,
-				E73093202F7115D200B4C322 /* SwiftSoup in Frameworks */,
 				E73092EF2F6F870300B4C322 /* FolioReaderKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -104,18 +90,6 @@
 			files = (
 				E73092F62F6F87A600B4C322 /* FolioReaderKit in Frameworks */,
 				E73092F52F6F87A600B4C322 /* (null) in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		CA10C12E1C572A4B0049165D /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E73092F82F6F87A600B4C322 /* FolioReaderKit in Frameworks */,
-				E73092F72F6F87A600B4C322 /* (null) in Frameworks */,
-				E73093252F7115D200B4C322 /* GCDWebServer in Frameworks */,
-				E73093232F7115D200B4C322 /* SwiftSoup in Frameworks */,
-				E73093242F7115D200B4C322 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,9 +213,6 @@
 			name = Example;
 			packageProductDependencies = (
 				E73092EE2F6F870300B4C322 /* FolioReaderKit */,
-				E73092F22F6F870300B4C326 /* SwiftSoup */,
-				E73092F32F6F870300B4C327 /* ZIPFoundation */,
-				E73092F42F6F870300B4C328 /* GCDWebServer */,
 			);
 			productName = Example;
 			productReference = 2A61344D2621950C0022FC04 /* Example.app */;
@@ -331,9 +302,6 @@
 			mainGroup = 1A42C2801C0E3882000F2137;
 			packageReferences = (
 				E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */,
-				E73092EF2F6F84FE00B4C323 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
-				E73092F02F6F84FE00B4C324 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
-				E73092F12F6F84FE00B4C325 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
 			);
 			productRefGroup = 1A42C2801C0E3882000F2137;
 			projectDirPath = "";
@@ -373,13 +341,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CA10C12F1C572A4B0049165D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D12066611D65FABD006E1D18 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -393,9 +354,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1A42C2851C0E3882000F2137 /* Sources */ = {
@@ -422,13 +380,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CA10C12D1C572A4B0049165D /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D120665F1D65FABD006E1D18 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -440,9 +391,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		1A42C2901C0E3883000F2137 /* Main.storyboard */ = {
@@ -767,53 +715,11 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		E73092EF2F6F84FE00B4C323 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.3.2;
-			};
-		};
-		E73092F02F6F84FE00B4C324 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.11;
-			};
-		};
-		E73092F12F6F84FE00B4C325 /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SlaunchaMan/GCDWebServer.git";
-			requirement = {
-				branch = "swift-package-manager";
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		E73092EE2F6F870300B4C322 /* FolioReaderKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E73092ED2F6F84FE00B4C322 /* XCLocalSwiftPackageReference "../../FolioReaderKit" */;
 			productName = FolioReaderKit;
-		};
-		E73092F22F6F870300B4C326 /* SwiftSoup */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E73092EF2F6F84FE00B4C323 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
-			productName = SwiftSoup;
-		};
-		E73092F32F6F870300B4C327 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E73092F02F6F84FE00B4C324 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
-		};
-		E73092F42F6F870300B4C328 /* GCDWebServer */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E73092F12F6F84FE00B4C325 /* XCRemoteSwiftPackageReference "GCDWebServer" */;
-			productName = GCDWebServer;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
