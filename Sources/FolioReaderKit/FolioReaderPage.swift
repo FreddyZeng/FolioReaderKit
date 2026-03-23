@@ -145,6 +145,10 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         self.pageNumber = -1     //guard against webView didFinish handler
         self.currentChapterName = nil
         
+        let themeBackgroundColor = self.readerContainer?.readerConfig.themeModeBackground[self.folioReader.themeMode]
+        self.backgroundColor = themeBackgroundColor
+        self.contentView.backgroundColor = themeBackgroundColor
+        
         if webView == nil {
             webView = FolioReaderWebView(frame: webViewFrame(), readerContainer: readerContainer)
             webView?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -159,6 +163,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
                 webView?.layer.borderColor = UIColor.magenta.cgColor
             }
         }
+        webView?.backgroundColor = .clear
         webView?.isHidden = true
         webView?.navigationDelegate = self
 
