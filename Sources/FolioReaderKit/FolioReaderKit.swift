@@ -649,7 +649,8 @@ extension FolioReader {
     public func save(readPosition position: FolioReaderReadPosition, for bookId: String) {
         guard let provider = self.delegate?.folioReaderReadPositionProvider?(self) else { return }
         
-        DispatchQueue.global().async { [provider, position] in
+        DispatchQueue.global().async { [weak self, provider, position] in
+            guard let self = self else { return }
             let positions = provider.folioReaderReadPosition(self, allByBookId: bookId)
             for pos in positions where pos.takePrecedence {
                 pos.takePrecedence = false

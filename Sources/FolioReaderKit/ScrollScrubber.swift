@@ -74,23 +74,29 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     var frame: CGRect {
         didSet {
-            self.slider.frame = frame
-            self.slider.maximumValue = Float(frame.height)
+            slider.transform = .identity
             if frame.height > frame.width {
-                slider.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi / 2))
+                // Vertical slider: width must be the long axis before rotation
+                slider.frame = CGRect(x: 0, y: 0, width: frame.height, height: frame.width)
+                slider.transform = CGAffineTransform(rotationAngle: .pi / 2)
+                slider.maximumValue = Float(frame.height)
             } else {
-                slider.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi))
+                // Horizontal slider: width is the long axis
+                slider.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
+                slider.transform = CGAffineTransform(rotationAngle: .pi)
+                slider.maximumValue = Float(frame.width)
             }
+            slider.center = CGPoint(x: frame.midX, y: frame.midY)
         }
     }
 
     init(frame:CGRect, withReaderContainer readerContainer: FolioReaderContainer) {
-        self.frame = frame
         self.readerContainer = readerContainer
+        self.frame = .zero
 
         super.init()
 
-        slider.layer.anchorPoint = CGPoint(x: 0, y: 0)
+        self.frame = frame
         slider.alpha = 0
         self.reloadColors()
 
@@ -137,7 +143,12 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     @objc func sliderChange(_ slider:UISlider) {
         guard let currentPage = delegate?.currentPage, let scrollView = currentPage.webView?.scrollView else { return }
-        let movePosition = (height() * CGFloat(slider.value))
+        
+        let maxRange = height()
+        let maxValue = CGFloat(slider.maximumValue)
+        let ratio = maxValue > 0 ? CGFloat(slider.value) / maxValue : 0
+        let movePosition = maxRange * ratio
+
         let offset = currentPage.byWritingMode(
             readerConfig.isDirection(CGPoint(x: 0, y: movePosition), CGPoint(x: movePosition, y: 0), CGPoint(x: 0, y: movePosition)),
             CGPoint(x: scrollView.contentSize.width - scrollView.frame.width - movePosition, y: 0)
@@ -255,7 +266,10 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     }
 
     func setSliderVal() {
-        let value = Float(Int(scrollTop() / height() * CGFloat(slider.maximumValue)))
+        let maxRange = height()
+        guard maxRange > 0 else { return }
+        
+        let value = Float(scrollTop() / maxRange * CGFloat(slider.maximumValue))
         guard value != slider.value
         else {
             return
@@ -271,15 +285,13 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     fileprivate func height() -> CGFloat {
         guard let currentPage = delegate?.currentPage,
-            let pageHeight = folioReader.readerCenter?.pageHeight,
-            let pageWidth = folioReader.readerCenter?.pageWidth,
             let webView = currentPage.webView else {
                 return 0
         }
 
         return currentPage.byWritingMode(
-            webView.scrollView.contentSize.height - pageHeight + 44,
-            webView.scrollView.contentSize.width - pageWidth
+            max(0, webView.scrollView.contentSize.height - webView.frame.height),
+            max(0, webView.scrollView.contentSize.width - webView.frame.width)
         )
     }
     

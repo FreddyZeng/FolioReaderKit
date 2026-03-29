@@ -103,18 +103,25 @@ public class MockScriptMessageHandler: NSObject, WKScriptMessageHandler {
 // MARK: - Mock Read Position Provider
 public class MockReadPositionProvider: NSObject, FolioReaderReadPositionProvider {
     private var storage: [String: [FolioReaderReadPosition]] = [:]
+    private let lock = NSLock()
     
     public override init() {}
     
     public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String) -> FolioReaderReadPosition? {
+        lock.lock()
+        defer { lock.unlock() }
         return storage[bookId]?.first { $0.takePrecedence } ?? storage[bookId]?.last
     }
     
     public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, by pageNumber: Int) -> FolioReaderReadPosition? {
+        lock.lock()
+        defer { lock.unlock() }
         return storage[bookId]?.first { $0.pageNumber == pageNumber }
     }
     
     public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, set position: FolioReaderReadPosition, completion: Completion?) {
+        lock.lock()
+        defer { lock.unlock() }
         var positions = storage[bookId] ?? []
         if let index = positions.firstIndex(where: { $0.cfi == position.cfi }) {
             positions[index] = position
@@ -126,18 +133,26 @@ public class MockReadPositionProvider: NSObject, FolioReaderReadPositionProvider
     }
     
     public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, remove readPosition: FolioReaderReadPosition) {
+        lock.lock()
+        defer { lock.unlock() }
         storage[bookId]?.removeAll { $0.cfi == readPosition.cfi }
     }
     
     public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, getById deviceId: String) -> [FolioReaderReadPosition] {
+        lock.lock()
+        defer { lock.unlock() }
         return storage[bookId]?.filter { $0.deviceId == deviceId } ?? []
     }
     
     public func folioReaderReadPosition(_ folioReader: FolioReader, allByBookId bookId: String) -> [FolioReaderReadPosition] {
+        lock.lock()
+        defer { lock.unlock() }
         return storage[bookId] ?? []
     }
     
     public func folioReaderReadPosition(_ folioReader: FolioReader) -> [FolioReaderReadPosition] {
+        lock.lock()
+        defer { lock.unlock() }
         return storage.values.flatMap { $0 }
     }
     
