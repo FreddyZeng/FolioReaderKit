@@ -63,7 +63,9 @@ class ViewController: UIViewController {
             withEpubPath: bookPath,
             andConfig: readerConfiguration,
             animated: true,
-            folioReaderCenterDelegate: nil)
+            folioReaderCenterDelegate: nil,
+            webServer: ReadiumGCDWebServer()
+        )
     }
 
     private func setCover(_ button: UIButton?, index: Int) {
@@ -73,11 +75,15 @@ class ViewController: UIViewController {
                 return
         }
 
-        do {
-            let image = try FREpubParserArchive.parseCoverImage(bookPath)
-            button?.setBackgroundImage(image, for: .normal)
-        } catch {
-            print(error.localizedDescription)
+        Task {
+            do {
+                let image = try await FREpubParserArchive.parseCoverImage(bookPath)
+                await MainActor.run {
+                    button?.setBackgroundImage(image, for: .normal)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
         }
     }
     

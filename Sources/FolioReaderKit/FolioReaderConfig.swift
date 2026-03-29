@@ -93,7 +93,7 @@ public struct ClassBasedOnClickListener {
 open class FolioReaderConfig: NSObject {
 
     /// The port used by the local web server.
-    open var serverPort: Int = 0
+//    open var serverPort: Int = 0
 
     // MARK: ClassBasedOnClickListener
 

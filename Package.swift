@@ -4,26 +4,33 @@ import PackageDescription
 let package = Package(
 	name: "FolioReaderKit",
     platforms: [
-            .iOS(.v13),
-            .macOS(.v10_15)
+        .iOS(.v13),
+        .macOS(.v11)
     ],
 	products: [
 		.library(name: "FolioReaderKit", targets: ["FolioReaderKit"])
 	],
 	dependencies: [
-	.package(url: "https://github.com/cxa/MenuItemKit.git", from: "3.0.0"),
-	.package(url: "https://github.com/tadija/AEXML.git", from: "4.3.3"),
-	.package(url: "https://github.com/ArtSabintsev/FontBlaster.git", from: "5.1.0"),
-	.package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.3.2"),
-	.package(url: "https://github.com/weichsel/ZIPFoundation.git", from: "0.9.11"),
-	.package(url: "https://github.com/SlaunchaMan/GCDWebServer.git", .branch("swift-package-manager")),
-		// .Package(url: "https://github.com/fantim/JSQWebViewController.git", majorVersion: 6, minor: 1),
-	],
+        .package(url: "https://github.com/cxa/MenuItemKit.git", from: "3.0.0"),
+        .package(url: "https://github.com/tadija/AEXML.git", from: "4.3.3"),
+        .package(url: "https://github.com/ArtSabintsev/FontBlaster.git", from: "5.1.0"),
+        .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.0"),
+        .package(url: "https://github.com/readium/ZIPFoundation.git", from: "3.0.0"),
+        .package(url: "https://github.com/readium/GCDWebServer.git", from: "4.0.0"),
+    ],
 	targets: [
-	.target(
-	name: "FolioReaderKit",
-	dependencies: ["AEXML", "FontBlaster", "MenuItemKit", "SwiftSoup", "ZIPFoundation", "GCDWebServer"],
-	exclude: [],            resources: [
+        .target(
+            name: "FolioReaderKit",
+            dependencies: [
+                "AEXML",
+                "FontBlaster",
+                "MenuItemKit",
+                "SwiftSoup",
+                .product(name: "ReadiumZIPFoundation", package: "ZIPFoundation"),
+                .product(name: "ReadiumGCDWebServer", package: "GCDWebServer"),
+            ],
+            exclude: [],
+            resources: [
                 .process("Resources/Bridge.js"),
                 .process("Resources/Style.css"),
                 .process("Resources/readium-cfi.umd.js"),

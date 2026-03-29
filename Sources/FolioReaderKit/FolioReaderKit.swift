@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import ReadiumGCDWebServer
 
 // MARK: - Internal constants
 
@@ -196,8 +197,8 @@ extension FolioReader {
     ///   - config: FolioReader configuration.
     ///   - shouldRemoveEpub: Boolean to remove the epub or not. Default true.
     ///   - animated: Pass true to animate the presentation; otherwise, pass false.
-    public func presentReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?) {
-        let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath)
+    public func presentReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?, webServer: ReadiumGCDWebServer) {
+        let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath, webServer: webServer)
         readerContainer.modalPresentationStyle = .fullScreen
         self.readerContainer = readerContainer
         
@@ -205,8 +206,8 @@ extension FolioReader {
         addObservers()
     }
     
-    public func prepareReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?) {
-        let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath)
+    public func prepareReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?, webServer: ReadiumGCDWebServer) {
+        let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath, webServer: webServer)
         self.readerContainer = readerContainer
         
         addObservers()
@@ -596,8 +597,7 @@ extension FolioReader {
         }
         set {
             guard let position = newValue,
-                  let bookId = self.readerCenter?.book.name?.deletingPathExtension,
-                  let provider = delegate?.folioReaderReadPositionProvider?(self) else { return }
+                  let bookId = self.readerCenter?.book.name?.deletingPathExtension else { return }
             
             guard self.isReaderReady || position.takePrecedence else { return }
             
@@ -610,17 +610,7 @@ extension FolioReader {
                 }
             }
             
-            DispatchQueue.global().async {
-                provider.folioReaderReadPosition(self, allByBookId: bookId)
-                    .forEach {
-                        guard $0.takePrecedence else { return }
-                        folioLogger("savedPositionForCurrentBook clear")
-                        $0.takePrecedence = false
-                        provider.folioReaderReadPosition(self, bookId: bookId, set: $0, completion: nil)
-                    }
-                
-                provider.folioReaderReadPosition(self, bookId: bookId, set: position, completion: nil)
-            }
+            self.save(readPosition: position, for: bookId)
         }
     }
     
@@ -655,6 +645,20 @@ extension FolioReader {
 
 extension FolioReader {
 
+    /// Centralizes the persistence logic of read positions safely.
+    public func save(readPosition position: FolioReaderReadPosition, for bookId: String) {
+        guard let provider = self.delegate?.folioReaderReadPositionProvider?(self) else { return }
+        
+        DispatchQueue.global().async { [provider, position] in
+            let positions = provider.folioReaderReadPosition(self, allByBookId: bookId)
+            for pos in positions where pos.takePrecedence {
+                pos.takePrecedence = false
+                provider.folioReaderReadPosition(self, bookId: bookId, set: pos, completion: nil)
+            }
+            provider.folioReaderReadPosition(self, bookId: bookId, set: position, completion: nil)
+        }
+    }
+
     /// Save Reader state, book, page and scroll offset.
     @objc open func saveReaderState(completion: (() -> Void)? = nil) {
         guard isReaderOpen,
@@ -676,7 +680,9 @@ extension FolioReader {
 
             print("saveReaderState position cfi=\(position.cfi)")
             
-            self.savedPositionForCurrentBook = position
+            if let bookId = self.readerCenter?.book.name?.deletingPathExtension {
+                self.save(readPosition: position, for: bookId)
+            }
 
             completion?()
         }

@@ -463,18 +463,14 @@ internal extension UIViewController {
     func setTranslucentNavigation(_ translucent: Bool = true, color: UIColor, tintColor: UIColor = UIColor.white, titleColor: UIColor = UIColor.black, andFont font: UIFont = UIFont.systemFont(ofSize: 17)) {
         let navBar = self.navigationController?.navigationBar
         
-        if #available(iOS 13.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = color
-            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: titleColor, NSAttributedString.Key.font: font]
-            
-            navBar?.standardAppearance = appearance
-            navBar?.scrollEdgeAppearance = appearance
-            navBar?.compactAppearance = appearance
-        } else {
-            navBar?.setBackgroundImage(UIImage.imageWithColor(color), for: UIBarMetrics.default)
-        }
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = color
+        appearance.titleTextAttributes = [.foregroundColor: titleColor, .font: font]
+        
+        navBar?.standardAppearance = appearance
+        navBar?.scrollEdgeAppearance = appearance
+        navBar?.compactAppearance = appearance
         
         navBar?.isHidden = false
         navBar?.isTranslucent = translucent
@@ -553,4 +549,22 @@ extension Array {
 
 func folioLogger(_ logMessage: String, functionName: String = #function, lineNumber: Int = #line) {
     print("[\(Date())] \(functionName):\(lineNumber): \(logMessage)")
+}
+
+/// A thread-safe data accumulator for concurrent closures.
+final class DataAccumulator: @unchecked Sendable {
+    private let data = NSMutableData()
+    private let lock = NSLock()
+
+    func append(_ other: Data) {
+        lock.lock()
+        defer { lock.unlock() }
+        data.append(other)
+    }
+
+    var result: Data {
+        lock.lock()
+        defer { lock.unlock() }
+        return data as Data
+    }
 }

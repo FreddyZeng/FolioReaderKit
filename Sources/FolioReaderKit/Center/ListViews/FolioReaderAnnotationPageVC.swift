@@ -103,11 +103,9 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
         
-        if #available(iOS 13.0, *) {
-            segmentedControl.selectedSegmentTintColor = tintColor
-            segmentedControl.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
-            segmentedControl.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
-        }
+        segmentedControl.selectedSegmentTintColor = tintColor
+        segmentedControl.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
+        segmentedControl.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
     }
 
     // MARK: - Segmented control changes

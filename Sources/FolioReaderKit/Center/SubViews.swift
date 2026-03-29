@@ -45,11 +45,7 @@ extension FolioReaderCenter {
         pageIndicatorHeight = 40
         #endif
         var bounds = CGRect(x: 0, y: outerBounds.size.height-pageIndicatorHeight, width: outerBounds.size.width, height: pageIndicatorHeight)
-        
-        if #available(iOS 11.0, *) {
-            bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
-        }
-        
+        bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
         return bounds
     }
 
@@ -75,10 +71,7 @@ extension FolioReaderCenter {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
         var bounds = CGRect(x: 0, y: 0, width: outerBounds.size.width, height: outerBounds.size.height)
-        
-        if #available(iOS 11.0, *) {
-            bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
-        }
+        bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
         return bounds
     }
     
@@ -87,15 +80,14 @@ extension FolioReaderCenter {
 
         var bounds = view.frame
         
-        if #available(iOS 11.0, *) {
-            if readerConfig.debug.contains(.viewTransition) {
-                print("getScreenBounds view.frame=\(bounds) view.safeAreaInsets=\(view.safeAreaInsets)")
-            }
-            bounds.size.height = bounds.size.height - view.safeAreaInsets.bottom
+        if readerConfig.debug.contains(.viewTransition) {
+            print("getScreenBounds view.frame=\(bounds) view.safeAreaInsets=\(view.safeAreaInsets)")
         }
+        bounds.size.height = bounds.size.height - view.safeAreaInsets.bottom
         
         if readerConfig.debug.contains(.borderHighlight) {
-            print("getScreenBounds \(bounds) \(UIApplication.shared.statusBarOrientation.rawValue)")
+            let orientation = self.view.window?.windowScene?.interfaceOrientation ?? .portrait
+            print("getScreenBounds \(bounds) \(orientation.rawValue)")
         }
         
         return bounds
@@ -124,7 +116,6 @@ extension FolioReaderCenter {
         let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let logoIcon = UIImage(readerImageNamed: "icon-button-back")?.ignoreSystemTint(withConfiguration: self.readerConfig)
         let bookmarkIcon = UIImage(readerImageNamed: "icon-navbar-bookmark")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let space = 70 as CGFloat
 
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
         let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
@@ -228,5 +219,4 @@ extension FolioReaderCenter {
         })
         self.navigationController?.setNavigationBarHidden(shouldHide, animated: true)
     }
-
 }

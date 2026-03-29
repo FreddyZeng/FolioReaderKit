@@ -99,3 +99,49 @@ public class MockScriptMessageHandler: NSObject, WKScriptMessageHandler {
         self.messageReceivedCount += 1
     }
 }
+
+// MARK: - Mock Read Position Provider
+public class MockReadPositionProvider: NSObject, FolioReaderReadPositionProvider {
+    private var storage: [String: [FolioReaderReadPosition]] = [:]
+    
+    public override init() {}
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String) -> FolioReaderReadPosition? {
+        return storage[bookId]?.first { $0.takePrecedence } ?? storage[bookId]?.last
+    }
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, by pageNumber: Int) -> FolioReaderReadPosition? {
+        return storage[bookId]?.first { $0.pageNumber == pageNumber }
+    }
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, set position: FolioReaderReadPosition, completion: Completion?) {
+        var positions = storage[bookId] ?? []
+        if let index = positions.firstIndex(where: { $0.cfi == position.cfi }) {
+            positions[index] = position
+        } else {
+            positions.append(position)
+        }
+        storage[bookId] = positions
+        completion?(nil)
+    }
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, remove readPosition: FolioReaderReadPosition) {
+        storage[bookId]?.removeAll { $0.cfi == readPosition.cfi }
+    }
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader, bookId: String, getById deviceId: String) -> [FolioReaderReadPosition] {
+        return storage[bookId]?.filter { $0.deviceId == deviceId } ?? []
+    }
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader, allByBookId bookId: String) -> [FolioReaderReadPosition] {
+        return storage[bookId] ?? []
+    }
+    
+    public func folioReaderReadPosition(_ folioReader: FolioReader) -> [FolioReaderReadPosition] {
+        return storage.values.flatMap { $0 }
+    }
+    
+    public func folioReaderPositionHistory(_ folioReader: FolioReader, bookId: String) -> [FolioReaderReadPositionHistory] {
+        return []
+    }
+}

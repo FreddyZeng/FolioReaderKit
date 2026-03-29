@@ -93,6 +93,10 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     fileprivate var menuIsVisible = false
     fileprivate var firstLoadReloaded = false
     
+    var statusbarHeight: CGFloat {
+        return self.window?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
+    }
+    
      var layoutAdapting: String? = nil {
         didSet {
             if let layoutAdapting = layoutAdapting {
@@ -327,7 +331,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         }
         
         // bounds.height does not include statusbarHeight
-        let statusbarHeight = UIApplication.shared.statusBarFrame.size.height
+        let statusbarHeight = self.statusbarHeight
         let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
         let topComponentTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : navBarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
@@ -364,7 +368,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             return bounds
         }
         
-        let statusbarHeight = UIApplication.shared.statusBarFrame.size.height
+        let statusbarHeight = self.statusbarHeight
         let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
         let navTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : statusbarHeight + navBarHeight
         let paddingTop: CGFloat = 20
@@ -383,14 +387,15 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             return bounds
         }
 
-        let statusbarHeight = UIApplication.shared.statusBarFrame.size.height
+        let statusbarHeight = self.statusbarHeight
         let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
         let navTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : statusbarHeight + navBarHeight
         let paddingTop: CGFloat = -40
         let paddingBottom: CGFloat = 50
 
         print("boundsFrame \(bounds)")
-        print("statusBarFrame \(UIApplication.shared.statusBarFrame)")
+        let statusBarFrame = self.window?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
+        print("statusBarFrame \(statusBarFrame)")
         print("navigationBarFrame \(String(describing: self.folioReader.readerCenter?.navigationController?.navigationBar.frame))")
         
         let x = bounds.origin.x
@@ -640,7 +645,10 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             
             //prevent invisible pages updating read positions
             guard self.pageNumber == self.folioReader.readerCenter?.currentPageNumber else { return }
-            self.folioReader.savedPositionForCurrentBook = position
+            
+            if let bookId = self.folioReader.readerCenter?.book.name?.deletingPathExtension {
+                self.folioReader.save(readPosition: position, for: bookId)
+            }
         }
     }
     
@@ -1439,10 +1447,10 @@ writingMode
         } else if let referer = request.value(forHTTPHeaderField: "Referer"),
                   let refererURL = URL(string: referer),
                   refererURL.host == "localhost",
-                  refererURL.port == readerConfig.serverPort,
+                  refererURL.port == Int(readerContainer?.webServer.port ?? 0),
                   url.scheme == "http",
                   url.host == "localhost",
-                  url.port == readerConfig.serverPort,
+                  url.port == Int(readerContainer?.webServer.port ?? 0),
                   let anchorFromURL = url.fragment {
             self.webView?.js("getClickAnchorOffset('\(anchorFromURL)')") { offset in
                 let snippetVC = FolioReaderAnchorPreview(
@@ -1460,7 +1468,7 @@ writingMode
                 self.folioReader.readerCenter?.present(snippetVC, animated: true, completion: nil)
             }
             return false
-        } else if scheme == "file" || (url.scheme == "http" && url.host == "localhost" && (url.port ?? 0) == readerConfig.serverPort) {
+        } else if scheme == "file" || (url.scheme == "http" && url.host == "localhost" && (url.port ?? 0) == Int(readerContainer?.webServer.port ?? 0)) {
             
             if navigationAction.navigationType == .linkActivated {
                 self.pushNavigateWebViewScrollPositions()

@@ -195,19 +195,15 @@ open class FolioReaderCenter: UIViewController {
         view.addSubview(collectionView)
         
         // Activity Indicator
-        self.activityIndicator.style = .gray
-        self.activityIndicator.hidesWhenStopped = true
         self.activityIndicator = UIActivityIndicatorView(frame: CGRect(x: screenBounds.size.width/2, y: screenBounds.size.height/2, width: 30, height: 30))
+        self.activityIndicator.style = .medium
+        self.activityIndicator.hidesWhenStopped = true
         self.activityIndicator.backgroundColor = UIColor.gray
         self.view.addSubview(self.activityIndicator)
         self.view.bringSubviewToFront(self.activityIndicator)
         
         // Configure navigation bar and layout
-        if #available(iOS 11.0, *) {
-            collectionView.contentInsetAdjustmentBehavior = .never
-        } else {
-            automaticallyAdjustsScrollViewInsets = false
-        }
+        collectionView.contentInsetAdjustmentBehavior = .never
         extendedLayoutIncludesOpaqueBars = true
         configureNavBar()
 
@@ -289,8 +285,11 @@ open class FolioReaderCenter: UIViewController {
         self.configureNavBarButtons()
         self.setCollectionViewProgressiveDirection()
 
+        let bookId = self.book.name?.deletingPathExtension
+        let position = bookId != nil ? self.folioReader.delegate?.folioReaderReadPositionProvider?(self.folioReader).folioReaderReadPosition(self.folioReader, bookId: bookId!) : nil
+
         if self.readerConfig.loadSavedPositionForCurrentBook,
-           let position = folioReader.savedPositionForCurrentBook,
+           let position = position,
            position.pageNumber > 0 {
             self.changePageWith(page: position.pageNumber)
         }
@@ -323,9 +322,7 @@ open class FolioReaderCenter: UIViewController {
         
         var bounds = view.frame
         bounds.size = size
-        if #available(iOS 11.0, *) {
-            bounds.size.height = bounds.size.height - view.safeAreaInsets.bottom
-        }
+        bounds.size.height = bounds.size.height - view.safeAreaInsets.bottom
         if readerConfig.debug.contains(.viewTransition) {
             folioLogger("size=\(size) newBounds=\(bounds) screenBounds=\(String(describing: screenBounds)) collectionViewFrame=\(collectionView.frame)")
         }
@@ -348,7 +345,7 @@ open class FolioReaderCenter: UIViewController {
             self.changePageWith(indexPath: currentIndexPath, animated: false) {
                 guard let currentPage = self.currentPage else { return }
                 
-                setPageProgressiveDirection(currentPage)
+                self.setPageProgressiveDirection(currentPage)
 
                 // After rotation fix internal page offset
                 delay(currentPage.delaySec()) {    //wait for webView finish resizing

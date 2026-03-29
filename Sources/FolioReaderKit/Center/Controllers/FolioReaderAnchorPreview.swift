@@ -159,59 +159,67 @@ class FolioReaderAnchorPreview: UIViewController {
         anchorLabel.text = "Before Locating"
         
         let entryPath = anchorURL.pathComponents.dropFirst(2).joined(separator: "/")
-        var entryData = Data()
         
         guard let fragment = anchorURL.fragment,
-              let archive = folioReader.readerContainer?.book.epubArchive,
-              let entry = archive[entryPath],
-              let _ = try? archive.extract(entry, consumer: { entryData.append($0) }),
-              let xmlString = String(data: entryData, encoding: .utf8),
-              let soupDoc = try? SwiftSoup.parse(xmlString),
-              let soupElement = try? soupDoc.getElementById(fragment),
-              var snippet = try? soupElement.text(trimAndNormaliseWhitespace: true)
+              let book = folioReader.readerContainer?.book,
+              let entry = book.archiveEntriesCache[entryPath]
         else { return }
-        
-        if snippet.isEmpty
-            || (snippetTestRegex?.matches(in: snippet, options: [], range: NSMakeRange(0, snippet.count)).isEmpty == false) {
-            var elements = [soupElement as Node]
-            while let sibling = elements.last?.nextSibling() {
-                guard sibling.hasAttr("id") == false else { break }
-                if let element = sibling as? Element,
-                   let elementsWithID = try? element.getElementsByAttribute("id"),
-                   elementsWithID.count > 0 {
-                    break
+
+        Task {
+            guard let archive = await book.getThreadEpubArchive() else { return }
+            let accumulator = DataAccumulator()
+            let _ = try? await archive.extract(entry, consumer: { accumulator.append($0) })
+            
+            guard let xmlString = String(data: accumulator.result, encoding: .utf8),
+                  let soupDoc = try? SwiftSoup.parse(xmlString),
+                  let soupElement = try? soupDoc.getElementById(fragment),
+                  var snippet = try? soupElement.text(trimAndNormaliseWhitespace: true)
+            else { return }
+            
+            if snippet.isEmpty
+                || (snippetTestRegex?.matches(in: snippet, options: [], range: NSMakeRange(0, snippet.count)).isEmpty == false) {
+                var elements = [soupElement as Node]
+                while let sibling = elements.last?.nextSibling() {
+                    guard sibling.hasAttr("id") == false else { break }
+                    if let element = sibling as? Element,
+                       let elementsWithID = try? element.getElementsByAttribute("id"),
+                       elementsWithID.count > 0 {
+                        break
+                    }
+                    elements.append(sibling)
                 }
-                elements.append(sibling)
+                
+                snippet = elements.compactMap({ node -> String? in
+                    if let element = node as? Element {
+                        return try? element.text(trimAndNormaliseWhitespace: true)
+                    }
+                    if let textNode = node as? TextNode {
+                        return textNode.text()
+                    }
+                    return nil
+                }).joined(separator: " ")
+            }
+
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineHeightMultiple = 1.2
+            
+            var attributes: [NSAttributedString.Key : Any] = [.paragraphStyle: paragraphStyle]
+            if let font = UIFont(name: folioReader.currentFont, size: CGFloat(folioReader.currentFontSizeOnly - 2)) {
+                attributes[.font] = font
+            }
+            if let color = folioReader.readerConfig?.themeModeTextColor[folioReader.themeMode] {
+                attributes[.foregroundColor] = color
             }
             
-            snippet = elements.compactMap({ node -> String? in
-                if let element = node as? Element {
-                    return try? element.text(trimAndNormaliseWhitespace: true)
-                }
-                if let textNode = node as? TextNode {
-                    return textNode.text()
-                }
-                return nil
-            }).joined(separator: " ")
+            let attribText = NSAttributedString(
+                string: snippet.trimmingCharacters(in: .whitespacesAndNewlines),
+                attributes: attributes
+            )
+            
+            await MainActor.run {
+                anchorLabel.attributedText = attribText
+            }
         }
-
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineHeightMultiple = 1.2
-        
-        var attributes: [NSAttributedString.Key : Any] = [.paragraphStyle: paragraphStyle]
-        if let font = UIFont(name: folioReader.currentFont, size: CGFloat(folioReader.currentFontSizeOnly - 2)) {
-            attributes[.font] = font
-        }
-        if let color = folioReader.readerConfig?.themeModeTextColor[folioReader.themeMode] {
-            attributes[.foregroundColor] = color
-        }
-        
-        let attribText = NSAttributedString(
-            string: snippet.trimmingCharacters(in: .whitespacesAndNewlines),
-            attributes: attributes
-        )
-        anchorLabel.attributedText = attribText
-        //anchorLabel.sizeToFit()
     }
     
     @objc func gotoButtonAction(_ sender: UIButton) {

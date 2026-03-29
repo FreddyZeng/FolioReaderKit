@@ -8,8 +8,8 @@
 
 import UIKit
 import FontBlaster
-import ZIPFoundation
-import GCDWebServer
+import ReadiumZIPFoundation
+import ReadiumGCDWebServer
 
 /// Reader container
 open class FolioReaderContainer: UIViewController {
@@ -28,9 +28,10 @@ open class FolioReaderContainer: UIViewController {
 
     fileprivate var errorOnLoad = false
     
-    let webServer = GCDWebServer()
     let dateFormatter = DateFormatter()
-    var epubArchive: Archive?
+    
+    var webServer: ReadiumGCDWebServer
+    internal let kGCDWebServerPreferredPort = 46436
 
     // MARK: - Init
 
@@ -42,11 +43,12 @@ open class FolioReaderContainer: UIViewController {
     ///   - path: The ePub path on system. Must not be nil nor empty string.
 	///   - unzipPath: Path to unzip the compressed epub.
     ///   - removeEpub: Should delete the original file after unzip? Default to `true` so the ePub will be unziped only once.
-    public init(withConfig config: FolioReaderConfig, folioReader: FolioReader, epubPath path: String) {
+    public init(withConfig config: FolioReaderConfig, folioReader: FolioReader, epubPath path: String, webServer: ReadiumGCDWebServer) {
         self.readerConfig = config
         self.folioReader = folioReader
         self.epubPath = path
         self.book = FRBook()
+        self.webServer = webServer
 
         super.init(nibName: nil, bundle: Bundle.frameworkBundle())
 
@@ -68,6 +70,7 @@ open class FolioReaderContainer: UIViewController {
         self.folioReader = FolioReader()
         self.epubPath = ""
         self.book = FRBook()
+        self.webServer = ReadiumGCDWebServer()
 
         super.init(coder: aDecoder)
 
@@ -162,26 +165,17 @@ open class FolioReaderContainer: UIViewController {
             super.viewWillAppear(animated)
         }
         
-        DispatchQueue.global(qos: .userInitiated).async {
-
-//                do {
-//                    guard let archive = Archive(url: URL(fileURLWithPath: self.epubPath), accessMode: .read, preferredEncoding: .utf8) else { throw FolioReaderError.errorInContainer }
-//                    folioLogger("BEFORE readEpub")
-//                    let parsedBook = try FREpubParserArchive(book: FRBook(), archive: archive).readEpubLight(epubPath: self.epubPath)
-//                    folioLogger("AFTER readEpub")
-//
-//                    self.book = parsedBook
-//                } catch {
-//                    self.errorOnLoad = true
-//                }
-            
+        Task {
             do {
-                guard let archive = Archive(url: URL(fileURLWithPath: self.epubPath), accessMode: .read, preferredEncoding: .utf8) else { throw FolioReaderError.errorInContainer }
-                
-//                    guard let archive = self.book.epubArchive else { throw FolioReaderError.errorInContainer }
+                let archive: Archive
+                do {
+                    archive = try await Archive(url: URL(fileURLWithPath: self.epubPath), accessMode: .read, pathEncoding: .utf8)
+                } catch {
+                    throw FolioReaderError.errorInContainer
+                }
                 
                 folioLogger("BEFORE readEpub")
-                let parsedBook = try FREpubParserArchive(book: self.book, archive: archive).readEpub(epubPath: self.epubPath)
+                let parsedBook = try await FREpubParserArchive(book: self.book, archive: archive).readEpub(epubPath: self.epubPath)
                 folioLogger("AFTER readEpub")
 
                 self.book = parsedBook
@@ -189,13 +183,16 @@ open class FolioReaderContainer: UIViewController {
                 self.folioReader.isReaderOpen = true
                 
                 // Reload data
-                DispatchQueue.main.async {
+                await MainActor.run {
                     if let position = self.readerConfig.savedPositionForCurrentBook {
                         self.folioReader.structuralStyle = position.structuralStyle
                         self.folioReader.structuralTrackingTocLevel = position.positionTrackingStyle
                         self.folioReader.readerCenter?.currentWebViewScrollPositions[position.pageNumber - 1] = position
-                        position.takePrecedence = true
-                        self.folioReader.savedPositionForCurrentBook = position
+                        
+                        if let bookId = self.book.name?.deletingPathExtension {
+                            position.takePrecedence = true
+                            self.folioReader.save(readPosition: position, for: bookId)
+                        }
                     }
 
                     let structuralTrackingTocLevel = self.folioReader.structuralTrackingTocLevel
@@ -211,20 +208,22 @@ open class FolioReaderContainer: UIViewController {
                     
                     self.folioReader.delegate?.folioReader?(self.folioReader, didFinishedLoading: self.book)
                     
-                    self.epubArchive = archive
                     self.initializeWebServer()
-                    self.readerConfig.serverPort = Int(self.webServer.port)
 
                     self.centerViewController.reloadData()
                     self.folioReader.isReaderReady = true
                 }
             } catch {
-                self.errorOnLoad = true
-                self.alert(message: error.localizedDescription)
+                await MainActor.run {
+                    self.errorOnLoad = true
+                    self.alert(message: error.localizedDescription)
+                }
             }
             
             if (self.errorOnLoad == true) {
-                self.dismiss()
+                await MainActor.run {
+                    self.dismiss()
+                }
             }
         }
     }
@@ -301,105 +300,140 @@ open class FolioReaderContainer: UIViewController {
         return self.folioReader.isNight(.lightContent, .default)
     }
 
-    // MARK: - Web Server
-
-    open func initializeWebServer() {
+    func initializeWebServer() -> Void {
         dateFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
         dateFormatter.locale = Locale(identifier: "en_US")
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-
-        webServer.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self) { [weak self] request in
-            guard let self = self, let path = request.path.removingPercentEncoding else { return GCDWebServerErrorResponse() }
-
+        
+        webServer.addDefaultHandler(forMethod: "GET", request: ReadiumGCDWebServerRequest.self, asyncProcessBlock: { [weak self] request, completion in
+            guard let self = self else {
+                completion(ReadiumGCDWebServerErrorResponse())
+                return
+            }
+            
+            guard let path = request.path.removingPercentEncoding else {
+                completion(ReadiumGCDWebServerErrorResponse())
+                return
+            }
+            print("\(#function) GCDREQUEST path=\(path)")
+            
             var pathSegs = path.split(separator: "/")
-            guard pathSegs.count > 1 else { return GCDWebServerErrorResponse() }
+            guard pathSegs.count > 1 else {
+                completion(ReadiumGCDWebServerErrorResponse())
+                return
+            }
             pathSegs.removeFirst()
             let resourcePath = pathSegs.joined(separator: "/")
-
-            guard let archiveURL = self.epubArchive?.url,
-                  let archive = try? Archive(url: archiveURL, accessMode: .read),
-                  let entry = archive[resourcePath] else { return GCDWebServerErrorResponse() }
-
-            var contentType = GCDWebServerGetMimeTypeForExtension((resourcePath as NSString).pathExtension, nil) ?? "application/octet-stream"
-            if contentType.contains("text/") {
-                contentType += ";charset=utf-8"
-            }
-
-            var dataQueue = [Data]()
-            var isError = false
-
-            let streamResponse = GCDWebServerStreamedResponse(
-                contentType: contentType,
-                asyncStreamBlock: { block in
-                    DispatchQueue.global(qos: .userInteractive).async {
-                        while( dataQueue.isEmpty && isError == false ) {
-                            Thread.sleep(forTimeInterval: 0.001)
-                        }
-
-                        DispatchQueue.main.async {
-                            if isError {
-                                block(nil, NSError(domain: "FolioReaderKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Uncompress Error"]))
-                            } else {
-                                block(dataQueue.removeFirst(), nil)
-                            }
-                        }
-                    }
-                }
-            )
-
-            if let modificationDate = entry.fileAttributes[.modificationDate] as? Date {
-                streamResponse.setValue(self.dateFormatter.string(from: modificationDate), forAdditionalHeader: "Last-Modified")
-                streamResponse.cacheControlMaxAge = 60
-            }
-
-            var totalCount = 0
-            let entrySize = entry.uncompressedSize
-            DispatchQueue.global(qos: .userInitiated).async {
+            
+            Task {
                 do {
-                    let _ = try archive.extract(entry) { data in
-                        while( dataQueue.count > 4) {
-                            Thread.sleep(forTimeInterval: 0.001)
-                        }
-                        let d = Data(data)
-                        DispatchQueue.main.async {
-                            dataQueue.append(d)
-                            totalCount += data.count
-                            if totalCount >= entrySize {
-                                dataQueue.append(Data())
+                    guard let archiveURL = self.book.epubURL else {
+                        completion(ReadiumGCDWebServerErrorResponse())
+                        return
+                    }
+                    
+                    // The Archive class maintains the state of its underlying file descriptor for performance reasons and is therefore not re-entrant. #29
+                    // However, we use the cached entry to avoid O(N) lookup.
+                    guard let entry = self.book.archiveEntriesCache[resourcePath] else {
+                        completion(ReadiumGCDWebServerErrorResponse())
+                        return
+                    }
+                    
+                    let archive = try await Archive(url: archiveURL, accessMode: .read)
+                    
+                    var contentType = ReadiumGCDWebServerGetMimeTypeForExtension((resourcePath as NSString).pathExtension, nil)
+                    if contentType.contains("text/") {
+                        contentType += ";charset=utf-8"
+                    }
+                    
+                    let stream = AsyncStream<Data> { continuation in
+                        Task {
+                            do {
+                                _ = try await archive.extract(entry) { data in
+                                    continuation.yield(data)
+                                }
+                                continuation.finish()
+                            } catch {
+                                print("\(#function) zipfile-deflate-error \(resourcePath) error=\(error.localizedDescription)")
+                                continuation.finish()
                             }
                         }
                     }
+                    
+                    let streamIterator = ReadiumStreamIterator(stream.makeAsyncIterator())
+                    
+                    let streamResponse = ReadiumGCDWebServerStreamedResponse(
+                        contentType: contentType,
+                        asyncStreamBlock: { streamCompletion in
+                            Task {
+                                let data = await streamIterator.next()
+                                streamCompletion(data ?? Data(), nil)
+                            }
+                        }
+                    )
+                    
+                    if let modificationDate = entry.fileAttributes[.modificationDate] as? Date {
+                        streamResponse.setValue(self.dateFormatter.string(from: modificationDate), forAdditionalHeader: "Last-Modified")
+                        streamResponse.cacheControlMaxAge = 60
+                    }
+                    
+                    completion(streamResponse)
                 } catch {
-                    isError = true
+                    print("\(#function) archive-error \(resourcePath) error=\(error.localizedDescription)")
+                    completion(ReadiumGCDWebServerErrorResponse())
                 }
             }
-
-            return streamResponse
-        }
-
-        webServer.addHandler(forMethod: "GET", pathRegex: "^/_fonts/.+?(otf|ttf)$", request: GCDWebServerRequest.self) { request in
+        })
+        
+        webServer.addHandler(forMethod: "GET", pathRegex: "^/_fonts/.+?(otf|ttf)$", request: ReadiumGCDWebServerRequest.self, asyncProcessBlock: { request, completion in
             let fileName = (request.path as NSString).lastPathComponent
+            print("\(#function) GCDREQUEST FONT fileName=\(fileName) path=\(request.path)")
 
             guard let documentDirectory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            else { return nil }
-
+            else {
+                completion(ReadiumGCDWebServerErrorResponse())
+                return
+            }
+            
             let fontFileURL = documentDirectory.appendingPathComponent("Fonts",  isDirectory: true).appendingPathComponent(fileName, isDirectory: false)
-            guard FileManager.default.fileExists(atPath: fontFileURL.path) else { return GCDWebServerErrorResponse() }
-
-            return GCDWebServerFileResponse(file: fontFileURL.path)
-        }
-
+            guard FileManager.default.fileExists(atPath: fontFileURL.path) else {
+                completion(ReadiumGCDWebServerErrorResponse())
+                return
+            }
+            
+            guard let fileResponse = ReadiumGCDWebServerFileResponse(file: fontFileURL.path) else {
+                completion(ReadiumGCDWebServerErrorResponse())
+                return
+            }
+            
+            completion(fileResponse)
+        })
+        
         try? webServer.start(options: [
-            GCDWebServerOption_BindToLocalhost: true
+            ReadiumGCDWebServerOption_Port: kGCDWebServerPreferredPort,
+            ReadiumGCDWebServerOption_BindToLocalhost: true
         ])
+        
+        // fallback
+        if webServer.isRunning == false {
+            try? webServer.start(options: [
+                ReadiumGCDWebServerOption_BindToLocalhost: true,
+            ])
+            
+            if webServer.isRunning == false {
+                try? webServer.start(options: [
+                    ReadiumGCDWebServerOption_BindToLocalhost: true
+                ])
+            }
+        }
     }
-
+    
     open func stopWebServer() {
         if webServer.isRunning {
             webServer.stop()
         }
     }
-    }
+}
 
 extension FolioReaderContainer {
     func alert(message: String) {
@@ -420,5 +454,18 @@ extension FolioReaderContainer {
         alertController.addAction(ignoreAction)
         
         self.present(alertController, animated: true, completion: nil)
+    }
+}
+
+private actor ReadiumStreamIterator {
+    private var iterator: AsyncStream<Data>.AsyncIterator
+    init(_ iterator: AsyncStream<Data>.AsyncIterator) {
+        self.iterator = iterator
+    }
+    func next() async -> Data? {
+        var it = iterator
+        let data = await it.next()
+        iterator = it
+        return data
     }
 }

@@ -21,11 +21,11 @@
       },
       {
         "package": "GCDWebServer",
-        "repositoryURL": "https://github.com/SlaunchaMan/GCDWebServer.git",
+        "repositoryURL": "https://github.com/readium/GCDWebServer.git",
         "state": {
-          "branch": "swift-package-manager",
-          "revision": "935e2736044e71e5341663c3cc9a335ba6867a2b",
-          "version": null
+          "branch": null,
+          "revision": "584db89a4c3c3be27206cce6afde037b2b6e38d8",
+          "version": "4.0.1"
         }
       },
       {
@@ -47,12 +47,12 @@
         }
       },
       {
-        "package": "ZIPFoundation",
-        "repositoryURL": "https://github.com/weichsel/ZIPFoundation.git",
+        "package": "ReadiumZIPFoundation",
+        "repositoryURL": "https://github.com/readium/ZIPFoundation.git",
         "state": {
           "branch": null,
-          "revision": "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
-          "version": "0.9.20"
+          "revision": "adb49c8bfe060cc187370b12fa081012a6440b86",
+          "version": "3.0.1"
         }
       }
     ]

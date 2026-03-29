@@ -8,6 +8,7 @@
 
 import UIKit
 import AEXML
+import ReadiumZIPFoundation
 
 /// Table Of Contents delegate
 @objc protocol FolioReaderBookListDelegate: AnyObject {
@@ -119,23 +120,29 @@ class FolioReaderBookList: UICollectionViewController {
             //prepare cover image
             let opfURL = URL(fileURLWithPath: book.opfResource.href, isDirectory: false)
             
-            guard let bookId = self.folioReader.readerConfig?.identifier,
-                  let imgSrc = book.coverImage?.href,
-                  let archive = book.epubArchive,
-                  let imgEntry = archive[URL(fileURLWithPath: imgSrc, relativeTo: opfURL).path.trimmingCharacters(in: ["/"])]
-            else { return }
-            
-            let tempFile = URL(
-                fileURLWithPath: imgEntry.path,
-                relativeTo: FileManager.default.temporaryDirectory.appendingPathComponent(bookId, isDirectory: true))
-            let tempDir = tempFile.deletingLastPathComponent()
-            try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true, attributes: nil)
-            
-            if FileManager.default.fileExists(atPath: tempFile.path) == false {
-                let _ = try? archive.extract(imgEntry, to: tempFile)
+            Task {
+                guard let bookId = self.folioReader.readerConfig?.identifier,
+                      let imgSrc = book.coverImage?.href,
+                      let archive = await book.getThreadEpubArchive()
+                else { return }
+                
+                let entryPath = URL(fileURLWithPath: imgSrc, relativeTo: opfURL).path.trimmingCharacters(in: ["/"])
+                guard let imgEntry = book.archiveEntriesCache[entryPath] else { return }
+                
+                let tempFile = URL(
+                    fileURLWithPath: imgEntry.path,
+                    relativeTo: FileManager.default.temporaryDirectory.appendingPathComponent(bookId, isDirectory: true))
+                let tempDir = tempFile.deletingLastPathComponent()
+                try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true, attributes: nil)
+                
+                if FileManager.default.fileExists(atPath: tempFile.path) == false {
+                    let _ = try? await archive.extract(imgEntry, to: tempFile)
+                }
+                
+                await MainActor.run {
+                    self.coverImage = UIImage(contentsOfFile: tempFile.path)
+                }
             }
-            
-            self.coverImage = UIImage(contentsOfFile: tempFile.path)
         }
     }
 
@@ -280,66 +287,68 @@ class FolioReaderBookList: UICollectionViewController {
         let titleLabelText = cell.titleLabel.text
         
         guard self.folioReader.currentNavigationMenuBookListSyle == .Grid else { return cell }
-        
-        DispatchQueue.global(qos: .userInitiated).async {
+
+        Task {
             guard let bookId = self.folioReader.readerConfig?.identifier,
-                  let archive = self.book.threadEpubArchive,
+                  let archive = await self.book.getThreadEpubArchive(),
                   let resource = tocReference.resource,
                   let tocPage = resource.spineIndices.first
             else { return }
-            
+
             let opfURL = URL(fileURLWithPath: self.book.opfResource.href, isDirectory: false)
             var imgNodes = [AEXMLElement]()
             var coverURL = opfURL
-            
+
             var image: UIImage?
             for page in (max(0,tocPage-1) ... tocPage).reversed() {
                 let resource = self.book.spine.spineReferences[page].resource
                 let entryURL = URL(fileURLWithPath: resource.href, isDirectory: false, relativeTo: opfURL)
-                guard let entry = archive[entryURL.path.trimmingCharacters(in: ["/"])] else { continue }
-                
-                var entryData = Data()
-                let _ = try? archive.extract(entry, consumer: { data in
-                    entryData.append(data)
+                let entryPath = entryURL.path.trimmingCharacters(in: ["/"])
+                guard let entry = self.book.archiveEntriesCache[entryPath] else { continue }
+
+                let accumulator = DataAccumulator()
+                let _ = try? await archive.extract(entry, consumer: { data in
+                    accumulator.append(data)
                 })
-                guard let xmlDoc = try? AEXMLDocument(xml: entryData) else { continue }
-                
+                guard let xmlDoc = try? AEXMLDocument(xml: accumulator.result) else { continue }
+
                 imgNodes = xmlDoc.allDescendants { $0.name == "img" || $0.name == "IMG" || $0.name == "image" || $0.name == "IMAGE" }
-                
+
                 guard imgNodes.isEmpty == false else { continue }
-                
+
                 coverURL = entryURL
-                
-                guard let imgSrc = imgNodes.first?.attributes["src"] ?? imgNodes.first?.attributes["xlink:href"],
-                      let imgEntry = archive[URL(fileURLWithPath: imgSrc, relativeTo: coverURL).path.trimmingCharacters(in: ["/"])]
-                else { continue }
-                
+
+                guard let imgSrc = imgNodes.first?.attributes["src"] ?? imgNodes.first?.attributes["xlink:href"] else { continue }
+                let imgEntryPath = URL(fileURLWithPath: imgSrc, relativeTo: coverURL).path.trimmingCharacters(in: ["/"])
+                guard let imgEntry = self.book.archiveEntriesCache[imgEntryPath] else { continue }
+
                 let tempFile = URL(
                     fileURLWithPath: imgEntry.path,
                     relativeTo: FileManager.default.temporaryDirectory.appendingPathComponent(bookId, isDirectory: true))
                 let tempDir = tempFile.deletingLastPathComponent()
+
                 try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true, attributes: nil)
-                
+
                 if FileManager.default.fileExists(atPath: tempFile.path) == false {
-                    let _ = try? archive.extract(imgEntry, to: tempFile)
+                    let _ = try? await archive.extract(imgEntry, to: tempFile)
                 }
-                
+
                 guard let tempImage = UIImage(contentsOfFile: tempFile.path),
                       tempImage.size.width >= 250,
                       tempImage.size.height >= 300 else { continue }
-                
+
                 image = tempImage
                 break
             }
-            
-            DispatchQueue.main.async {
+
+            await MainActor.run {
                 guard titleLabelText == cell.titleLabel.text,
                       cell.coverImage.image == nil
                 else { return }
                 cell.coverImage.image = image ?? self.coverImage
             }
         }
-        
+
         return cell
     }
 
