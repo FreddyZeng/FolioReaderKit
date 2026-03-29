@@ -221,10 +221,10 @@ extension FolioReader {
     /// Check if current theme is Night mode
     public var nightMode: Bool {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(nightMode: false) ?? false
+            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "nightMode", default: false) ?? false
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setNightMode: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "nightMode")
 
             if let readerCenter = self.readerCenter {
                 UIView.animate(withDuration: 0.6, animations: {
@@ -242,10 +242,10 @@ extension FolioReader {
     
     public var themeMode: Int {
         get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(themeMode: 1) ?? 1
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "themeMode", default: 1) ?? 1
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setThemeMode: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "themeMode")
             
             guard let readerCenter = self.readerCenter,
                   let backgroundColor = self.readerConfig?.themeModeBackground[self.themeMode] else { return }
@@ -299,10 +299,10 @@ extension FolioReader {
 
     public var currentFont: String {
         get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentFont: "Georgia") ?? "Georgia"
+            return delegate?.folioReaderPreferenceProvider?(self).preference(stringFor: "currentFont", default: "Georgia") ?? "Georgia"
         }
         set (fontFamilyName) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentFont: fontFamilyName)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setString: fontFamilyName, for: "currentFont")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
         }
     }
@@ -313,10 +313,10 @@ extension FolioReader {
     /// Check current font size. Default .m
     public var currentFontSize: String {
         get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentFontSize: FolioReader.DefaultFontSize) ?? FolioReader.DefaultFontSize
+            return delegate?.folioReaderPreferenceProvider?(self).preference(stringFor: "currentFontSize", default: FolioReader.DefaultFontSize) ?? FolioReader.DefaultFontSize
         }
         set (fontSize) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentFontSize: fontSize)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setString: fontSize, for: "currentFontSize")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
         }
     }
@@ -328,10 +328,10 @@ extension FolioReader {
     public static let DefaultFontWeight = "500"
     public var currentFontWeight: String {
         get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentFontWeight: "500") ?? "500"
+            return delegate?.folioReaderPreferenceProvider?(self).preference(stringFor: "currentFontWeight", default: "500") ?? "500"
         }
         set (fontWeight) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentFontWeight: fontWeight)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setString: fontWeight, for: "currentFontWeight")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
         }
     }
@@ -339,10 +339,10 @@ extension FolioReader {
     /// Check current audio rate, the speed of speech voice. Default 0
     public var currentAudioRate: Int {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(currentAudioRate: 1) ?? 1
+            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentAudioRate", default: 1) ?? 1
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentAudioRate: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentAudioRate")
         }
     }
 
@@ -350,25 +350,25 @@ extension FolioReader {
     public var currentHighlightStyle: Int {
         get {
             return delegate?.folioReaderPreferenceProvider?(self)
-                .preference(currentHighlightStyle: FolioReaderHighlightStyle.yellow.rawValue)
+                .preference(intFor: "currentHighlightStyle", default: FolioReaderHighlightStyle.yellow.rawValue)
                 ?? FolioReaderHighlightStyle.yellow.rawValue
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentHighlightStyle: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentHighlightStyle")
         }
     }
 
     /// Check the current Media Overlay or TTS style
     public var currentMediaOverlayStyle: MediaOverlayStyle {
         get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(currentMediaOverlayStyle: MediaOverlayStyle.default.rawValue),
+            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMediaOverlayStyle", default: MediaOverlayStyle.default.rawValue),
                 let style = MediaOverlayStyle(rawValue: rawValue) else {
                 return MediaOverlayStyle.default
             }
             return style
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentMediaOverlayStyle: value.rawValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "currentMediaOverlayStyle")
         }
     }
 
@@ -379,11 +379,11 @@ extension FolioReader {
     public var currentScrollDirection: Int {
         get {
             return delegate?.folioReaderPreferenceProvider?(self)
-                .preference(currentScrollDirection: defaultScrollDirection.rawValue)
+                .preference(intFor: "currentScrollDirection", default: defaultScrollDirection.rawValue)
                 ?? defaultScrollDirection.rawValue
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentScrollDirection: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentScrollDirection")
 
             let direction = FolioReaderScrollDirection(rawValue: currentScrollDirection) ?? defaultScrollDirection
             readerCenter?.currentPage?.setScrollDirection(direction)
@@ -392,19 +392,19 @@ extension FolioReader {
 
     public var currentNavigationMenuIndex: Int {
         get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentNavigationMenuIndex: 0) ?? 0
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentNavigationMenuIndex", default: 0) ?? 0
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentNavigationMenuIndex: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentNavigationMenuIndex")
         }
     }
     
     public var currentAnnotationMenuIndex: Int {
         get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentAnnotationMenuIndex: 0) ?? 0
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentAnnotationMenuIndex", default: 0) ?? 0
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentAnnotationMenuIndex: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentAnnotationMenuIndex")
         }
     }
     
@@ -418,22 +418,22 @@ extension FolioReader {
                 return .List
             }
             let defaults: NavigationMenuBookListStyle = self.structuralTrackingTocLevel == .level1 ? .Grid : .List
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(currentNavigationMenuBookListSyle: defaults.rawValue),
+            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentNavigationMenuBookListSyle", default: defaults.rawValue),
                   let style = NavigationMenuBookListStyle(rawValue: rawValue)
             else { return defaults }
             return style
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentNavigationMenuBookListStyle: value.rawValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "currentNavigationMenuBookListSyle")
         }
     }
     
     public var currentVMarginLinked: Bool {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(currentVMarginLinked: true) ?? true
+            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "currentVMarginLinked", default: true) ?? true
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentVMarginLinked: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "currentVMarginLinked")
         }
     }
     
@@ -443,11 +443,11 @@ extension FolioReader {
     public var currentMarginTop: Int {
         get {
             let defaults = self.defaultMarginTop
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentMarginTop: defaults) ?? defaults
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginTop", default: defaults) ?? defaults
         }
         set (value) {
             let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentMarginTop: newValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginTop")
             guard currentVMarginLinked == false else { return }
             readerCenter?.currentPage?.byWritingMode(
                 horizontal: { self.readerCenter?.currentPage?.updateViewerLayout(delay: 0.2) },
@@ -462,11 +462,11 @@ extension FolioReader {
     public var currentMarginBottom: Int {
         get {
             let defaults = defaultMarginBottom
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentMarginBottom: defaults) ?? defaults
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginBottom", default: defaults) ?? defaults
         }
         set (value) {
             let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentMarginBottom: newValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginBottom")
             guard currentVMarginLinked == false else { return }
             readerCenter?.currentPage?.byWritingMode(
                 horizontal: { self.readerCenter?.currentPage?.updateViewerLayout(delay: 0.2) },
@@ -477,10 +477,10 @@ extension FolioReader {
 
     public var currentHMarginLinked: Bool {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(currentHMarginLinked: true) ?? true
+            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "currentHMarginLinked", default: true) ?? true
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentHMarginLinked: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "currentHMarginLinked")
         }
     }
     
@@ -490,11 +490,11 @@ extension FolioReader {
     public var currentMarginLeft: Int {
         get {
             let defaults = self.defaultMarginLeft
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentMarginLeft: defaults) ?? defaults
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginLeft", default: defaults) ?? defaults
         }
         set (value) {
             let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentMarginLeft: newValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginLeft")
             guard currentHMarginLinked == false else { return }
             readerCenter?.currentPage?.byWritingMode(
                 horizontal: { self.readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4) },
@@ -509,11 +509,11 @@ extension FolioReader {
     public var currentMarginRight: Int {
         get {
             let defaults = self.defaultMarginRight
-            return delegate?.folioReaderPreferenceProvider?(self).preference(currentMarginRight: defaults) ?? defaults
+            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginRight", default: defaults) ?? defaults
         }
         set (value) {
             let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentMarginRight: newValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginRight")
             guard currentHMarginLinked == false else { return }
             readerCenter?.currentPage?.byWritingMode(
                 horizontal: { self.readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4) },
@@ -525,10 +525,10 @@ extension FolioReader {
     public static let DefaultLetterSpacing = 2
     public var currentLetterSpacing: Int {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(currentLetterSpacing: 2) ?? 2
+            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentLetterSpacing", default: 2) ?? 2
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentLetterSpacing: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentLetterSpacing")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
         }
     }
@@ -536,10 +536,10 @@ extension FolioReader {
     public static let DefaultLineHeight = 3
     public var currentLineHeight: Int {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(currentLineHeight: 3) ?? 3
+            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentLineHeight", default: 3) ?? 3
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentLineHeight: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentLineHeight")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
         }
     }
@@ -548,42 +548,42 @@ extension FolioReader {
     public static let DefaultTextIndent = 2
     public var currentTextIndent: Int {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(currentTextIndent: 2) ?? 2
+            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentTextIndent", default: 2) ?? 2
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setCurrentTextIndent: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentTextIndent")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
         }
     }
     
     public var doWrapPara: Bool {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(doWrapPara: false) ?? false
+            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "doWrapPara", default: false) ?? false
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setDoWrapPara: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "doWrapPara")
         }
     }
     
     public var doClearClass: Bool {
         get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(doClearClass: true) ?? true
+            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "doClearClass", default: true) ?? true
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setDoClearClass: value)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "doClearClass")
         }
     }
     
     public var styleOverride: StyleOverrideTypes {
         get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(styleOverride: StyleOverrideTypes.PNode.rawValue),
+            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "styleOverride", default: StyleOverrideTypes.PNode.rawValue),
                   let value = StyleOverrideTypes(rawValue: rawValue) else {
                 return StyleOverrideTypes.PNode
             }
             return value
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setStyleOverride: value.rawValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "styleOverride")
             readerCenter?.currentPage?.updateRuntimStyle(delay: 0.2)
         }
     }
@@ -616,27 +616,27 @@ extension FolioReader {
     
     public var structuralStyle: FolioReaderStructuralStyle {
         get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(structuralStyle: FolioReaderStructuralStyle.atom.rawValue),
+            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "structuralStyle", default: FolioReaderStructuralStyle.atom.rawValue),
                   let value = FolioReaderStructuralStyle(rawValue: rawValue) else {
                       return FolioReaderStructuralStyle.atom
                   }
             return value
         }
         set {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setStructuralStyle: newValue.rawValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue.rawValue, for: "structuralStyle")
         }
     }
     
     public var structuralTrackingTocLevel: FolioReaderPositionTrackingStyle {
         get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(structuralTocLevel: FolioReaderPositionTrackingStyle.linear.rawValue),
+            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "structuralTrackingTocLevel", default: FolioReaderPositionTrackingStyle.linear.rawValue),
                   let value = FolioReaderPositionTrackingStyle(rawValue: rawValue) else {
                       return FolioReaderPositionTrackingStyle.linear
                   }
             return value
         }
         set {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setStructuralTocLevel: newValue.rawValue)
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue.rawValue, for: "structuralTrackingTocLevel")
         }
     }
 }
