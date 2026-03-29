@@ -74,29 +74,23 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     var frame: CGRect {
         didSet {
-            slider.transform = .identity
+            self.slider.frame = frame
+            self.slider.maximumValue = Float(frame.height)
             if frame.height > frame.width {
-                // Vertical slider: width must be the long axis before rotation
-                slider.frame = CGRect(x: 0, y: 0, width: frame.height, height: frame.width)
-                slider.transform = CGAffineTransform(rotationAngle: .pi / 2)
-                slider.maximumValue = Float(frame.height)
+                slider.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi / 2))
             } else {
-                // Horizontal slider: width is the long axis
-                slider.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
-                slider.transform = CGAffineTransform(rotationAngle: .pi)
-                slider.maximumValue = Float(frame.width)
+                slider.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi))
             }
-            slider.center = CGPoint(x: frame.midX, y: frame.midY)
         }
     }
 
     init(frame:CGRect, withReaderContainer readerContainer: FolioReaderContainer) {
+        self.frame = frame
         self.readerContainer = readerContainer
-        self.frame = .zero
 
         super.init()
 
-        self.frame = frame
+        slider.layer.anchorPoint = CGPoint(x: 0, y: 0)
         slider.alpha = 0
         self.reloadColors()
 
@@ -224,7 +218,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
             setSliderVal()
         }
 
-        if (visible || slider.alpha > 0) {
+        if (slider.alpha > 0) {
             self.show()
         } else if let currentPage = delegate?.currentPage,
                   scrollStart != nil {
@@ -283,13 +277,15 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     fileprivate func height() -> CGFloat {
         guard let currentPage = delegate?.currentPage,
+            let pageHeight = folioReader.readerCenter?.pageHeight,
+            let pageWidth = folioReader.readerCenter?.pageWidth,
             let webView = currentPage.webView else {
                 return 0
         }
 
         return currentPage.byWritingMode(
-            max(0, webView.scrollView.contentSize.height - webView.frame.height),
-            max(0, webView.scrollView.contentSize.width - webView.frame.width)
+            webView.scrollView.contentSize.height - pageHeight,
+            webView.scrollView.contentSize.width - pageWidth
         )
     }
     
