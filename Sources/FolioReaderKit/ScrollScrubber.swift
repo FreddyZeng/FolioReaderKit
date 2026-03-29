@@ -214,9 +214,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
             scrollDeltaTimer = nil
         }
 
-        if scrollStart == nil {
-            scrollStart = scrollView.contentOffset.forDirection(withConfiguration: readerConfig)
-        }
+        scrollStart = scrollView.contentOffset.forDirection(withConfiguration: readerConfig)
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -226,7 +224,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
             setSliderVal()
         }
 
-        if (slider.alpha > 0) {
+        if (visible || slider.alpha > 0) {
             self.show()
         } else if let currentPage = delegate?.currentPage,
                   scrollStart != nil {
