@@ -6,19 +6,20 @@
 //
 
 import Foundation
+import UIKit
 
 class FolioReaderPageMenu: FolioReaderMenu, SMSegmentViewDelegate {
-    let dayNightSegment = SMSegmentView()
+    let dayNightSegment = FolioSegmentedControl()
     let dayNightSegmentHeight = CGFloat(55)
     
-    let layoutDirectionHorizontalSegment = SMSegmentView()
-    let layoutDirectionVerticalSegment = SMSegmentView()
+    let layoutDirectionHorizontalSegment = FolioSegmentedControl()
+    let layoutDirectionVerticalSegment = FolioSegmentedControl()
     let layoutDirectionSegmentHeight = CGFloat(55)
     
-    let marginMenuVSegment = SMSegmentView()
+    let marginMenuVSegment = FolioSegmentedControl()
     let marginMenuVSegmentHeight = CGFloat(55)
     
-    let marginMenuHSegment = SMSegmentView()
+    let marginMenuHSegment = FolioSegmentedControl()
     let marginMenuHSegmentHeight = CGFloat(55)
     
     let vLinkedButton = UIButton()

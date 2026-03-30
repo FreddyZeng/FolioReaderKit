@@ -1,0 +1,313 @@
+//
+//  FolioReaderPage+WKNavigationDelegate.swift
+//  FolioReaderKit
+//
+
+import UIKit
+import WebKit
+import SafariServices
+
+extension FolioReaderPage {
+    // MARK: - WKNavigation Delegate
+
+    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        guard webView is FolioReaderWebView else {
+            return
+        }
+
+        delegate?.pageWillLoad?(self)
+    }
+    
+    public func webView(_ webView: WKWebView, didFail: WKNavigation!, withError: Error) {
+        self.readerContainer?.alert(message: "LOAD FAIL WITH ERROR \(withError.localizedDescription)")
+    }
+
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        guard let webView = webView as? FolioReaderWebView,
+              let pageNumber = self.pageNumber else {
+            return
+        }
+        
+        print("\(#function) bridgeFinished pageNumber=\(String(describing: pageNumber))")
+        var preprocessor = ""
+        if folioReader.doClearClass {
+            preprocessor.append("removeBodyClass();tweakStyleOnly();")
+        }
+        if folioReader.doWrapPara {
+            preprocessor.append("removeOuterTable();reParagraph();removePSpace();")
+        }
+        
+        preprocessor.append("document.body.style.minHeight = null;")
+        
+        self.layoutAdapting = "Preparing Document Structure..."
+        self.webView?.js(preprocessor) {_ in
+            guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch \(pageNumber) vs \(self.pageNumber!)"); return }
+
+            folioLogger("bridgeFinished pageNumber=\(String(describing: self.pageNumber)) size=\(String(describing: self.book.spine.spineReferences[self.pageNumber-1].resource.size))")
+            
+            self.updateOverflowStyle(delay: 0.2) {
+                guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch updateOverflowStyle \(pageNumber) vs \(self.pageNumber!)"); return }
+                folioLogger("bridgeFinished updateOverflowStyle pageNumber=\(pageNumber)")
+
+                if self.writingMode == "vertical-rl" {
+                    self.setNeedsLayout()       //resize webViewFrame
+                }
+                
+                self.updateRuntimStyle(delay: 0.2) {
+                    guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch updateRuntimStyle \(pageNumber) vs \(self.pageNumber!)"); return }
+
+                    folioLogger("bridgeFinished updateRuntimStyle pageNumber=\(pageNumber)")
+                    
+                    self.injectHighlights() {
+                        guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch injectHighlights \(pageNumber) vs \(self.pageNumber!)"); return }
+                        folioLogger("bridgeFinished injectHighlights pageNumber=\(pageNumber)")
+
+                        self.updatePageInfo() {
+                            guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch updatePageInfo \(pageNumber) vs \(self.pageNumber!)"); return }
+                            folioLogger("bridgeFinished updatePageInfo pageNumber=\(pageNumber)")
+
+                            self.updateStyleBackgroundPadding(delay: 0.2, tryShrinking: false) {
+                                folioLogger("bridgeFinished updateStyleBackgroundPadding pageNumber=\(pageNumber)")
+                                
+                                guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch beforeShow \(pageNumber) vs \(self.pageNumber!)"); return }
+                                
+                                self.layoutAdapting = nil
+                                webView.isHidden = false
+                                
+                                self.delegate?.pageDidLoad?(self)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+        // Add the custom class based onClick listener
+        self.setupClassBasedOnClickListeners()
+
+        refreshPageMode()
+
+        if self.readerConfig.enableTTS && !self.book.hasAudio {
+            webView.js("wrappingSentencesWithinPTags()")
+
+            if let audioPlayer = self.folioReader.readerAudioPlayer, (audioPlayer.isPlaying() == true) {
+                audioPlayer.readCurrentSentence()
+            }
+        }
+
+        UIView.animate(withDuration: 0.2, animations: {webView.alpha = 1}, completion: { finished in
+            webView.isColors = false
+            self.webView?.createMenu(onHighlight: false)
+        })
+        
+        let overlayColor = readerConfig.mediaOverlayColor!
+        let colors = "\"\(overlayColor.hexString(false))\", \"\(overlayColor.highlightColor().hexString(false))\""
+        webView.js("setMediaOverlayStyleColors(\(colors))")
+    }
+
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        let handledAction = handlePolicy(for: navigationAction)
+        let policy: WKNavigationActionPolicy = handledAction ? .allow : .cancel
+        decisionHandler(policy)
+    }
+    
+    private func handlePolicy(for navigationAction: WKNavigationAction) -> Bool {
+        let request = navigationAction.request
+        
+        guard
+            let webView = webView,
+            let scheme = request.url?.scheme else {
+                return true
+        }
+
+        guard let url = request.url else { return false }
+
+        if scheme == "highlight" || scheme == "highlight-with-note" {
+            shouldShowBar = false
+
+            guard let decoded = url.absoluteString.removingPercentEncoding else { return false }
+            let index = decoded.index(decoded.startIndex, offsetBy: 12)
+            let rect = NSCoder.cgRect(for: String(decoded[index...]))
+
+            webView.createMenu(onHighlight: true)
+            webView.setMenuVisible(true, andRect: rect)
+            menuIsVisible = true
+
+            return false
+        } else if scheme == "play-audio" {
+            guard let decoded = url.absoluteString.removingPercentEncoding else { return false }
+            let index = decoded.index(decoded.startIndex, offsetBy: 13)
+            let playID = String(decoded[index...])
+            let chapter = self.getChapter()
+            let href = chapter?.href ?? ""
+            self.folioReader.readerAudioPlayer?.playAudio(href, fragmentID: playID)
+
+            return false
+        } else if let referer = request.value(forHTTPHeaderField: "Referer"),
+                  let refererURL = URL(string: referer),
+                  refererURL.host == "localhost",
+                  refererURL.port == Int(readerContainer?.webServer.port ?? 0),
+                  url.scheme == "http",
+                  url.host == "localhost",
+                  url.port == Int(readerContainer?.webServer.port ?? 0),
+                  let anchorFromURL = url.fragment {
+            self.webView?.js("getClickAnchorOffset('\(anchorFromURL)')") { offset in
+                let snippetVC = FolioReaderAnchorPreview(
+                    self.folioReader,
+                    url,
+                    CGFloat(truncating: NumberFormatter().number(from: offset ?? "0") ?? 0),
+                    self.anchorBoundsFrame()
+                )
+
+                snippetVC.anchorLabel.text = url.absoluteString
+
+                snippetVC.modalPresentationStyle = .overFullScreen
+                snippetVC.modalTransitionStyle = .crossDissolve
+                
+                self.folioReader.readerCenter?.present(snippetVC, animated: true, completion: nil)
+            }
+            return false
+        } else if scheme == "file" || (url.scheme == "http" && url.host == "localhost" && (url.port ?? 0) == Int(readerContainer?.webServer.port ?? 0)) {
+            
+            if navigationAction.navigationType == .linkActivated {
+                self.pushNavigateWebViewScrollPositions()
+            }
+            
+            // Handle internal url
+            if !url.pathExtension.isEmpty {
+                let pathComponent = (self.book.opfResource.href as NSString?)?.deletingLastPathComponent
+                guard let base = ((pathComponent == nil || pathComponent?.isEmpty == true) ? self.book.name : pathComponent)?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
+                    return true
+                }
+
+                let path = url.path
+                let splitedPath = path.components(separatedBy: base)
+
+                // Return to avoid crash
+                if (splitedPath.count <= 1 || splitedPath[1].isEmpty) {
+                    return true
+                }
+
+                let href = splitedPath[1].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                let hrefPage = (self.book.resources.findByHref(href)?.spineIndices.first ?? 0) + 1
+
+                if (hrefPage == pageNumber) {
+                    // Handle internal #anchor
+                    guard let anchorFromURL = url.fragment else { return true }
+                    self.webView?.js("getClickAnchorOffset('\(anchorFromURL)')") { offset in
+                        print("getClickAnchorOffset offset=\(offset ?? "0")")
+                        self.handleAnchor(anchorFromURL, offsetInWindow: CGFloat(truncating: NumberFormatter().number(from: offset ?? "0") ?? 0), avoidBeginningAnchors: false, animated: false)
+                        
+                    }
+                } else {
+                    // self.folioReader.readerCenter?.tempFragment = anchorFromURL
+                    self.folioReader.readerCenter?.currentWebViewScrollPositions.removeValue(forKey: hrefPage - 1)
+                    if let anchorFromURL = url.fragment {
+                        self.webView?.js("getClickAnchorOffset('\(anchorFromURL)')") { offset in
+                            print("getClickAnchorOffset offset=\(offset ?? "0")")
+                            self.folioReader.readerCenter?.changePageWith(href: href, animated: true) {
+                                delay(0.2) {
+                                    guard self.folioReader.readerCenter?.currentPageNumber == hrefPage else { return }
+                                    self.folioReader.readerCenter?.currentPage?.waitForLayoutFinish {
+                                        self.folioReader.readerCenter?.currentPage?.handleAnchor(anchorFromURL, offsetInWindow: CGFloat(truncating: NumberFormatter().number(from: offset ?? "0") ?? 0), avoidBeginningAnchors: false, animated: true)
+                                    }
+                                }
+                            }
+                        }
+                    } else if navigationAction.navigationType != .other {
+                        self.folioReader.readerCenter?.changePageWith(href: href, animated: true) {
+                            delay(0.2) {
+                                guard self.folioReader.readerCenter?.currentPageNumber == hrefPage else { return }
+                                guard let currentPage = self.folioReader.readerCenter?.currentPage else { return }
+                                currentPage.waitForLayoutFinish {
+                                    if self.folioReader.needsRTLChange {
+                                        currentPage.scrollPageToBottom()
+                                    } else {
+                                        currentPage.scrollPageToOffset(.zero, animated: false, retry: 0)
+                                    }
+                                }
+                            }
+                        }
+                    } else {    //triggered by datasource loading url
+                        return true
+                    }
+                }
+                return false
+            }
+
+            // Handle internal #anchor
+            if let anchorFromURL = url.fragment {
+                self.webView?.js("getClickAnchorOffset('\(anchorFromURL)')") { offset in
+                    print("getClickAnchorOffset offset=\(offset ?? "0")")
+                    self.handleAnchor(anchorFromURL, offsetInWindow: CGFloat(truncating: NumberFormatter().number(from: offset ?? "0") ?? 0), avoidBeginningAnchors: false, animated: false)
+                }
+                return false
+            } else {
+                return true
+            }
+        } else if scheme == "mailto" {
+            print("Email")
+            return true
+        } else if url.absoluteString != "about:blank" && scheme.contains("http") && navigationAction.navigationType == .linkActivated {
+            let safariVC = SFSafariViewController(url: request.url!)
+            safariVC.view.tintColor = self.readerConfig.tintColor
+            self.folioReader.readerCenter?.present(safariVC, animated: true, completion: nil)
+            return false
+        } else {
+            // Check if the url is a custom class based onClick listerner
+            var isClassBasedOnClickListenerScheme = false
+            for listener in self.readerConfig.classBasedOnClickListeners {
+
+                if scheme == listener.schemeName,
+                    let absoluteURLString = request.url?.absoluteString,
+                    let range = absoluteURLString.range(of: "/clientX=") {
+                    let baseURL = String(absoluteURLString[..<range.lowerBound])
+                    let positionString = String(absoluteURLString[range.lowerBound...])
+                    if let point = getEventTouchPoint(fromPositionParameterString: positionString) {
+                        let attributeContentString = (baseURL.replacingOccurrences(of: "\(scheme)://", with: "").removingPercentEncoding)
+                        // Call the on click action block
+                        listener.onClickAction(attributeContentString, point)
+                        // Mark the scheme as class based click listener scheme
+                        isClassBasedOnClickListenerScheme = true
+                    }
+                }
+            }
+
+            if isClassBasedOnClickListenerScheme == false {
+                // Try to open the url with the system if it wasn't a custom class based click listener
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    fileprivate func getEventTouchPoint(fromPositionParameterString positionParameterString: String) -> CGPoint? {
+        // Remove the parameter names: "/clientX=188&clientY=292" -> "188&292"
+        var positionParameterString = positionParameterString.replacingOccurrences(of: "/clientX=", with: "")
+        positionParameterString = positionParameterString.replacingOccurrences(of: "clientY=", with: "")
+        // Separate both position values into an array: "188&292" -> [188],[292]
+        let positionStringValues = positionParameterString.components(separatedBy: "&")
+        // Multiply the raw positions with the screen scale and return them as CGPoint
+        if
+            positionStringValues.count == 2,
+            let xPos = Int(positionStringValues[0]),
+            let yPos = Int(positionStringValues[1]) {
+            return CGPoint(x: xPos, y: yPos)
+        }
+        return nil
+    }
+
+    // MARK: - Class based click listener
+    
+    fileprivate func setupClassBasedOnClickListeners() {
+        for listener in self.readerConfig.classBasedOnClickListeners {
+            self.webView?.js("addClassBasedOnClickListener(\"\(listener.schemeName)\", \"\(listener.querySelector)\", \"\(listener.attributeName)\", \"\(listener.selectAll)\")")
+        }
+    }
+}

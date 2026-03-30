@@ -145,7 +145,7 @@ class FolioReaderHighlightList: UITableViewController {
         dateLabel.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
         dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
         
-        if let error = self.folioReader.readerCenter?.highlightErrors[highlight.highlightId] {
+        if let _ = self.folioReader.readerCenter?.highlightErrors[highlight.highlightId] {
             var errorLabel: UILabel!
             if cell.contentView.viewWithTag(4567) == nil {
                 errorLabel = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))

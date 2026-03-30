@@ -8,11 +8,12 @@
 
 import UIKit
 
-class FolioReaderSharingProvider: UIActivityItemProvider {
-    var subject: String
-    var text: String
-    var html: String?
-    var image: UIImage?
+@MainActor
+class FolioReaderSharingProvider: UIActivityItemProvider, @unchecked Sendable {
+    let subject: String
+    let text: String
+    let html: String?
+    let image: UIImage?
 
     static var AttribStringActivityTypes: Set<UIActivity.ActivityType> = [
         .init("com.google.Gmail.ShareExtension")

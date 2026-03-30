@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 extension FolioReaderCenter: UICollectionViewDataSource {
     
@@ -40,10 +41,8 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         cell.pageNumber = indexPath.row+1
         cell.layoutAdapting = "Initializing..."
         
-        cell.webView?.scrollView.delegate = self
-        if #available(iOS 11.0, *) {
-            cell.webView?.scrollView.contentInsetAdjustmentBehavior = .never
-        }
+        cell.webView?.scrollView.delegate = self.scrollHandler
+        cell.webView?.scrollView.contentInsetAdjustmentBehavior = .never
         //cell.webView?.cssRuntimeProperty = self.folioReader.generateRuntimeStyle()
         cell.webView?.setupScrollDirection()
         cell.webView?.frame = cell.webViewFrame()
@@ -62,7 +61,7 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         var urlComponents = URLComponents()
         urlComponents.scheme = "http"
         urlComponents.host = "localhost"
-        urlComponents.port = readerConfig.serverPort
+        urlComponents.port = Int(readerContainer.webServer.port)
         urlComponents.path = ["", fileName, self.book.opfResource.href.deletingLastPathComponent, resourceHref].joined(separator: "/")
         
         guard let url = urlComponents.url else { return cell }

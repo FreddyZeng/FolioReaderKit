@@ -6,17 +6,18 @@
 //
 
 import Foundation
+import UIKit
 
 class FolioReaderParagraphMenu: FolioReaderMenu {
     let safeAreaHeight = CGFloat(90)    //including padding between elements
 
-    let letterSpacingSlider = HADiscreteSlider()
+    let letterSpacingSlider = FolioDiscreteSlider()
     let letterSpacingSliderHeight = CGFloat(40)
     let letterSpacingTopPadding = CGFloat(10)
-    
-    let lineHeightSlider = HADiscreteSlider()
+
+    let lineHeightSlider = FolioDiscreteSlider()
     let lineHeightSliderHeight = CGFloat(40)
-    let lineHeightSliderTopPadding = CGFloat(8)
+    let lineHeightSliderTopPadding = CGFloat(10)
     
     let textIndentValue = UILabel()
     let textIndentHeight = CGFloat(32)
@@ -74,11 +75,11 @@ class FolioReaderParagraphMenu: FolioReaderMenu {
         ])
         
         // Letter Spacing Slider
-        letterSpacingSlider.tickStyle = ComponentStyle.rounded
+        letterSpacingSlider.tickStyle = .rounded
         letterSpacingSlider.tickCount = 11
         letterSpacingSlider.tickSize = CGSize(width: 8, height: 8)
 
-        letterSpacingSlider.thumbStyle = ComponentStyle.rounded
+        letterSpacingSlider.thumbStyle = .rounded
         letterSpacingSlider.thumbSize = CGSize(width: 28, height: 28)
         letterSpacingSlider.thumbShadowOffset = CGSize(width: 0, height: 2)
         letterSpacingSlider.thumbShadowRadius = 3
@@ -91,10 +92,6 @@ class FolioReaderParagraphMenu: FolioReaderMenu {
         letterSpacingSlider.value = CGFloat(self.folioReader.currentLetterSpacing)
         letterSpacingSlider.addTarget(self, action: #selector(FolioReaderParagraphMenu.letterSpacingSliderValueChanged(_:)), for: UIControl.Event.valueChanged)
 
-        // Force remove fill color
-        letterSpacingSlider.layer.sublayers?.forEach({ layer in
-            layer.backgroundColor = UIColor.clear.cgColor
-        })
         letterSpacingSlider.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(letterSpacingSlider)
         NSLayoutConstraint.activate([
@@ -129,11 +126,11 @@ class FolioReaderParagraphMenu: FolioReaderMenu {
         ])
         
         // Line Spacing Slider
-        lineHeightSlider.tickStyle = ComponentStyle.rounded
+        lineHeightSlider.tickStyle = .rounded
         lineHeightSlider.tickCount = 11
         lineHeightSlider.tickSize = CGSize(width: 8, height: 8)
 
-        lineHeightSlider.thumbStyle = ComponentStyle.rounded
+        lineHeightSlider.thumbStyle = .rounded
         lineHeightSlider.thumbSize = CGSize(width: 28, height: 28)
         lineHeightSlider.thumbShadowOffset = CGSize(width: 0, height: 2)
         lineHeightSlider.thumbShadowRadius = 3
@@ -145,10 +142,6 @@ class FolioReaderParagraphMenu: FolioReaderMenu {
         lineHeightSlider.value = CGFloat(self.folioReader.currentLineHeight)
         lineHeightSlider.addTarget(self, action: #selector(FolioReaderParagraphMenu.lineHeightSliderValueChanged(_:)), for: UIControl.Event.valueChanged)
 
-        // Force remove fill color
-        lineHeightSlider.layer.sublayers?.forEach({ layer in
-            layer.backgroundColor = UIColor.clear.cgColor
-        })
         lineHeightSlider.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(lineHeightSlider)
         NSLayoutConstraint.activate([
@@ -304,11 +297,11 @@ class FolioReaderParagraphMenu: FolioReaderMenu {
     
     // MARK: - Font slider changed
     
-    @objc func letterSpacingSliderValueChanged(_ sender: HADiscreteSlider) {
+    @objc func letterSpacingSliderValueChanged(_ sender: FolioDiscreteSlider) {
         self.folioReader.currentLetterSpacing = Int(sender.value)
     }
     
-    @objc func lineHeightSliderValueChanged(_ sender: HADiscreteSlider) {
+    @objc func lineHeightSliderValueChanged(_ sender: FolioDiscreteSlider) {
         self.folioReader.currentLineHeight = Int(sender.value)
     }
     

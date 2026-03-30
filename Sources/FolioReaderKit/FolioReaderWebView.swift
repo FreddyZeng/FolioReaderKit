@@ -7,6 +7,7 @@
 //
 
 import WebKit
+import UIKit
 
 public typealias JSCallback = (String?) ->()
 
@@ -518,9 +519,6 @@ open class FolioReaderWebView: WKWebView {
 
         let colors = UIImage(readerImageNamed: "colors-marker")
         var share = UIImage(readerImageNamed: "share-marker")
-        if #available(iOS 13.0, *) {
-            share = share?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
-        }
         let remove = UIImage(readerImageNamed: "no-marker")
         let yellow = UIImage(readerImageNamed: "yellow-marker")
         let green = UIImage(readerImageNamed: "green-marker")
@@ -528,8 +526,12 @@ open class FolioReaderWebView: WKWebView {
         let pink = UIImage(readerImageNamed: "pink-marker")
         let underline = UIImage(readerImageNamed: "underline-marker")
         var mdictImage = UIImage(readerImageNamed: "icon-dictionary")
-        if #available(iOS 13.0, *) {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            share = share?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
             mdictImage = mdictImage?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
+        } else {
+            share = share?.withTintColor(.white)
+            mdictImage = mdictImage?.withTintColor(.white)
         }
 
         let menuController = UIMenuController.shared
@@ -609,7 +611,7 @@ open class FolioReaderWebView: WKWebView {
     
     open func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
         if menuVisible == false {
-            UIMenuController.shared.setMenuVisible(menuVisible, animated: animated)
+            UIMenuController.shared.hideMenu()
         }
         
         if !menuVisible && isSharingHighlight || !menuVisible && isColors {
@@ -619,18 +621,21 @@ open class FolioReaderWebView: WKWebView {
         
         if menuVisible  {
             if !rect.equalTo(CGRect.zero) {
-                UIMenuController.shared.setTargetRect(rect, in: self)
+                UIMenuController.shared.showMenu(from: self, rect: rect)
             }
         } else {
             self.createMenu(onHighlight: false)
         }
         
-        UIMenuController.shared.setMenuVisible(menuVisible, animated: animated)
+        if menuVisible {
+            UIMenuController.shared.showMenu(from: self, rect: rect)
+        } else {
+            UIMenuController.shared.hideMenu()
+        }
     }
     
     // MARK: - Java Script Bridge
     
-    @available(iOS 13.0.0, *)
     open func js(_ script: String) async -> String? {
         if let result = try? await evaluateJavaScript(script) {
             let output = "\(result)"

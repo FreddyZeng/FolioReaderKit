@@ -28,20 +28,9 @@ class FolioReaderCenterLayout : UICollectionViewFlowLayout {
         
         guard let collectionView = self.collectionView else { return }
         
+        self.itemSize = collectionView.bounds.size
+        
         let numberOfItems = collectionView.numberOfItems(inSection: 0)
-        
-//        self.itemSize = collectionView.bounds.inset(by: collectionView.layoutMargins).size
-//        self.sectionInset = UIEdgeInsets(top: 0, left: self.minimumInteritemSpacing, bottom: 0, right: 0)
-//        self.sectionInsetReference = .fromSafeArea
-//        self.itemSize = collectionView.bounds.size
-//        self.itemSize = CGSize(width: itemSize.width, height: itemSize.height - 20)
-        
-//          self.scrollDirection = .horizontal
-        
-//        contentSize = CGSize(
-//            width: collectionView.frame.width * CGFloat(collectionView.numberOfItems(inSection: 0)),
-//            height: collectionView.frame.height
-//        )
         
         print("PREPAREROTATE collectionViewContentSize=\(collectionViewContentSize.debugDescription) w=\(collectionViewContentSize.width) h=\(collectionViewContentSize.height) collectionView.bounds=\(collectionView.bounds) w=\(collectionView.bounds.width) h=\(collectionView.bounds.height) collectionView.frame=\(collectionView.frame) numberOfItems=\(numberOfItems)")
         

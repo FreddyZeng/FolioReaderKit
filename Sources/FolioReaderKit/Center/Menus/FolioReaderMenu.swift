@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 class FolioReaderMenu: UIViewController, UIGestureRecognizerDelegate {
     public var menuView = UIView()

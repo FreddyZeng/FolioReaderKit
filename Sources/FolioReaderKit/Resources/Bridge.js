@@ -1444,7 +1444,8 @@ function wrappingSentencesWithinPTags(){
 }
 
 function visible(elem) {
-    return !(elem.clientHeight === 0 || elem.clientWidth === 0)
+    if (elem.nodeType === 3) return true;
+    return !(elem.clientHeight === 0 || elem.clientWidth === 0);
 }
 
 function getVisibleCFI(horizontal) {

@@ -1,9 +1,8 @@
-
 ![FolioReader logo](https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/folioreader.png)
 FolioReaderKit is an ePub reader and parser framework for iOS written in Swift.
 
-![Version](https://img.shields.io/cocoapods/v/FolioReaderKit.svg)
-![License](https://img.shields.io/cocoapods/l/FolioReaderKit.svg)
+![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)
+![License](https://img.shields.io/badge/license-BSD-green.svg)
 
 ## Features
 
@@ -27,125 +26,61 @@ FolioReaderKit is an ePub reader and parser framework for iOS written in Swift.
 - [ ] Book Search
 - [ ] Add Notes to a Highlight
 
-## Who is using it?
-
-On [AppSight](https://www.appsight.io/sdk/folio-reader-kit) you can see apps that are using it in production.
-
-## Demo
-
-**Custom Fonts :smirk:**   |  **Text Highlighting :heart_eyes:**
-:-------------------------:|:-------------------------:
-![Custom fonts](https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/custom-fonts.gif)  |  ![Highlight](https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/highlight.gif)
-
-**Reading Time Left :open_mouth:**   |  **Media Overlays 😭**
-:-------------------------:|:-------------------------:
-![Time left](https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/time-left.mov.gif)  |  ![Media Overlays](https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/media-overlays.gif)
-
 ## Installation
 
-**FolioReaderKit** is available through [CocoaPods](http://cocoapods.org) and [Carthage](https://github.com/Carthage/Carthage). 
+**FolioReaderKit** is available through Swift Package Manager (SPM).
 
-### Cocoapods
+### Swift Package Manager
 
-[CocoaPods](http://cocoapods.org) is a dependency manager for Cocoa projects. You can install it with the following command:
+In Xcode, go to **File > Add Packages...** and enter the repository URL:
 
-```bash
-$ gem install cocoapods
+```text
+https://github.com/drearycold/FolioReaderKit.git
 ```
 
-To integrate FolioReaderKit into your Xcode project using CocoaPods, specify it in your `Podfile`:
-
-```ruby
-source 'https://github.com/CocoaPods/Specs.git'
-platform :ios, '9.0'
-use_frameworks!
-
-target '<Your Target Name>' do
-    pod 'FolioReaderKit'
-end
-```
-
-Then, run the following command:
-
-```bash
-$ pod install
-```
-
-Alternatively to give it a test run, run the command:
-
-```bash
-$ pod try FolioReaderKit
-```
-
-### Carthage
-
-Add the following to your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile)
-
-```ruby
-github "FolioReader/FolioReaderKit"
-```
-
-Run the following command:
-
-```bash
-$ carthage update --platform iOS --no-use-binaries
-```
-
-Then, follow the steps as described in Carthage's [README](https://github.com/Carthage/Carthage#adding-frameworks-to-an-application).
+Choose the dependency rule that suits your needs (e.g., Up to Next Major Version) and click **Add Package**.
 
 ## Requirements
 
-- iOS 9.0+
-- Xcode 10.1+
+- iOS 13.0+
+- macOS 11.0+ (Catalyst)
+- Xcode 12.0+
 
 ## Basic Usage
 
-To get started, this is a simple usage sample of using the integrated view controller.
+To get started, this is a simple usage sample of using the integrated view controller. Note that you now need to provide a `ReadiumGCDWebServer` instance to serve the EPUB content locally.
 
 ```swift
 import FolioReaderKit
+import ReadiumGCDWebServer
+
+let webServer = ReadiumGCDWebServer()
 
 func open(sender: AnyObject) {
     let config = FolioReaderConfig()
-    let bookPath = Bundle.main.path(forResource: "book", ofType: "epub")
+    let bookPath = Bundle.main.path(forResource: "book", ofType: "epub")
     let folioReader = FolioReader()
-    folioReader.presentReader(parentViewController: self, withEpubPath: bookPath!, andConfig: config)
+    
+    // Provide the webServer instance required for serving EPUB resources
+    folioReader.presentReader(
+        parentViewController: self, 
+        withEpubPath: bookPath!, 
+        andConfig: config,
+        folioReaderCenterDelegate: nil,
+        webServer: webServer
+    )
 }
 ```
 
-For more usage examples check the [Example](/Example) folder.
+For more usage examples check the `Example` folder.
 
-## Storyboard
+## Architecture & Migration
 
-To get started, here is a simple example how to use the integrated view controller with storyboards.
-
-```swift
-import FolioReaderKit
-
-class StoryboardFolioReaderContrainer: FolioReaderContainer {
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        
-        let config = FolioReaderConfig()
-        config.scrollDirection = .horizontalWithVerticalContent
-        
-        guard let bookPath = Bundle.main.path(forResource: "The Silver Chair", ofType: "epub") else { return }
-        setupConfig(config, epubPath: bookPath)
-    }
-}
-```
-
-Go to your storyboard file, choose or create the view controller that should present the epub reader. In the identity inspector set StoryboardFolioReaderContrainer as class.
-
-## Documentation
-Checkout [Example](/Example) and [API Documentation](https://folioReader.github.io/FolioReaderKit/)
-
-You can always use the header-doc. (use **alt+click** in Xcode)
-
-<img src="https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/header-doc.png" width="521px"/>
-
-### Migration
-If you are migrating to a newer version check out [MIGRATION](/MIGRATION.md) and [CHANGELOG](/CHANGELOG.md).
+This fork features a modernized architecture:
+- **SPM First**: Migrated from CocoaPods/Carthage to Swift Package Manager.
+- **Local WebServer**: Uses `GCDWebServer` to serve EPUB assets via `http://localhost`, resolving `file://` URL restrictions in modern `WKWebView`.
+- **Concurrency**: Adopts Swift `async/await` for EPUB parsing and extraction using `ZIPFoundation`.
+- **Persistence**: Removed the hard dependency on `Realm`. Integrators must now provide their own persistence via the `FolioReaderPreferenceProvider`, `FolioReaderHighlightProvider`, and `FolioReaderBookmarkProvider` protocols.
 
 ## Author
 [**Heberti Almeida**](https://github.com/hebertialmeida)

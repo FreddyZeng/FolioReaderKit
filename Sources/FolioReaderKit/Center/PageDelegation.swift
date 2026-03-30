@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 extension FolioReaderCenter: FolioReaderPageDelegate {
 
@@ -89,7 +90,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
             }
         } else if let position = self.folioReader.readerCenter?.currentWebViewScrollPositions[page.pageNumber - 1] {
             self.readerContainer?.centerViewController?.pageIndicatorView?.infoLabel.text = position.cfi
-            folioLogger("bridgeFinished isFirstLoad pageNumber=\(page.pageNumber)")
+            folioLogger("bridgeFinished isFirstLoad pageNumber=\(String(describing: page.pageNumber))")
             
             page.scrollWebViewByPosition(
                 pageOffset: position.pageOffset.forDirection(withConfiguration: self.readerConfig),

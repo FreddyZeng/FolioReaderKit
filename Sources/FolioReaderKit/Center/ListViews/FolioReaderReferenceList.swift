@@ -50,18 +50,21 @@ class FolioReaderReferenceList: UITableViewController {
         loadSections()
     }
 
-    func loadSection(bookId: String, book: FRBook, pageNumber: Int, refText: String, deepest: FolioReaderBookmark) -> [FolioReaderBookmark] {
-        var epubEntryData = Data()
+    func loadSection(bookId: String, book: FRBook, pageNumber: Int, refText: String, deepest: FolioReaderBookmark) async -> [FolioReaderBookmark] {
+        let accumulator = DataAccumulator()
         
-        guard let epubArchive = book.threadEpubArchive,
+        guard let epubArchive = await book.getThreadEpubArchive(),
               let spine = book.spine.spineReferences[safe: pageNumber - 1],
               let opfURL = URL(fileURLWithPath: book.opfResource.href, isDirectory: false) as URL?,
-              let spineURL = URL(fileURLWithPath: spine.resource.href, isDirectory: false, relativeTo: opfURL) as URL?,
-              let epubEntry = epubArchive[spineURL.path.trimmingCharacters(in: ["/"])],
-              let _ = try? epubArchive.extract(epubEntry, consumer: { data in
-                  epubEntryData.append(data)
+              let spineURL = URL(fileURLWithPath: spine.resource.href, isDirectory: false, relativeTo: opfURL) as URL?
+        else { return [] }
+        
+        let entryPath = spineURL.path.trimmingCharacters(in: ["/"])
+        guard let epubEntry = book.archiveEntriesCache[entryPath],
+              let _ = try? await epubArchive.extract(epubEntry, consumer: { data in
+                  accumulator.append(data)
               }),
-              let epubEntryString = String(data: epubEntryData, encoding: .utf8),
+              let epubEntryString = String(data: accumulator.result, encoding: .utf8),
               let document = try? SwiftSoup.parse(epubEntryString),
               let _ = try? document.attr("CFI", "/\(pageNumber * 2)")
         else { return [] }
@@ -159,11 +162,10 @@ class FolioReaderReferenceList: UITableViewController {
             deepestBookmark.pos = "epubcfi(\(currentPageNumber*2)/2\(tempRefCFI))"
         }
         for pageNumber in (startPageNumber...currentPageNumber).reversed() {
-            DispatchQueue.global(qos: .userInitiated).async {
-//            DispatchQueue.main.async {
-                let bookmarks = self.loadSection(bookId: bookId, book: readerCenter.book, pageNumber: pageNumber, refText: refText, deepest: deepestBookmark)
+            Task {
+                let bookmarks = await self.loadSection(bookId: bookId, book: readerCenter.book, pageNumber: pageNumber, refText: refText, deepest: deepestBookmark)
                 guard bookmarks.isEmpty == false else { return }
-                DispatchQueue.main.async {
+                await MainActor.run {
                     self.sectionBookmarks[pageNumber] = bookmarks
                     self.sections = self.sectionBookmarks.keys.sorted()
                     self.tableView.reloadData()
@@ -266,7 +268,7 @@ class FolioReaderReferenceList: UITableViewController {
         dateLabel.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
         dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
         
-        if let pos = bookmark.pos, let error = self.folioReader.readerCenter?.bookmarkErrors[pos] {
+        if let pos = bookmark.pos, let _ = self.folioReader.readerCenter?.bookmarkErrors[pos] {
             var errorLabel: UILabel!
             if cell.contentView.viewWithTag(4567) == nil {
                 errorLabel = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))

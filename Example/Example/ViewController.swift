@@ -8,13 +8,11 @@
 
 import UIKit
 import FolioReaderKit
-import RealmSwift
 
 class ViewController: UIViewController {
 
     @IBOutlet weak var bookOne: UIButton?
     @IBOutlet weak var bookTwo: UIButton?
-    //let folioReader = FolioReader()
 
     var preferenceProvider: FolioReaderPreferenceProvider?
     var highlightProvider: FolioReaderHighlightProvider?
@@ -33,23 +31,9 @@ class ViewController: UIViewController {
         let config = FolioReaderConfig(withIdentifier: epub.readerIdentifier)
         config.shouldHideNavigationOnTap = epub.shouldHideNavigationOnTap
         config.scrollDirection = epub.scrollDirection
-        //config.savedPositionForCurrentBook = ["pageNumber": Int(6), "pageOffsetX": CGFloat(6150), "pageOffsetY": CGFloat(0.0)]
-        config.allowSharing = false //Broken as of now
+        config.allowSharing = false
         config.enableTTS = false
         config.debug.formUnion([.htmlStyling])
-
-        // See more at FolioReaderConfig.swift
-//        config.canChangeScrollDirection = false
-//        config.enableTTS = false
-//        config.displayTitle = true
-//        config.allowSharing = false
-//        config.tintColor = UIColor.blueColor()
-//        config.toolBarTintColor = UIColor.redColor()
-//        config.toolBarBackgroundColor = UIColor.purpleColor()
-//        config.menuTextColor = UIColor.brownColor()
-//        config.menuBackgroundColor = UIColor.lightGrayColor()
-//        config.hidePageIndicator = true
-//        config.realmConfiguration = Realm.Configuration(fileURL: FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("highlights.realm"))
 
         // Custom sharing quote background
         config.quoteCustomBackgrounds = []
@@ -77,17 +61,11 @@ class ViewController: UIViewController {
         folioReader.presentReader(
             parentViewController: self,
             withEpubPath: bookPath,
-            unzipPath: makeFolioReaderUnzipPath()?.path,
             andConfig: readerConfiguration,
-            shouldRemoveEpub: false,
-            folioReaderCenterDelegate: nil)
-        
-        //TEST
-        for fontFamilyName in UIFont.familyNames {
-            for fontName in UIFont.fontNames(forFamilyName: fontFamilyName) {
-                print("Font: \(fontFamilyName) \(fontName)")
-            }
-        }
+            animated: true,
+            folioReaderCenterDelegate: nil,
+            webServer: ReadiumGCDWebServer()
+        )
     }
 
     private func setCover(_ button: UIButton?, index: Int) {
@@ -97,12 +75,15 @@ class ViewController: UIViewController {
                 return
         }
 
-        do {
-            let image = try FolioReader.getCoverImage(bookPath)
-
-            button?.setBackgroundImage(image, for: .normal)
-        } catch {
-            print(error.localizedDescription)
+        Task {
+            do {
+                let image = try await FREpubParserArchive.parseCoverImage(bookPath)
+                await MainActor.run {
+                    button?.setBackgroundImage(image, for: .normal)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
         }
     }
     
@@ -135,7 +116,6 @@ extension ViewController: FolioReaderDelegate {
         } else {
             let preferenceProvider = FolioReaderUserDefaultsPreferenceProvider(folioReader)
             self.preferenceProvider = preferenceProvider
-            
             return preferenceProvider
         }
     }
@@ -144,72 +124,14 @@ extension ViewController: FolioReaderDelegate {
         if let highlightProvider = highlightProvider {
             return highlightProvider
         } else {
-            let highlightProvider = FolioReaderRealmHighlightProvider(folioReader)
+            let highlightProvider = FolioReaderInMemoryHighlightProvider(folioReader)
             self.highlightProvider = highlightProvider
-            
             return highlightProvider
         }
     }
 }
-open class HighlightRealm: Object {
-    @objc open dynamic var bookId: String!
-    @objc open dynamic var content: String!
-    @objc open dynamic var contentPost: String!
-    @objc open dynamic var contentPre: String!
-    @objc open dynamic var date: Date!
-    @objc open dynamic var highlightId: String!
-    @objc open dynamic var page: Int = 0
-    @objc open dynamic var type: Int = 0
-    @objc open dynamic var startOffset: Int = -1
-    @objc open dynamic var endOffset: Int = -1
-    @objc open dynamic var noteForHighlight: String?
-    @objc open dynamic var cfiStart: String?
-    @objc open dynamic var cfiEnd: String?
 
-    override open class func primaryKey()-> String {
-        return "highlightId"
-    }
-    
-    func fromHighlight(_ highlight: Highlight) {
-        bookId = highlight.bookId
-        content = highlight.content
-        contentPost = highlight.contentPost
-        contentPre = highlight.contentPre
-        date = highlight.date
-        highlightId = highlight.highlightId
-        page = highlight.page
-        type = highlight.type
-        startOffset = highlight.startOffset
-        endOffset = highlight.endOffset
-        noteForHighlight = highlight.noteForHighlight
-        cfiStart = highlight.cfiStart
-        cfiEnd = highlight.cfiEnd
-    }
-    
-    func toHighlight() -> Highlight {
-        let highlight = Highlight()
-        highlight.bookId = bookId
-        highlight.content = content
-        highlight.contentPost = contentPost
-        highlight.contentPre = contentPre
-        highlight.date = date
-        highlight.highlightId = highlightId
-        highlight.page = page
-        highlight.type = type
-        highlight.style = HighlightStyle.classForStyle(type)
-        highlight.startOffset = startOffset
-        highlight.endOffset = endOffset
-        highlight.noteForHighlight = noteForHighlight
-        highlight.cfiStart = cfiStart
-        highlight.cfiEnd = cfiEnd
-        
-        highlight.encodeContents()
-        
-        return highlight
-    }
-}
-
-class FolioReaderUserDefaultsPreferenceProvider: FolioReaderPreferenceProvider {
+class FolioReaderUserDefaultsPreferenceProvider: FolioReaderDummyPreferenceProvider {
     
     internal let kCurrentFontFamily = "com.folioreader.kCurrentFontFamily"
     internal let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
@@ -228,29 +150,41 @@ class FolioReaderUserDefaultsPreferenceProvider: FolioReaderPreferenceProvider {
     internal let kCurrentMarginRight = "com.folioreader.kCurrentMarginRight"
     internal let kCurrentLetterSpacing = "com.folioreader.kCurrentLetterSpacing"
     internal let kCurrentLineHeight = "com.folioreader.kCurrentLineHeight"
+    internal let kCurrentTextIndent = "com.folioreader.kCurrentTextIndent"
     internal let kDoWrapPara = "com.folioreader.kDoWrapPara"
     internal let kDoClearClass = "com.folioreader.kDoClearClass"
+    internal let kCurrentAnnotationMenuIndex = "com.folioreader.kCurrentAnnotationMenuIndex"
+    internal let kCurrentNavigationMenuBookListStyle = "com.folioreader.kCurrentNavigationMenuBookListStyle"
+    internal let kCurrentVMarginLinked = "com.folioreader.kCurrentVMarginLinked"
+    internal let kCurrentHMarginLinked = "com.folioreader.kCurrentHMarginLinked"
+    internal let kStyleOverride = "com.folioreader.kStyleOverride"
+    internal let kStructuralStyle = "com.folioreader.kStructuralStyle"
+    internal let kStructuralTocLevel = "com.folioreader.kStructuralTocLevel"
     
-    let folioReader: FolioReader
-    
-    init(_ folioReader: FolioReader) {
-        self.folioReader = folioReader
+    override init(_ folioReader: FolioReader) {
+        super.init(folioReader)
         
         // Register initial defaults
         register(defaults: [
-            kCurrentFontFamily: FolioReaderFont.andada.rawValue,
+            kCurrentFontFamily: "andada",
             kNightMode: false,
             kThemeMode: FolioReaderThemeMode.day.rawValue,
-            kCurrentFontSize: 2,
+            kCurrentFontSize: "2",
             kCurrentAudioRate: 1,
             kCurrentHighlightStyle: 0,
             kCurrentTOCMenu: 0,
             kCurrentMediaOverlayStyle: MediaOverlayStyle.default.rawValue,
-            kCurrentScrollDirection: FolioReaderScrollDirection.defaultVertical.rawValue
+            kCurrentScrollDirection: FolioReaderScrollDirection.defaultVertical.rawValue,
+            kCurrentAnnotationMenuIndex: 0,
+            kCurrentNavigationMenuBookListStyle: 0,
+            kCurrentVMarginLinked: true,
+            kCurrentHMarginLinked: true,
+            kStyleOverride: 1,
+            kStructuralStyle: 0,
+            kStructuralTocLevel: 0
             ])
     }
     
-    /// UserDefault for the current ePub file.
     fileprivate var defaults: FolioReaderUserDefaults {
         return FolioReaderUserDefaults(
             withIdentifier: folioReader.readerCenter?.readerContainer?.readerConfig.identifier)
@@ -260,131 +194,187 @@ class FolioReaderUserDefaultsPreferenceProvider: FolioReaderPreferenceProvider {
         self.defaults.register(defaults: defaults)
     }
 
-    func preference(nightMode defaults: Bool) -> Bool {
+    override func preference(nightMode defaults: Bool) -> Bool {
         return self.defaults.bool(forKey: kNightMode)
     }
     
-    func preference(setNightMode value: Bool){
+    override func preference(setNightMode value: Bool){
         self.defaults.set(value, forKey: kNightMode)
     }
     
-    func preference(themeMode defaults: Int) -> Int {
+    override func preference(themeMode defaults: Int) -> Int {
         return self.defaults.integer(forKey: kThemeMode)
     }
-    func preference(setThemeMode value: Int) {
+    override func preference(setThemeMode value: Int) {
         self.defaults.set(value, forKey: kThemeMode)
     }
     
-    func preference(currentFont defaults: String) -> String {
+    override func preference(currentFont defaults: String) -> String {
         return self.defaults.value(forKey: kCurrentFontFamily) as? String ?? defaults
     }
-    func preference(setCurrentFont value: String) {
+    override func preference(setCurrentFont value: String) {
         self.defaults.set(value, forKey: kCurrentFontFamily)
     }
     
-    func preference(currentFontSize defaults: String) -> String {
+    override func preference(currentFontSize defaults: String) -> String {
         return self.defaults.value(forKey: kCurrentFontSize) as? String ?? defaults
     }
-    func preference(setCurrentFontSize value: String) {
+    override func preference(setCurrentFontSize value: String) {
         self.defaults.set(value, forKey: kCurrentFontSize)
     }
     
-    func preference(currentFontWeight defaults: String) -> String {
+    override func preference(currentFontWeight defaults: String) -> String {
         return self.defaults.value(forKey: kCurrentFontWeight) as? String ?? defaults
     }
-    func preference(setCurrentFontWeight value: String) {
+    override func preference(setCurrentFontWeight value: String) {
         self.defaults.set(value, forKey: kCurrentFontWeight)
     }
     
-    func preference(currentAudioRate defaults: Int) -> Int {
+    override func preference(currentAudioRate defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentAudioRate)
     }
-    func preference(setCurrentAudioRate value: Int) {
+    override func preference(setCurrentAudioRate value: Int) {
         self.defaults.set(value, forKey: kCurrentAudioRate)
     }
     
-    func preference(currentHighlightStyle defaults: Int) -> Int {
+    override func preference(currentHighlightStyle defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentHighlightStyle)
     }
-    func preference(setCurrentHighlightStyle value: Int) {
+    override func preference(setCurrentHighlightStyle value: Int) {
         self.defaults.set(value, forKey: kCurrentHighlightStyle)
     }
     
-    func preference(currentMediaOverlayStyle defaults: Int) -> Int {
+    override func preference(currentMediaOverlayStyle defaults: Int) -> Int {
         return self.defaults.value(forKey: kCurrentMediaOverlayStyle) as? Int ?? defaults
     }
-    func preference(setCurrentMediaOverlayStyle value: Int) {
+    override func preference(setCurrentMediaOverlayStyle value: Int) {
         self.defaults.set(value, forKey: kCurrentMediaOverlayStyle)
     }
     
-    func preference(currentScrollDirection defaults: Int) -> Int {
+    override func preference(currentScrollDirection defaults: Int) -> Int {
         return self.defaults.value(forKey: kCurrentScrollDirection) as? Int ?? defaults
     }
-    func preference(setCurrentScrollDirection value: Int) {
+    override func preference(setCurrentScrollDirection value: Int) {
         self.defaults.set(value, forKey: kCurrentScrollDirection)
     }
     
-    func preference(currentMenuIndex defaults: Int) -> Int {
+    override func preference(currentNavigationMenuIndex defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentTOCMenu)
     }
-    func preference(setCurrentMenuIndex value: Int) {
+    override func preference(setCurrentNavigationMenuIndex value: Int) {
         self.defaults.set(value, forKey: kCurrentTOCMenu)
     }
+
+    override func preference(currentAnnotationMenuIndex defaults: Int) -> Int {
+        return self.defaults.integer(forKey: kCurrentAnnotationMenuIndex)
+    }
+    override func preference(setCurrentAnnotationMenuIndex value: Int) {
+        self.defaults.set(value, forKey: kCurrentAnnotationMenuIndex)
+    }
+
+    override func preference(currentNavigationMenuBookListSyle defaults: Int) -> Int {
+        return self.defaults.integer(forKey: kCurrentNavigationMenuBookListStyle)
+    }
+    override func preference(setCurrentNavigationMenuBookListStyle value: Int) {
+        self.defaults.set(value, forKey: kCurrentNavigationMenuBookListStyle)
+    }
     
-    func preference(currentMarginTop defaults: Int) -> Int {
+    override func preference(currentMarginTop defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentMarginTop)
     }
-    func preference(setCurrentMarginTop value: Int) {
+    override func preference(setCurrentMarginTop value: Int) {
         self.defaults.set(value, forKey: kCurrentMarginTop)
     }
     
-    func preference(currentMarginBottom defaults: Int) -> Int {
+    override func preference(currentMarginBottom defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentMarginBottom)
     }
-    func preference(setCurrentMarginBottom value: Int) {
+    override func preference(setCurrentMarginBottom value: Int) {
         self.defaults.set(value, forKey: kCurrentMarginBottom)
     }
     
-    func preference(currentMarginLeft defaults: Int) -> Int {
+    override func preference(currentMarginLeft defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentMarginLeft)
     }
-    func preference(setCurrentMarginLeft value: Int) {
+    override func preference(setCurrentMarginLeft value: Int) {
         self.defaults.set(value, forKey: kCurrentMarginLeft)
     }
     
-    func preference(currentMarginRight defaults: Int) -> Int {
+    override func preference(currentMarginRight defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentMarginRight)
     }
-    func preference(setCurrentMarginRight value: Int) {
+    override func preference(setCurrentMarginRight value: Int) {
         self.defaults.set(value, forKey: kCurrentMarginRight)
     }
+
+    override func preference(currentVMarginLinked defaults: Bool) -> Bool {
+        return self.defaults.bool(forKey: kCurrentVMarginLinked)
+    }
+    override func preference(setCurrentVMarginLinked value: Bool) {
+        self.defaults.set(value, forKey: kCurrentVMarginLinked)
+    }
+
+    override func preference(currentHMarginLinked defaults: Bool) -> Bool {
+        return self.defaults.bool(forKey: kCurrentHMarginLinked)
+    }
+    override func preference(setCurrentHMarginLinked value: Bool) {
+        self.defaults.set(value, forKey: kCurrentHMarginLinked)
+    }
     
-    func preference(currentLetterSpacing defaults: Int) -> Int {
+    override func preference(currentLetterSpacing defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentLetterSpacing)
     }
-    func preference(setCurrentLetterSpacing value: Int) {
+    override func preference(setCurrentLetterSpacing value: Int) {
         self.defaults.set(value, forKey: kCurrentLetterSpacing)
     }
     
-    func preference(currentLineHeight defaults: Int) -> Int {
+    override func preference(currentLineHeight defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentLineHeight)
     }
-    func preference(setCurrentLineHeight value: Int) {
+    override func preference(setCurrentLineHeight value: Int) {
         self.defaults.set(value, forKey: kCurrentLineHeight)
     }
     
-    func preference(doWrapPara defaults: Bool) -> Bool {
+    override func preference(doWrapPara defaults: Bool) -> Bool {
         return self.defaults.bool(forKey: kDoWrapPara)
     }
-    func preference(setDoWrapPara value: Bool) {
+    override func preference(setDoWrapPara value: Bool) {
         self.defaults.set(value, forKey: kDoWrapPara)
     }
     
-    func preference(doClearClass defaults: Bool) -> Bool {
+    override func preference(doClearClass defaults: Bool) -> Bool {
         return self.defaults.bool(forKey: kDoClearClass)
     }
-    func preference(setDoClearClass value: Bool) {
+    override func preference(setDoClearClass value: Bool) {
         self.defaults.set(value, forKey: kDoClearClass)
+    }
+    
+    override func preference(currentTextIndent defaults: Int) -> Int {
+        return self.defaults.integer(forKey: kCurrentTextIndent)
+    }
+    override func preference(setCurrentTextIndent value: Int) {
+        self.defaults.set(value, forKey: kCurrentTextIndent)
+    }
+
+    override func preference(styleOverride defaults: Int) -> Int {
+        return self.defaults.integer(forKey: kStyleOverride)
+    }
+    override func preference(setStyleOverride value: Int) {
+        self.defaults.set(value, forKey: kStyleOverride)
+    }
+
+    override func preference(structuralStyle defaults: Int) -> Int {
+        return self.defaults.integer(forKey: kStructuralStyle)
+    }
+    override func preference(setStructuralStyle value: Int) {
+        self.defaults.set(value, forKey: kStructuralStyle)
+    }
+
+    override func preference(structuralTocLevel defaults: Int) -> Int {
+        return self.defaults.integer(forKey: kStructuralTocLevel)
+    }
+    override func preference(setStructuralTocLevel value: Int) {
+        self.defaults.set(value, forKey: kStructuralTocLevel)
     }
     
     func preference(savedPosition defaults: [String: Any]?) -> [String: Any]? {
@@ -402,158 +392,41 @@ class FolioReaderUserDefaultsPreferenceProvider: FolioReaderPreferenceProvider {
     }
 }
 
-public class FolioReaderRealmHighlightProvider: FolioReaderHighlightProvider {
+public class FolioReaderInMemoryHighlightProvider: NSObject, FolioReaderHighlightProvider {
+    private var highlights = [String: FolioReaderHighlight]()
     let folioReader: FolioReader
-    var realmConfiguration = Realm.Configuration(schemaVersion: 2)
     
     init(_ folioReader: FolioReader) {
         self.folioReader = folioReader
     }
     
-    public func folioReaderHighlight(_ folioReader: FolioReader, added highlight: Highlight, completion: Completion?) {
-        print("highlight added \(highlight)")
-        
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return }
-        do {
-            let highlightRealm = HighlightRealm()
-            highlightRealm.fromHighlight(highlight)
-            
-            let realm = try Realm(configuration: realmConfiguration)
-            realm.beginWrite()
-            realm.add(highlightRealm, update: .all)
-            try realm.commitWrite()
-            completion?(nil)
-        } catch let error as NSError {
-            print("Error on persist highlight: \(error)")
-            completion?(error)
-        }
+    public func folioReaderHighlight(_ folioReader: FolioReader, added highlight: FolioReaderHighlight, completion: Completion?) {
+        highlights[highlight.highlightId] = highlight
+        completion?(nil)
     }
     
     public func folioReaderHighlight(_ folioReader: FolioReader, removedId highlightId: String) {
-        print("highlight removed \(highlightId)")
-        
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return }
-        let predicate = NSPredicate(format:"highlightId = %@", highlightId)
-
-        do {
-            let realm = try Realm(configuration: realmConfiguration)
-            guard let highlightRealm = realm.objects(HighlightRealm.self).filter(predicate).toArray(HighlightRealm.self).first else { return }
-            try realm.write {
-                realm.delete(highlightRealm)
-            }
-        } catch let error as NSError {
-            print("Error on remove highlight by id: \(error)")
-        }
+        highlights.removeValue(forKey: highlightId)
     }
     
-    public func folioReaderHighlight(_ folioReader: FolioReader, updateById highlightId: String, type style: HighlightStyle) {
-        print("highlight updated \(highlightId) \(style)")
-
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return }
-        var highlight: HighlightRealm?
-        let predicate = NSPredicate(format:"highlightId = %@", highlightId)
-        do {
-            let realm = try Realm(configuration: realmConfiguration)
-            highlight = realm.objects(HighlightRealm.self).filter(predicate).toArray(HighlightRealm.self).first
-            realm.beginWrite()
-
-            highlight?.type = style.rawValue
-
-            try realm.commitWrite()
-            
-        } catch let error as NSError {
-            print("Error on updateById: \(error)")
-        }
-
+    public func folioReaderHighlight(_ folioReader: FolioReader, updateById highlightId: String, type style: FolioReaderHighlightStyle) {
+        highlights[highlightId]?.type = style.rawValue
     }
 
-    public func folioReaderHighlight(_ folioReader: FolioReader, getById highlightId: String) -> Highlight? {
-        print("highlight getById \(highlightId)")
-
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return nil }
-        
-        let predicate = NSPredicate(format:"highlightId = %@", highlightId)
-
-        do {
-            let realm = try Realm(configuration: realmConfiguration)
-            if let highlightRealm = realm.objects(HighlightRealm.self).filter(predicate).toArray(HighlightRealm.self).first {
-                return highlightRealm.toHighlight()
-            }
-        } catch let error as NSError {
-            print("Error getting Highlight : \(error)")
-        }
-
-        return nil
+    public func folioReaderHighlight(_ folioReader: FolioReader, getById highlightId: String) -> FolioReaderHighlight? {
+        return highlights[highlightId]
     }
     
-    public func folioReaderHighlight(_ folioReader: FolioReader, allByBookId bookId: String, andPage page: NSNumber?) -> [Highlight] {
-        print("highlight allByBookId \(bookId) \(page ?? 0)")
-
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return [] }
-
-        var highlights: [Highlight]?
-        var predicate = NSPredicate(format: "bookId = %@", bookId)
-        if let page = page {
-            predicate = NSPredicate(format: "bookId = %@ && page = %@", bookId, page)
-        }
-
-        do {
-            let realm = try Realm(configuration: realmConfiguration)
-            highlights = realm.objects(HighlightRealm.self).filter(predicate).toArray(HighlightRealm.self).map {
-                $0.toHighlight()
-            }.sorted()
-            print("highlight allByBookId \(highlights ?? [])")
-
-            return (highlights ?? [])
-        } catch let error as NSError {
-            print("Error on fetch all by book Id: \(error)")
-            return []
-        }
+    public func folioReaderHighlight(_ folioReader: FolioReader, allByBookId bookId: String, andPage page: NSNumber?) -> [FolioReaderHighlight] {
+        return highlights.values.filter { $0.bookId == bookId && (page == nil || $0.page == page?.intValue) }.sorted()
     }
 
-    public func folioReaderHighlight(_ folioReader: FolioReader) -> [Highlight] {
-        print("highlight all")
-        
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return [] }
-
-        var highlights: [Highlight]?
-        do {
-            let realm = try Realm(configuration: realmConfiguration)
-            highlights = realm.objects(HighlightRealm.self).toArray(HighlightRealm.self).map {
-                $0.toHighlight()
-            }
-            print("highlight all \(highlights ?? [])")
-
-            return (highlights ?? [])
-        } catch let error as NSError {
-            print("Error on fetch all: \(error)")
-            return []
-        }
+    public func folioReaderHighlight(_ folioReader: FolioReader) -> [FolioReaderHighlight] {
+        return Array(highlights.values)
     }
     
-    public func folioReaderHighlight(_ folioReader: FolioReader, saveNoteFor highlight: Highlight) {
-        print("highlight saveNoteFor \(highlight)")
-
-        guard let readerConfig = folioReader.readerCenter?.readerContainer?.readerConfig else { return }
-        do {
-            let realm = try Realm(configuration: realmConfiguration)
-            let predicate = NSPredicate(format:"highlightId = %@", highlight.highlightId)
-            if let highlightRealm = realm.objects(HighlightRealm.self).filter(predicate).toArray(HighlightRealm.self).first {
-                try realm.write {
-                    highlightRealm.noteForHighlight = highlight.noteForHighlight
-                    realm.add(highlightRealm, update: .modified)
-                }
-            }
-        } catch let error as NSError {
-            print("Error on updateById: \(error)")
-        }
-        
-    }
-}
-
-extension Results {
-    func toArray<T>(_ ofType: T.Type) -> [T] {
-        return compactMap { $0 as? T }
+    public func folioReaderHighlight(_ folioReader: FolioReader, saveNoteFor highlight: FolioReaderHighlight) {
+        highlights[highlight.highlightId] = highlight
     }
 }
 
@@ -569,4 +442,3 @@ extension ViewController {
         self.open(epub: epub)
     }
 }
-

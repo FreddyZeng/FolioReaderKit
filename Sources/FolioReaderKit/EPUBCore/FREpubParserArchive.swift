@@ -8,9 +8,9 @@
 
 import UIKit
 import AEXML
-import ZIPFoundation
+import ReadiumZIPFoundation
 
-class FREpubParserArchive: NSObject {
+open class FREpubParserArchive: NSObject {
     static let ContainerPath = "META-INF/container.xml"
 
     let book: FRBook
@@ -20,25 +20,70 @@ class FREpubParserArchive: NSObject {
         self.book = book
         self.archive = archive
     }
-    
-    /// Unzip, delete and read an epub file.
+
+    /// Parse the Cover Image from an epub file.
     ///
     /// - Parameters:
-    ///   - withEpubPath: Epub path on the disk
-    /// - Returns: `FRBook` Object
+    ///   - epubPath: Epub path on the disk.
+    /// - Returns: The book cover as UIImage object
     /// - Throws: `FolioReaderError`
-    func readEpub(epubPath withEpubPath: String) throws -> FRBook {
-        guard FileManager.default.fileExists(atPath: withEpubPath) else {
+    public static func parseCoverImage(_ epubPath: String) async throws -> UIImage {
+        let archive: Archive
+        do {
+            archive = try await Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read)
+        } catch {
             throw FolioReaderError.bookNotAvailable
         }
-
-        book.name = withEpubPath.lastPathComponent
-        if book.opfResource == nil {
-            try readContainer()
+        
+        let parser = FREpubParserArchive(book: FRBook(), archive: archive)
+        let book = try await parser.readEpub(epubPath: epubPath)
+        guard let coverImage = book.coverImage else {
+            throw FolioReaderError.coverNotAvailable
         }
-        try readOpf()
-        self.book.epubArchive = archive
-        return self.book
+
+        guard let opfResourceHref = book.opfResource.href else {
+            throw FolioReaderError.coverNotAvailable
+        }
+        
+        let opfPath = opfResourceHref.deletingLastPathComponent
+        let coverEntryPath = opfPath.appendingPathComponent(coverImage.href)
+        
+        guard let coverEntry = book.archiveEntriesCache[coverEntryPath] else {
+            throw FolioReaderError.coverNotAvailable
+        }
+
+        let accumulator = DataAccumulator()
+        let _ = try await archive.extract(coverEntry) { data in
+            accumulator.append(data)
+        }
+
+        guard let image = UIImage(data: accumulator.result) else {
+            throw FolioReaderError.invalidImage(path: coverImage.href)
+        }
+
+        return image
+    }
+
+    /// Parse the book Author name from an epub file.
+    ///
+    /// - Parameters:
+    ///   - epubPath: Epub path on the disk.
+    /// - Returns: The author name
+    /// - Throws: `FolioReaderError`
+    public static func parseAuthorName(_ epubPath: String) async throws -> String {
+        let archive: Archive
+        do {
+            archive = try await Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read)
+        } catch {
+            throw FolioReaderError.bookNotAvailable
+        }
+        
+        let parser = FREpubParserArchive(book: FRBook(), archive: archive)
+        let book = try await parser.readEpub(epubPath: epubPath)
+        guard let authorName = book.authorName else {
+            throw FolioReaderError.authorNameNotAvailable
+        }
+        return authorName
     }
     
     /// Unzip, delete and read an epub file.
@@ -47,33 +92,23 @@ class FREpubParserArchive: NSObject {
     ///   - withEpubPath: Epub path on the disk
     /// - Returns: `FRBook` Object
     /// - Throws: `FolioReaderError`
-    func readEpubLight(epubPath withEpubPath: String) throws -> FRBook {
+    open func readEpub(epubPath withEpubPath: String) async throws -> FRBook {
         guard FileManager.default.fileExists(atPath: withEpubPath) else {
             throw FolioReaderError.bookNotAvailable
         }
 
         book.name = withEpubPath.lastPathComponent
-        try readContainer()
         
-        guard let opfPath = book.opfResource.href,
-              let opfEntry = archive[opfPath] else  { throw FolioReaderError.errorInOpf }
-        
-        var opfData = Data(capacity: Int(opfEntry.uncompressedSize))
-        let crc = try archive.extract(opfEntry) { data in
-            opfData.append(data)
+        // Build entries cache
+        for entry in try await archive.entries() {
+            book.archiveEntriesCache[entry.path] = entry
         }
-        guard crc == opfEntry.checksum else { throw FolioReaderError.errorInOpf }
-        let xmlDoc = try AEXMLDocument(xml: opfData)
 
-        // Read Spine
-        let spine = xmlDoc.root["spine"]
-
-        // Page progress direction `ltr` or `rtl`
-        if let pageProgressionDirection = spine.attributes["page-progression-direction"] {
-            book.spine.pageProgressionDirection = pageProgressionDirection
+        if book.opfResource == nil {
+            try await readContainer()
         }
-        
-        self.book.epubArchive = archive
+        try await readOpf()
+        self.book.epubURL = archive.url
         return self.book
     }
 
@@ -81,14 +116,14 @@ class FREpubParserArchive: NSObject {
     ///
     /// - Parameter bookBasePath: The base book path
     /// - Throws: `FolioReaderError`
-    private func readContainer() throws {
-        guard let containerEntry = archive[FREpubParserArchive.ContainerPath] else { throw FolioReaderError.errorInContainer }
-        var containerData = Data(capacity: Int(containerEntry.uncompressedSize))
-        let crc = try archive.extract(containerEntry) { data in
-            containerData.append(data)
+    private func readContainer() async throws {
+        guard let containerEntry = book.archiveEntriesCache[FREpubParserArchive.ContainerPath] else { throw FolioReaderError.errorInContainer }
+        let containerAccumulator = DataAccumulator()
+        let crc = try await archive.extract(containerEntry) { data in
+            containerAccumulator.append(data)
         }
         guard crc == containerEntry.checksum else { throw FolioReaderError.errorInContainer }
-        let xmlDoc = try AEXMLDocument(xml: containerData)
+        let xmlDoc = try AEXMLDocument(xml: containerAccumulator.result)
         
         let opfResource = FRResource()
         guard let fullPath = xmlDoc.root["rootfiles"]["rootfile"].attributes["full-path"] else {
@@ -103,18 +138,18 @@ class FREpubParserArchive: NSObject {
     ///
     /// - Parameter bookBasePath: The base book path
     /// - Throws: `FolioReaderError`
-    private func readOpf() throws {
+    private func readOpf() async throws {
         guard let opfPath = book.opfResource.href,
-              let opfEntry = archive[opfPath] else  { throw FolioReaderError.errorInOpf }
+              let opfEntry = book.archiveEntriesCache[opfPath] else  { throw FolioReaderError.errorInOpf }
         
         var identifier: String?
 
-        var opfData = Data(capacity: Int(opfEntry.uncompressedSize))
-        let crc = try archive.extract(opfEntry) { data in
-            opfData.append(data)
+        let opfAccumulator = DataAccumulator()
+        let crc = try await archive.extract(opfEntry) { data in
+            opfAccumulator.append(data)
         }
         guard crc == opfEntry.checksum else { throw FolioReaderError.errorInOpf }
-        let xmlDoc = try AEXMLDocument(xml: opfData)
+        let xmlDoc = try AEXMLDocument(xml: opfAccumulator.result)
 
         // Base OPF info
         if let package = xmlDoc.children.first {
@@ -125,10 +160,6 @@ class FREpubParserArchive: NSObject {
             }
         }
 
-        var entrySizeMap = [String:Int]()
-        archive.forEach { entry in
-            entrySizeMap[entry.path] = entry.uncompressedSize
-        }
         // Parse and save each "manifest item"
         xmlDoc.root["manifest"]["item"].all?.forEach {
             let resource = FRResource()
@@ -138,14 +169,16 @@ class FREpubParserArchive: NSObject {
             resource.mediaType = MediaType.by(name: $0.attributes["media-type"] ?? "", fileName: resource.href)
             resource.mediaOverlay = $0.attributes["media-overlay"]
             
-            resource.size = entrySizeMap[opfPath.deletingLastPathComponent.appendingPathComponent(resource.href)]
+            resource.size = book.archiveEntriesCache[opfPath.deletingLastPathComponent.appendingPathComponent(resource.href)]?.uncompressedSize
             
-            // if a .smil file is listed in resources, go parse that file now and save it on book model
-            if (resource.mediaType != nil && resource.mediaType == .smil) {
-                readSmilFile(resource)
-            }
-
             book.resources.add(resource)
+        }
+        
+        // Re-process smil files asynchronously
+        for resource in book.resources.resources.values {
+            if (resource.mediaType != nil && resource.mediaType == .smil) {
+                await readSmilFile(resource)
+            }
         }
 
         // Read metadata
@@ -178,7 +211,7 @@ class FREpubParserArchive: NSObject {
         precondition(book.tocResource != nil, "ERROR: Could not find table of contents resource. The book don't have a TOC resource.")
 
         // The book TOC
-        book.tableOfContents = findTableOfContents()
+        book.tableOfContents = try await findTableOfContents()
         book.flatTableOfContents = flatTOC
         
         // Create TOC Map
@@ -207,19 +240,19 @@ class FREpubParserArchive: NSObject {
     /// Reads and parses a .smil file.
     ///
     /// - Parameter resource: A `FRResource` to read the smill
-    private func readSmilFile(_ resource: FRResource) {
+    private func readSmilFile(_ resource: FRResource) async {
         do {
             guard let smilPath = resource.href,
-                  let smilEntry = archive[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(smilPath)] else { return }
+                  let smilEntry = book.archiveEntriesCache[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(smilPath)] else { return }
             
-            var smilData = Data(capacity: Int(smilEntry.uncompressedSize))
-            let crc = try archive.extract(smilEntry) { data in
-                smilData.append(data)
+            let smilAccumulator = DataAccumulator()
+            let crc = try await archive.extract(smilEntry) { data in
+                smilAccumulator.append(data)
             }
             guard crc == smilEntry.checksum else { return }
             
             var smilFile = FRSmilFile(resource: resource)
-            let xmlDoc = try AEXMLDocument(xml: smilData)
+            let xmlDoc = try AEXMLDocument(xml: smilAccumulator.result)
 
             let children = xmlDoc.root["body"].children
 
@@ -254,21 +287,21 @@ class FREpubParserArchive: NSObject {
     /// Read and parse the Table of Contents.
     ///
     /// - Returns: A list of toc references
-    private func findTableOfContents() -> [FRTocReference] {
+    private func findTableOfContents() async throws -> [FRTocReference] {
         var tableOfContent = [FRTocReference]()
         var tocItems: [AEXMLElement]?
         guard let tocResource = book.tocResource,
               let tocPath = tocResource.href,
-              let tocEntry = archive[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(tocPath)] else { return tableOfContent }
+              let tocEntry = book.archiveEntriesCache[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(tocPath)] else { return tableOfContent }
         
 
         do {
-            var tocData = Data(capacity: Int(tocEntry.uncompressedSize))
-            let crc = try archive.extract(tocEntry, consumer: { data in
-                tocData.append(data)
+            let accumulator = DataAccumulator()
+            let crc = try await archive.extract(tocEntry, consumer: { data in
+                accumulator.append(data)
             })
             guard crc == tocEntry.checksum else { return tableOfContent }
-            let xmlDoc = try AEXMLDocument(xml: tocData)
+            let xmlDoc = try AEXMLDocument(xml: accumulator.result)
 
             if tocResource.mediaType == MediaType.ncx {
                 if let itemsList = xmlDoc.root["navMap"]["navPoint"].all {

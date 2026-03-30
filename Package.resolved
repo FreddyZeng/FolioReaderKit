@@ -1,0 +1,61 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AEXML",
+        "repositoryURL": "https://github.com/tadija/AEXML.git",
+        "state": {
+          "branch": null,
+          "revision": "db806756c989760b35108146381535aec231092b",
+          "version": "4.7.0"
+        }
+      },
+      {
+        "package": "FontBlaster",
+        "repositoryURL": "https://github.com/ArtSabintsev/FontBlaster.git",
+        "state": {
+          "branch": null,
+          "revision": "09fffe9cf20293fce81ce7154b46f8e60291baa8",
+          "version": "5.3.0"
+        }
+      },
+      {
+        "package": "GCDWebServer",
+        "repositoryURL": "https://github.com/readium/GCDWebServer.git",
+        "state": {
+          "branch": null,
+          "revision": "584db89a4c3c3be27206cce6afde037b2b6e38d8",
+          "version": "4.0.1"
+        }
+      },
+      {
+        "package": "MenuItemKit",
+        "repositoryURL": "https://github.com/cxa/MenuItemKit.git",
+        "state": {
+          "branch": null,
+          "revision": "3f832b3d2a6075e1e6b7db06c498dd710c773e6f",
+          "version": "3.2.2"
+        }
+      },
+      {
+        "package": "SwiftSoup",
+        "repositoryURL": "https://github.com/scinfu/SwiftSoup.git",
+        "state": {
+          "branch": null,
+          "revision": "fd541c4b3fa7dcec2e7cfe049505b6e4382cd66b",
+          "version": "2.13.2"
+        }
+      },
+      {
+        "package": "ReadiumZIPFoundation",
+        "repositoryURL": "https://github.com/readium/ZIPFoundation.git",
+        "state": {
+          "branch": null,
+          "revision": "adb49c8bfe060cc187370b12fa081012a6440b86",
+          "version": "3.0.1"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

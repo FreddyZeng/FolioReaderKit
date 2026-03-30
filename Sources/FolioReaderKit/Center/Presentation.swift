@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import ZFDragableModalTransition
+import UIKit
 
 extension FolioReaderCenter {
     /**
@@ -38,7 +38,6 @@ extension FolioReaderCenter {
         }
         
         let nav = UINavigationController(rootViewController: pageController)
-        nav.navigationBar.backgroundColor = readerConfig.themeModeNavBackground[folioReader.themeMode]
         
         present(nav, animated: true, completion: nil)
     }
@@ -65,7 +64,6 @@ extension FolioReaderCenter {
         }
         
         let nav = UINavigationController(rootViewController: pageController)
-        nav.navigationBar.backgroundColor = readerConfig.themeModeNavBackground[folioReader.themeMode]
 
         present(nav, animated: true, completion: nil)
     }
@@ -102,16 +100,17 @@ extension FolioReaderCenter {
         menuTabs.append(menuProfileTab)
         
         menuBarController.setViewControllers(menuTabs, animated: true)
+        menuBarController.view.backgroundColor = .clear
         menuBarController.modalPresentationStyle = .custom
         menuBarController.selectedIndex = lastMenuSelectedIndex
         
-        animator = ZFModalTransitionAnimator(modalViewController: menuBarController)
+        animator = FolioModalTransitionAnimator(modalViewController: menuBarController)
         animator.isDragable = false
         animator.bounces = false
         animator.behindViewAlpha = 1.0
         animator.behindViewScale = 1.0
         animator.transitionDuration = 0.6
-        animator.direction = ZFModalTransitonDirection.bottom
+        animator.direction = .bottom
 
         menuBarController.transitioningDelegate = animator
         
@@ -130,13 +129,13 @@ extension FolioReaderCenter {
         let menu = FolioReaderPlayerMenu(folioReader: folioReader, readerConfig: readerConfig)
         menu.modalPresentationStyle = .custom
 
-        animator = ZFModalTransitionAnimator(modalViewController: menu)
+        animator = FolioModalTransitionAnimator(modalViewController: menu)
         animator.isDragable = true
         animator.bounces = false
         //animator.behindViewAlpha = 0.4
         animator.behindViewScale = 1
         animator.transitionDuration = 0.6
-        animator.direction = ZFModalTransitonDirection.bottom
+        animator.direction = .bottom
 
         menu.transitioningDelegate = animator
         present(menu, animated: true, completion: nil)

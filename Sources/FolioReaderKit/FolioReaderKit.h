@@ -15,5 +15,4 @@ FOUNDATION_EXPORT double FolioReaderKitVersionNumber;
 FOUNDATION_EXPORT const unsigned char FolioReaderKitVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <FolioReaderKit/PublicHeader.h>
-#import "ZFModalTransitionAnimator.h"
-#import "ZFDragableModalTransition.h"
+

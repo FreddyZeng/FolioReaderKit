@@ -61,19 +61,21 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
         self.delegate = self
         self.dataSource = self
 
-        self.view.backgroundColor = UIColor.white
+        let backgroundColor = self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode]
+        self.view.backgroundColor = backgroundColor
+
+        for view in self.view.subviews {
+            view.backgroundColor = backgroundColor
+            if let scrollView = view as? UIScrollView {
+                scrollView.backgroundColor = backgroundColor
+                scrollView.bounces = false
+            }
+        }
+
         if index >= viewList.count {
             index = 0
         }
         self.setViewControllers([viewList[index]], direction: .forward, animated: false, completion: nil)
-
-        // FIXME: This disable scroll because of highlight swipe to delete, if you can fix this would be awesome
-        for view in self.view.subviews {
-            if view is UIScrollView {
-                let scroll = view as! UIScrollView
-                scroll.bounces = false
-            }
-        }
 
         self.setCloseButton(withConfiguration: self.readerConfig)
     }
@@ -100,6 +102,10 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
         let navText = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
+        
+        segmentedControl.selectedSegmentTintColor = tintColor
+        segmentedControl.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
+        segmentedControl.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
     }
 
     // MARK: - Segmented control changes

@@ -68,8 +68,13 @@ extension FolioReaderHighlight {
         let str = (matchingHighlight.text as NSString)
 
         let mapped = matches?.map { (match) -> FolioReaderHighlight in
-            var contentPre = str.substring(with: NSRange(location: match.range.location-kHighlightRange, length: kHighlightRange))
-            var contentPost = str.substring(with: NSRange(location: match.range.location + match.range.length, length: kHighlightRange))
+            let preLocation = max(0, match.range.location - kHighlightRange)
+            let preLength = match.range.location - preLocation
+            var contentPre = str.substring(with: NSRange(location: preLocation, length: preLength))
+            
+            let postLocation = match.range.location + match.range.length
+            let postLength = min(str.length - postLocation, kHighlightRange)
+            var contentPost = str.substring(with: NSRange(location: postLocation, length: postLength))
 
             // Normalize string before save
             contentPre = FolioReaderHighlight.subString(ofContent: contentPre, fromRangeOfString: ">", withPattern: "((?=[^>]*$)(.|\\s)*$)")

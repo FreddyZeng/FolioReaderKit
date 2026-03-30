@@ -8,7 +8,7 @@
 //
 
 import UIKit
-import ZIPFoundation
+import ReadiumZIPFoundation
 
 open class FRBook: NSObject {
     var metadata = FRMetadata()
@@ -26,11 +26,12 @@ open class FRBook: NSObject {
     public var flatTableOfContents: [FRTocReference]!
     public var resourceTocMap: [FRResource: [FRTocReference]]!
 
-    public var epubArchive: Archive?
+    public var epubURL: URL?
+    public var archiveEntriesCache = [String: Entry]()
     
-    public var threadEpubArchive: Archive? {
-        guard let archiveURL = self.epubArchive?.url,
-              let epubArchive = Archive(url: archiveURL, accessMode: .read)
+    public func getThreadEpubArchive() async -> Archive? {
+        guard let archiveURL = self.epubURL,
+              let epubArchive = try? await Archive(url: archiveURL, accessMode: .read)
         else { return nil }
         return epubArchive
     }
