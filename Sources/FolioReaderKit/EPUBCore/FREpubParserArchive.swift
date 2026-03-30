@@ -64,29 +64,6 @@ open class FREpubParserArchive: NSObject {
         return image
     }
 
-    /// Parse the book title from an epub file.
-    ///
-    /// - Parameters:
-    ///   - epubPath: Epub path on the disk.
-    /// - Returns: The book title
-    /// - Throws: `FolioReaderError`
-    public static func parseTitle(_ epubPath: String) async throws -> String {
-        let archive: Archive
-        do {
-            archive = try await Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read)
-        } catch {
-            throw FolioReaderError.bookNotAvailable
-        }
-        
-        let parser = FREpubParserArchive(book: FRBook(), archive: archive)
-        let book = try await parser.readEpubLight(epubPath: epubPath)
-        guard let title = book.title else {
-             throw FolioReaderError.titleNotAvailable
-        }
-        return title
-    }
-
-
     /// Parse the book Author name from an epub file.
     ///
     /// - Parameters:
@@ -131,48 +108,6 @@ open class FREpubParserArchive: NSObject {
             try await readContainer()
         }
         try await readOpf()
-        self.book.epubURL = archive.url
-        return self.book
-    }
-    
-    /// Unzip, delete and read an epub file.
-    ///
-    /// - Parameters:
-    ///   - withEpubPath: Epub path on the disk
-    /// - Returns: `FRBook` Object
-    /// - Throws: `FolioReaderError`
-    func readEpubLight(epubPath withEpubPath: String) async throws -> FRBook {
-        guard FileManager.default.fileExists(atPath: withEpubPath) else {
-            throw FolioReaderError.bookNotAvailable
-        }
-
-        book.name = withEpubPath.lastPathComponent
-        
-        // Build entries cache
-        for entry in try await archive.entries() {
-            book.archiveEntriesCache[entry.path] = entry
-        }
-
-        try await readContainer()
-        
-        guard let opfPath = book.opfResource.href,
-              let opfEntry = book.archiveEntriesCache[opfPath] else  { throw FolioReaderError.errorInOpf }
-        
-        let opfAccumulator = DataAccumulator()
-        let crc = try await archive.extract(opfEntry) { data in
-            opfAccumulator.append(data)
-        }
-        guard crc == opfEntry.checksum else { throw FolioReaderError.errorInOpf }
-        let xmlDoc = try AEXMLDocument(xml: opfAccumulator.result)
-
-        // Read Spine
-        let spine = xmlDoc.root["spine"]
-
-        // Page progress direction `ltr` or `rtl`
-        if let pageProgressionDirection = spine.attributes["page-progression-direction"] {
-            book.spine.pageProgressionDirection = pageProgressionDirection
-        }
-        
         self.book.epubURL = archive.url
         return self.book
     }
