@@ -265,7 +265,8 @@ extension FolioReaderPage {
                 position.bookName = bookRootToc.title
             }
             
-            DispatchQueue.global().async {
+            DispatchQueue.global().async { [weak self] in
+                guard let self = self else { return }
                 position.bundleProgress = self.getBundleProgress()
                 
                 DispatchQueue.main.async {

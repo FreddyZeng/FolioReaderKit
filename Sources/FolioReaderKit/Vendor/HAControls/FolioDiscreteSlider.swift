@@ -184,7 +184,7 @@ open class FolioDiscreteSlider: UIControl {
     private func updateValueFor(_ x: CGFloat) {
         let usableWidth = bounds.width - thumbSize.width
         let clampedX = max(thumbSize.width/2, min(x, bounds.width - thumbSize.width/2))
-        let ratio = (clampedX - thumbSize.width/2) / usableWidth
+        let ratio = usableWidth > 0 ? (clampedX - thumbSize.width/2) / usableWidth : 0
         
         let segments = CGFloat(max(1, tickCount - 1))
         let tick = round(ratio * segments)
