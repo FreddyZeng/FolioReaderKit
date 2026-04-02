@@ -462,25 +462,25 @@ internal extension UIViewController {
     
     func setTranslucentNavigation(_ translucent: Bool = true, color: UIColor, tintColor: UIColor = UIColor.white, titleColor: UIColor = UIColor.black, andFont font: UIFont = UIFont.systemFont(ofSize: 17)) {
         let navBar = self.navigationController?.navigationBar
-        
+
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = color
+        if translucent {
+            appearance.configureWithDefaultBackground()
+            appearance.backgroundColor = color.withAlphaComponent(0.5)
+        } else {
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = color
+        }
         appearance.titleTextAttributes = [.foregroundColor: titleColor, .font: font]
-        
+
         navBar?.standardAppearance = appearance
         navBar?.scrollEdgeAppearance = appearance
         navBar?.compactAppearance = appearance
-        
+
         navBar?.isHidden = false
         navBar?.isTranslucent = translucent
         navBar?.tintColor = tintColor
-        
-        if let segmentedControl = self.navigationItem.titleView as? UISegmentedControl {
-            segmentedControl.setTitleTextAttributes([.foregroundColor: titleColor], for: .normal)
-        }
-    }
-}
+    }}
 /**
  Fix for Swift 4 / iOS 12
  https://stackoverflow.com/questions/34452920/removing-the-hairline-under-navigation-bar

@@ -41,12 +41,22 @@ extension FolioReaderCenter {
     func frameForPageIndicatorView(outerBounds: CGRect) -> CGRect {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
+        let safeAreaBottom = view.safeAreaInsets.bottom
+        
         #if DEBUG
-        pageIndicatorHeight = 40
+        let extraDebugHeight: CGFloat = 30
+        #else
+        let extraDebugHeight: CGFloat = 0
         #endif
-        var bounds = CGRect(x: 0, y: outerBounds.size.height-pageIndicatorHeight, width: outerBounds.size.width, height: pageIndicatorHeight)
-        bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
-        return bounds
+
+        if safeAreaBottom > 0 {
+            pageIndicatorHeight = safeAreaBottom + extraDebugHeight
+        } else {
+            pageIndicatorHeight = 40 + extraDebugHeight
+        }
+        
+        let fullHeight = outerBounds.size.height + safeAreaBottom
+        return CGRect(x: 0, y: fullHeight - pageIndicatorHeight, width: outerBounds.size.width, height: pageIndicatorHeight)
     }
 
     func frameForScrollScrubber(outerBounds: CGRect) -> CGRect {
@@ -55,11 +65,11 @@ extension FolioReaderCenter {
         guard let currentPage = currentPage else { return .zero }
         
         let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let topComponentTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : navBarHeight
+        let topComponentTotal = self.readerConfig.hideBars ? 0 : navBarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
         
-        let scrubberYforHorizontal: CGFloat = ((self.readerConfig.shouldHideNavigationOnTap == true || self.readerConfig.hideBars == true) ? 50 : 74)
-        let scrubberYforVertical: CGFloat = self.pageHeight// + ((self.readerConfig.shouldHideNavigationOnTap == true || self.readerConfig.hideBars == true) ? 50 : 74)
+        let scrubberYforHorizontal: CGFloat = (self.readerConfig.hideBars == true ? 50 : 74)
+        let scrubberYforVertical: CGFloat = self.pageHeight
         
         return currentPage.byWritingMode(
             CGRect(x: self.pageWidth + 10, y: scrubberYforHorizontal, width: 40, height: (self.pageHeight - 70 - topComponentTotal - bottomComponentTotal)),
@@ -204,10 +214,7 @@ extension FolioReaderCenter {
         UIView.animate(withDuration: 0.25, animations: {
             readerContainer.setNeedsStatusBarAppearanceUpdate()
 
-            // Show minutes indicator
-            if (shouldShowIndicator == true) {
-                self.pageIndicatorView?.minutesLabel.alpha = shouldHide ? 0 : 1
-            }
+            self.pageIndicatorView?.alpha = shouldHide ? 0 : 1
         })
         self.navigationController?.setNavigationBarHidden(shouldHide, animated: true)
     }

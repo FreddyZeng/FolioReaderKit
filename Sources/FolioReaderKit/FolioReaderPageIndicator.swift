@@ -59,11 +59,18 @@ class FolioReaderPageIndicator: UIView {
         pagesLabel.sizeToFit()
         
         let fullW = pagesLabel.frame.width + minutesLabel.frame.width
-        minutesLabel.frame.origin = CGPoint(x: frame.width/2-fullW/2, y: 2)
-        pagesLabel.frame.origin = CGPoint(x: minutesLabel.frame.origin.x+minutesLabel.frame.width, y: 2)
         
         #if DEBUG
-        infoLabel.frame = CGRect(origin: .init(x: 10, y: 22), size: .init(width: frame.width, height: 18))
+        let yPos: CGFloat = 5
+        #else
+        let yPos = (frame.height / 2) - (pagesLabel.frame.height / 2)
+        #endif
+        
+        minutesLabel.frame.origin = CGPoint(x: frame.width/2-fullW/2, y: yPos)
+        pagesLabel.frame.origin = CGPoint(x: minutesLabel.frame.origin.x+minutesLabel.frame.width, y: yPos)
+        
+        #if DEBUG
+        infoLabel.frame = CGRect(origin: .init(x: 0, y: yPos + 15), size: .init(width: frame.width, height: 18))
         #endif
         
         if updateShadow {

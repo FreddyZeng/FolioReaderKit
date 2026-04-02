@@ -66,7 +66,25 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     var menuIsVisible = false
     var firstLoadReloaded = false
     
+    static var cachedStatusBarHeight: CGFloat = 0
     var statusbarHeight: CGFloat {
+        // 1. Fast path: Use window insets (available 99% of the time during layout)
+        if let safeTop = self.window?.safeAreaInsets.top, safeTop > 0 {
+            FolioReaderPage.cachedStatusBarHeight = safeTop
+            return safeTop
+        }
+        
+        // 2. Medium path: Use own insets
+        if self.safeAreaInsets.top > 0 {
+            FolioReaderPage.cachedStatusBarHeight = self.safeAreaInsets.top
+            return self.safeAreaInsets.top
+        }
+        
+        // 3. Fallback to cache or simple status bar frame (only for very early layout)
+        if FolioReaderPage.cachedStatusBarHeight > 0 {
+            return FolioReaderPage.cachedStatusBarHeight
+        }
+        
         return self.window?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
     }
     
@@ -262,12 +280,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     }
 
     func webViewFrame() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-        
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let topComponentTotal = self.readerConfig.hideBars ? 0 : navBarHeight
+        let topComponentTotal = self.statusbarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
         let paddingTop: CGFloat = floor(CGFloat(self.folioReader.currentMarginTop) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
         let paddingBottom: CGFloat = floor(CGFloat(self.folioReader.currentMarginBottom) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
@@ -303,14 +316,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     }
     
     func anchorBoundsFrame() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-        
         // bounds.height does not include statusbarHeight
         let statusbarHeight = self.statusbarHeight
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let topComponentTotal = self.readerConfig.hideBars ? 0 : navBarHeight
+        let topComponentTotal = self.statusbarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
         let paddingTop: CGFloat = floor(CGFloat(self.folioReader.currentMarginTop) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
         let paddingBottom: CGFloat = floor(CGFloat(self.folioReader.currentMarginBottom) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
@@ -340,61 +348,6 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         )
     }
     
-    func webViewFrameVanilla() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-        
-        let statusbarHeight = self.statusbarHeight
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let navTotal = self.readerConfig.hideBars ? 0 : statusbarHeight + navBarHeight
-        let paddingTop: CGFloat = 20
-        let paddingBottom: CGFloat = 30
-        
-        return CGRect(
-            x: bounds.origin.x,
-            y: self.readerConfig.isDirection(bounds.origin.y + navTotal, bounds.origin.y + navTotal + paddingTop, bounds.origin.y + navTotal),
-            width: bounds.width,
-            height: self.readerConfig.isDirection(bounds.height - navTotal, bounds.height - navTotal - paddingTop - paddingBottom, bounds.height - navTotal)
-        )
-    }
-    
-    func webViewFramePeter() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-
-        let statusbarHeight = self.statusbarHeight
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let navTotal = self.readerConfig.hideBars ? 0 : statusbarHeight + navBarHeight
-        let paddingTop: CGFloat = -40
-        let paddingBottom: CGFloat = 50
-
-        print("boundsFrame \(bounds)")
-        let statusBarFrame = self.window?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
-        print("statusBarFrame \(statusBarFrame)")
-        print("navigationBarFrame \(String(describing: self.folioReader.readerCenter?.navigationController?.navigationBar.frame))")
-        
-        let x = bounds.origin.x
-        var y = self.readerConfig.isDirection(bounds.origin.y + navTotal, bounds.origin.y + navTotal + paddingTop, bounds.origin.y + navTotal)
-        y = navBarHeight
-        let width = bounds.width
-        var height = self.readerConfig.isDirection(bounds.height - navTotal, bounds.height - navTotal - paddingTop - paddingBottom, bounds.height - navTotal)
-        height = bounds.height - navBarHeight - statusbarHeight
-        
-        var frame = CGRect(x:x, y:y, width: width, height: height)
-        frame = frame.insetBy(
-            dx: CGFloat((self.folioReader.currentMarginLeft + self.folioReader.currentMarginRight) / 2),
-            dy: CGFloat((self.folioReader.currentMarginTop + self.folioReader.currentMarginBottom) / 2))
-        frame = frame.offsetBy(
-            dx: CGFloat((self.folioReader.currentMarginLeft - self.folioReader.currentMarginRight) / 2),
-            dy: CGFloat((self.folioReader.currentMarginTop - self.folioReader.currentMarginBottom) / 2))
-        
-        print("Frame \(frame)")
-        
-        return frame
-    }
-
     func loadHTMLString(_ htmlContent: String!, baseURL: URL!) {
         // Load the html into the webview
         webView?.alpha = 0
