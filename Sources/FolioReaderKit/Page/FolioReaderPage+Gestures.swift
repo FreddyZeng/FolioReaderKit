@@ -8,9 +8,16 @@ import UIKit
 extension FolioReaderPage {
     // MARK: Gesture recognizer
 
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        let viewName = touch.view.map { "\(type(of: $0))" } ?? "nil"
+        print("FolioReaderPage shouldReceive touch in \(viewName) at \(touch.location(in: self.contentView)) - Page \(self.pageNumber ?? -1)")
+        return true
+    }
+
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        print("FolioReaderPage shouldRecognizeSimultaneouslyWith \(type(of: gestureRecognizer)) and \(type(of: otherGestureRecognizer))")
         if gestureRecognizer.view is FolioReaderWebView {
-            if otherGestureRecognizer is UILongPressGestureRecognizer || otherGestureRecognizer is UITapGestureRecognizer {
+            if otherGestureRecognizer is UILongPressGestureRecognizer {
                 if UIMenuController.shared.isMenuVisible {
                     webView?.setMenuVisible(false)
                 }
@@ -22,6 +29,8 @@ extension FolioReaderPage {
     }
 
     @objc public func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
+        print("FolioReaderPage handleTapGesture state=\(recognizer.state.rawValue) - Page \(self.pageNumber ?? -1)")
+        self.shouldShowBar = true
         self.delegate?.pageTap?(recognizer)
         
         if let _navigationController = self.folioReader.readerCenter?.navigationController, (_navigationController.isNavigationBarHidden == true) {
@@ -57,6 +66,11 @@ extension FolioReaderPage {
 
     // MARK: - Deadzone Pan Gesture
     public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Allow tap gesture to begin regardless of view
+        if gestureRecognizer is UITapGestureRecognizer {
+            return true
+        }
+        
         if gestureRecognizer.view == panDeadZoneTop || gestureRecognizer.view == panDeadZoneBot || gestureRecognizer.view == panDeadZoneLeft || gestureRecognizer.view == panDeadZoneRight {
             return true
         }

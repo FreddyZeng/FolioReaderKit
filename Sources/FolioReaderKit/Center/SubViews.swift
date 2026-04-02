@@ -174,10 +174,6 @@ extension FolioReaderCenter {
     func hideBars() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        guard self.readerConfig.shouldHideNavigationOnTap == true else {
-            return
-        }
-
         self.updateBarsStatus(true)
     }
 
@@ -190,10 +186,6 @@ extension FolioReaderCenter {
 
     func toggleBars() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
-
-        guard self.readerConfig.shouldHideNavigationOnTap == true else {
-            return
-        }
 
         let shouldHide = !self.navigationController!.isNavigationBarHidden
         if shouldHide == false {
