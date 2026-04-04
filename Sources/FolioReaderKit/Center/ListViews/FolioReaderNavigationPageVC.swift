@@ -103,7 +103,7 @@ class FolioReaderNavigationPageVC: UIPageViewController {
             switch self.folioReader.structuralStyle {
             case .bundle:
                 self.navigationItem.rightBarButtonItem = UIBarButtonItem(
-                    title: self.folioReader.currentNavigationMenuBookListSyle == .Grid ? "List" : "Grid",
+                    title: self.folioReader.currentNavigationMenuBookListStyle == .Grid ? "List" : "Grid",
                     style: .plain,
                     target: self,
                     action: #selector(switchBookListStyle(_:))
@@ -142,10 +142,10 @@ class FolioReaderNavigationPageVC: UIPageViewController {
     // MARK: - NavBar Button
     
     @objc func switchBookListStyle(_ sender: UIBarButtonItem) {
-        if self.folioReader.currentNavigationMenuBookListSyle == .Grid {
-            self.folioReader.currentNavigationMenuBookListSyle = .List
+        if self.folioReader.currentNavigationMenuBookListStyle == .Grid {
+            self.folioReader.currentNavigationMenuBookListStyle = .List
         } else {
-            self.folioReader.currentNavigationMenuBookListSyle = .Grid
+            self.folioReader.currentNavigationMenuBookListStyle = .Grid
         }
         configureNavBar()
         guard let bookList = self.viewControllerZero as? FolioReaderBookList else { return }

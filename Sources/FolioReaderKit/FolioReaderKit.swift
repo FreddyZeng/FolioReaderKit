@@ -412,19 +412,19 @@ extension FolioReader {
      0: Grid
      1: List
      */
-    public var currentNavigationMenuBookListSyle: NavigationMenuBookListStyle {
+    public var currentNavigationMenuBookListStyle: NavigationMenuBookListStyle {
         get {
             guard self.structuralStyle == .bundle else {
                 return .List
             }
             let defaults: NavigationMenuBookListStyle = self.structuralTrackingTocLevel == .level1 ? .Grid : .List
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentNavigationMenuBookListSyle", default: defaults.rawValue),
+            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentNavigationMenuBookListStyle", default: defaults.rawValue),
                   let style = NavigationMenuBookListStyle(rawValue: rawValue)
             else { return defaults }
             return style
         }
         set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "currentNavigationMenuBookListSyle")
+            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "currentNavigationMenuBookListStyle")
         }
     }
     

@@ -272,7 +272,7 @@ class FolioReaderUserDefaultsPreferenceProvider: FolioReaderDummyPreferenceProvi
         self.defaults.set(value, forKey: kCurrentAnnotationMenuIndex)
     }
 
-    override func preference(currentNavigationMenuBookListSyle defaults: Int) -> Int {
+    override func preference(currentNavigationMenuBookListStyle defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentNavigationMenuBookListStyle)
     }
     override func preference(setCurrentNavigationMenuBookListStyle value: Int) {
