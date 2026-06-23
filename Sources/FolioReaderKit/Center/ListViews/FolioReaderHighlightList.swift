@@ -293,13 +293,19 @@ class FolioReaderHighlightList: UITableViewController {
             }
 
             folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(folioReader, removedId: highlight.highlightId)
-            
+
             sectionHighlights[sections[indexPath.section]]?.remove(at: indexPath.row)
-            if sectionHighlights[sections[indexPath.section]]?.isEmpty == true {
+            let isOnlyRowInSection = (sectionHighlights[sections[indexPath.section]]?.isEmpty == true)
+            if isOnlyRowInSection {
                 sectionHighlights.removeValue(forKey: sections[indexPath.section])
                 sections.remove(at: indexPath.section)
             }
-            tableView.deleteRows(at: [indexPath], with: .fade)
+            switch folioReaderListDeleteAction(isOnlyRowInSection: isOnlyRowInSection, indexPath: indexPath) {
+            case .deleteRow(let indexPath):
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            case .deleteSection(let section):
+                tableView.deleteSections(IndexSet(integer: section), with: .fade)
+            }
         }
     }
     

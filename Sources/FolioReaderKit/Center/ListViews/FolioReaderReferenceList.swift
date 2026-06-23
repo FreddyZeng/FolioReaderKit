@@ -418,13 +418,19 @@ class FolioReaderReferenceList: UITableViewController {
             }
 
             folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(folioReader, removed: pos)
-            
+
             sectionBookmarks[sections[indexPath.section]]?.remove(at: indexPath.row)
-            if sectionBookmarks[sections[indexPath.section]]?.isEmpty == true {
+            let isOnlyRowInSection = (sectionBookmarks[sections[indexPath.section]]?.isEmpty == true)
+            if isOnlyRowInSection {
                 sectionBookmarks.removeValue(forKey: sections[indexPath.section])
                 sections.remove(at: indexPath.section)
             }
-            tableView.deleteRows(at: [indexPath], with: .fade)
+            switch folioReaderListDeleteAction(isOnlyRowInSection: isOnlyRowInSection, indexPath: indexPath) {
+            case .deleteRow(let indexPath):
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            case .deleteSection(let section):
+                tableView.deleteSections(IndexSet(integer: section), with: .fade)
+            }
         }
     }
     
