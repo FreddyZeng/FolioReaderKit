@@ -28,6 +28,7 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
         guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
+        center.invalidatePendingBarReveal()
         center.isScrolling = true
         center.clearRecentlyScrolled()
         center.recentlyScrolled = true
@@ -38,6 +39,10 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
             currentPage.webView?.setMenuVisible(false)
         }
 
+        if center.barHostingNavigationController?.isNavigationBarHidden == false {
+            center.hideBars()
+        }
+
         center.scrollScrubber?.scrollViewWillBeginDragging(scrollView)
     }
 
@@ -45,8 +50,8 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
         guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER"); }
 
-        if (center.navigationController?.isNavigationBarHidden == false) {
-            center.toggleBars()
+        if scrollView.isDragging || scrollView.isDecelerating {
+            center.invalidatePendingBarReveal()
         }
 
         center.scrollScrubber?.scrollViewDidScroll(scrollView)
@@ -96,6 +101,10 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
     open func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard let center = center else { return }
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+
+        if decelerate == false {
+            center.isScrolling = false
+        }
 
         center.recentlyScrolledTimer = Timer(timeInterval:center.recentlyScrolledDelay, target: center, selector: #selector(FolioReaderCenter.clearRecentlyScrolled), userInfo: nil, repeats: false)
         RunLoop.current.add(center.recentlyScrolledTimer, forMode: RunLoop.Mode.common)

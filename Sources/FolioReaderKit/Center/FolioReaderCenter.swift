@@ -42,6 +42,8 @@ open class FolioReaderCenter: UIViewController {
     var scrollScrubber: ScrollScrubber?
     var activityIndicator = UIActivityIndicatorView()
     var isScrolling = false
+    var pendingBarRevealWorkItem: DispatchWorkItem?
+    var pendingBarRevealToken: UInt = 0
     var pageScrollDirection = ScrollDirection()
     let wkProcessorPool = WKProcessPool()
     
@@ -100,6 +102,10 @@ open class FolioReaderCenter: UIViewController {
     var readerConfig: FolioReaderConfig {
         guard let readerContainer = readerContainer else { return FolioReaderConfig() }
         return readerContainer.readerConfig
+    }
+
+    var barHostingNavigationController: UINavigationController? {
+        readerContainer?.centerNavigationController ?? navigationController
     }
 
     lazy var paginationEngine: ReaderPaginationEngine = {

@@ -10,7 +10,58 @@ import Foundation
 import UIKit
 
 extension FolioReaderCenter {
-    
+    func isScrollMotionActive() -> Bool {
+        if let collectionView = collectionView,
+           collectionView.isDragging || collectionView.isDecelerating {
+            return true
+        }
+
+        if let webScrollView = currentPage?.webView?.scrollView,
+           webScrollView.isDragging || webScrollView.isDecelerating {
+            return true
+        }
+
+        return isScrolling
+    }
+
+    func invalidatePendingBarReveal() {
+        pendingBarRevealToken &+= 1
+        pendingBarRevealWorkItem?.cancel()
+        pendingBarRevealWorkItem = nil
+    }
+
+    func requestBarReveal(after delay: TimeInterval = 0.4, forPageNumber pageNumber: Int? = nil) {
+        guard readerConfig.hideBars == false else { return }
+
+        invalidatePendingBarReveal()
+        let token = pendingBarRevealToken
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            guard self.canRevealBars(forToken: token, pageNumber: pageNumber) else { return }
+            self.showBars()
+        }
+
+        pendingBarRevealWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    func canRevealBars(forToken token: UInt, pageNumber: Int?) -> Bool {
+        guard readerConfig.hideBars == false else { return false }
+        guard token == pendingBarRevealToken else { return false }
+        guard barHostingNavigationController?.isNavigationBarHidden == true else { return false }
+        guard isScrollMotionActive() == false else { return false }
+
+        if let pageNumber = pageNumber, currentPage?.pageNumber != pageNumber {
+            return false
+        }
+
+        if currentPage?.menuIsVisible == true {
+            return false
+        }
+
+        return true
+    }
+
     func updateSubviewFrames() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
@@ -184,20 +235,29 @@ extension FolioReaderCenter {
     func hideBars() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
+        invalidatePendingBarReveal()
         self.updateBarsStatus(true)
     }
 
     func showBars() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        guard readerConfig.hideBars == false else { return }
 
+        invalidatePendingBarReveal()
         self.configureNavBar()
         self.updateBarsStatus(false)
     }
 
     func toggleBars() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        guard let navigationController = barHostingNavigationController else { return }
 
-        let shouldHide = !self.navigationController!.isNavigationBarHidden
+        if readerConfig.hideBars == true {
+            hideBars()
+            return
+        }
+
+        let shouldHide = !navigationController.isNavigationBarHidden
         if shouldHide == false {
             self.configureNavBar()
         }
@@ -216,6 +276,6 @@ extension FolioReaderCenter {
 
             self.pageIndicatorView?.alpha = shouldHide ? 0 : 1
         })
-        self.navigationController?.setNavigationBarHidden(shouldHide, animated: true)
+        barHostingNavigationController?.setNavigationBarHidden(shouldHide, animated: true)
     }
 }

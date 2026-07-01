@@ -9,13 +9,15 @@ extension FolioReaderPage {
     // MARK: Gesture recognizer
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        let viewName = touch.view.map { "\(type(of: $0))" } ?? "nil"
-        print("FolioReaderPage shouldReceive touch in \(viewName) at \(touch.location(in: self.contentView)) - Page \(self.pageNumber ?? -1)")
+        if gestureRecognizer is UITapGestureRecognizer {
+            tapStartLocation = touch.location(in: contentView)
+            tapStartPageNumber = pageNumber
+            tapStartedWhileScrolling = folioReader.readerCenter?.isScrollMotionActive() ?? false
+        }
         return true
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        print("FolioReaderPage shouldRecognizeSimultaneouslyWith \(type(of: gestureRecognizer)) and \(type(of: otherGestureRecognizer))")
         if gestureRecognizer.view is FolioReaderWebView {
             if otherGestureRecognizer is UILongPressGestureRecognizer {
                 if UIMenuController.shared.isMenuVisible {
@@ -29,29 +31,50 @@ extension FolioReaderPage {
     }
 
     @objc public func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
-        print("FolioReaderPage handleTapGesture state=\(recognizer.state.rawValue) - Page \(self.pageNumber ?? -1)")
-        self.shouldShowBar = true
-        self.delegate?.pageTap?(recognizer)
-        
-        if let _navigationController = self.folioReader.readerCenter?.navigationController, (_navigationController.isNavigationBarHidden == true) {
+        delegate?.pageTap?(recognizer)
+
+        guard let readerCenter = folioReader.readerCenter else { return }
+        guard isValidBarRevealTap(recognizer) else {
+            readerCenter.invalidatePendingBarReveal()
+            return
+        }
+
+        if readerCenter.barHostingNavigationController?.isNavigationBarHidden == true {
+            let pageNumberForTap = tapStartPageNumber ?? pageNumber
             webView?.js("getSelectedText()") { selected in
                 guard (selected == nil || selected?.isEmpty == true) else {
                     return
                 }
-            
-                let delay = 0.4 * Double(NSEC_PER_SEC) // 0.4 seconds * nanoseconds per seconds
-                let dispatchTime = (DispatchTime.now() + (Double(Int64(delay)) / Double(NSEC_PER_SEC)))
-                
-                DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
-                    if (self.shouldShowBar == true && self.menuIsVisible == false) {
-                        self.folioReader.readerCenter?.toggleBars()
-                    }
-                })
+
+                readerCenter.requestBarReveal(forPageNumber: pageNumberForTap)
             }
         } else if (self.readerConfig.shouldHideNavigationOnTap == true) {
-            self.folioReader.readerCenter?.hideBars()
+            readerCenter.hideBars()
             self.menuIsVisible = false
         }
+    }
+
+    private func isValidBarRevealTap(_ recognizer: UITapGestureRecognizer) -> Bool {
+        guard readerConfig.hideBars == false else { return false }
+        guard tapStartedWhileScrolling == false else { return false }
+        guard folioReader.readerCenter?.isScrollMotionActive() == false else { return false }
+        guard menuIsVisible == false else { return false }
+
+        if let tapStartPageNumber = tapStartPageNumber, tapStartPageNumber != pageNumber {
+            return false
+        }
+
+        if let tapStartLocation = tapStartLocation {
+            let tapEndLocation = recognizer.location(in: contentView)
+            let deltaX = tapEndLocation.x - tapStartLocation.x
+            let deltaY = tapEndLocation.y - tapStartLocation.y
+            let distance = hypot(deltaX, deltaY)
+            if distance > 8 {
+                return false
+            }
+        }
+
+        return true
     }
 
     public func pushNavigateWebViewScrollPositions() {

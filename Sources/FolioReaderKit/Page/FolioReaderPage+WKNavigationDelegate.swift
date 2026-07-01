@@ -123,7 +123,7 @@ extension FolioReaderPage {
         guard let url = request.url else { return false }
 
         if scheme == "highlight" || scheme == "highlight-with-note" {
-            shouldShowBar = false
+            folioReader.readerCenter?.invalidatePendingBarReveal()
 
             guard let decoded = url.absoluteString.removingPercentEncoding else { return false }
             let index = decoded.index(decoded.startIndex, offsetBy: 12)

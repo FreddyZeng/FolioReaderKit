@@ -143,7 +143,7 @@ open class FolioReaderContainer: UIViewController {
 
         if (self.readerConfig.hideBars == true) {
             self.readerConfig.shouldHideNavigationOnTap = false
-            self.navigationController?.navigationBar.isHidden = true
+            self.centerNavigationController?.setNavigationBarHidden(true, animated: false)
             self.centerViewController?.pageIndicatorHeight = 0
         }
 

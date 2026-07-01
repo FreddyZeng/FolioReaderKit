@@ -14,6 +14,8 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
     public func pageDidLoad(_ page: FolioReaderPage) {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
+        invalidatePendingBarReveal()
+
 //        let indexPath = getCurrentIndexPath(navigating: to)
 //        guard indexPath.row + 1 == page.pageNumber else { return }  //guard against cancelled page transition
         

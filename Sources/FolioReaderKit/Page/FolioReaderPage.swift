@@ -62,7 +62,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     var idOffsets: [String: Int]?
     
     var colorView: UIView!
-    var shouldShowBar = true
+    var tapStartLocation: CGPoint?
+    var tapStartPageNumber: Int?
+    var tapStartedWhileScrolling = false
     var menuIsVisible = false
     var firstLoadReloaded = false
     
@@ -226,7 +228,6 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
                 webView?.removeGestureRecognizer(gesture)
             }
         })
-        print("FolioReaderPage adding tapGestureRecognizer to webView - Page \(self.pageNumber ?? -1)")
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(_:)))
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.cancelsTouchesInView = false

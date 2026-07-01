@@ -610,6 +610,13 @@ open class FolioReaderWebView: WKWebView {
     }
     
     open func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
+        if let currentPage = self.folioReader.readerCenter?.currentPage {
+            currentPage.menuIsVisible = menuVisible
+        }
+        if menuVisible {
+            self.folioReader.readerCenter?.invalidatePendingBarReveal()
+        }
+
         if menuVisible == false {
             UIMenuController.shared.hideMenu()
         }
