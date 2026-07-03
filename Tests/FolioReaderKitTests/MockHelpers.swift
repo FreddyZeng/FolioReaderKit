@@ -160,3 +160,136 @@ public class MockReadPositionProvider: NSObject, FolioReaderReadPositionProvider
         return []
     }
 }
+
+// MARK: - Mock Bookmark Provider
+public class MockBookmarkProvider: NSObject, FolioReaderBookmarkProvider {
+    private var storage: [String: FolioReaderBookmark] = [:]
+    
+    public override init() {}
+    
+    public func folioReaderBookmark(_ folioReader: FolioReader, added bookmark: FolioReaderBookmark, completion: Completion?) {
+        if let pos = bookmark.pos {
+            storage[pos] = bookmark
+        }
+        completion?(nil)
+    }
+    
+    public func folioReaderBookmark(_ folioReader: FolioReader, removed bookmarkPos: String) {
+        storage.removeValue(forKey: bookmarkPos)
+    }
+    
+    public func folioReaderBookmark(_ folioReader: FolioReader, updated bookmarkPos: String, title: String) {
+        if let bookmark = storage[bookmarkPos] {
+            bookmark.title = title
+            storage[bookmarkPos] = bookmark
+        }
+    }
+    
+    public func folioReaderBookmark(_ folioReader: FolioReader, getBy bookmarkPos: String) -> FolioReaderBookmark? {
+        return storage[bookmarkPos]
+    }
+    
+    public func folioReaderBookmark(_ folioReader: FolioReader, allByBookId bookId: String, andPage page: NSNumber?) -> [FolioReaderBookmark] {
+        let results = storage.values.filter { bookmark in
+            let matchBook = (bookmark.bookId == bookId)
+            if let targetPage = page {
+                return matchBook && (bookmark.page == targetPage.intValue)
+            }
+            return matchBook
+        }
+        return results.sorted {
+            if $0.page == $1.page {
+                return ($0.pos ?? "") < ($1.pos ?? "")
+            }
+            return $0.page < $1.page
+        }
+    }
+    
+    public func folioReaderBookmark(_ folioReader: FolioReader) -> [FolioReaderBookmark] {
+        return Array(storage.values)
+    }
+}
+
+// MARK: - Mock Preference Provider
+public class MockPreferenceProvider: NSObject, FolioReaderPreferenceProvider {
+    private var storage: [String: Any] = [:]
+    public var profiles: [String] = ["Default"]
+    public var currentProfile: String = "Default"
+    
+    public override init() {}
+    
+    public func preference(stringFor key: String, default defaultValue: String) -> String {
+        return storage[key] as? String ?? defaultValue
+    }
+    
+    public func preference(setString value: String, for key: String) {
+        storage[key] = value
+    }
+    
+    public func preference(intFor key: String, default defaultValue: Int) -> Int {
+        return storage[key] as? Int ?? defaultValue
+    }
+    
+    public func preference(setInt value: Int, for key: String) {
+        storage[key] = value
+    }
+    
+    public func preference(boolFor key: String, default defaultValue: Bool) -> Bool {
+        return storage[key] as? Bool ?? defaultValue
+    }
+    
+    public func preference(setBool value: Bool, for key: String) {
+        storage[key] = value
+    }
+    
+    public func preference(listProfile filter: String?) -> [String] {
+        if let filter = filter {
+            return profiles.filter { $0.contains(filter) }
+        }
+        return profiles
+    }
+    
+    public func preference(saveProfile name: String) {
+        if !profiles.contains(name) {
+            profiles.append(name)
+        }
+        currentProfile = name
+    }
+    
+    public func preference(loadProfile name: String) {
+        if profiles.contains(name) {
+            currentProfile = name
+        }
+    }
+    
+    public func preference(removeProfile name: String) {
+        profiles.removeAll { $0 == name }
+        if currentProfile == name {
+            currentProfile = "Default"
+        }
+    }
+}
+
+// MARK: - Mock FolioReader Delegate
+public class MockFolioReaderDelegate: NSObject, FolioReaderDelegate {
+    public let highlightProvider = MockHighlightProvider()
+    public let bookmarkProvider = MockBookmarkProvider()
+    public let preferenceProvider = MockPreferenceProvider()
+    public let readPositionProvider = MockReadPositionProvider()
+    
+    public func folioReaderHighlightProvider(_ folioReader: FolioReader) -> FolioReaderHighlightProvider {
+        return highlightProvider
+    }
+    
+    public func folioReaderBookmarkProvider(_ folioReader: FolioReader) -> FolioReaderBookmarkProvider {
+        return bookmarkProvider
+    }
+    
+    public func folioReaderPreferenceProvider(_ folioReader: FolioReader) -> FolioReaderPreferenceProvider {
+        return preferenceProvider
+    }
+    
+    public func folioReaderReadPositionProvider(_ folioReader: FolioReader) -> FolioReaderReadPositionProvider {
+        return readPositionProvider
+    }
+}
