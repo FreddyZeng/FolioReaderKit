@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import AEXML
 import ReadiumZIPFoundation
 
@@ -27,7 +27,7 @@ open class FREpubParserArchive: NSObject {
     ///   - epubPath: Epub path on the disk.
     /// - Returns: The book cover as UIImage object
     /// - Throws: `FolioReaderError`
-    public static func parseCoverImage(_ epubPath: String) async throws -> UIImage {
+    public static func parseCoverImage(_ epubPath: String) async throws -> Data {
         let archive: Archive
         do {
             archive = try await Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read)
@@ -57,11 +57,7 @@ open class FREpubParserArchive: NSObject {
             accumulator.append(data)
         }
 
-        guard let image = UIImage(data: accumulator.result) else {
-            throw FolioReaderError.invalidImage(path: coverImage.href)
-        }
-
-        return image
+        return accumulator.result
     }
 
     /// Parse the book Author name from an epub file.

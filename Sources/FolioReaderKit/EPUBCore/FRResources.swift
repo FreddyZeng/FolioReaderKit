@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 open class FRResources: NSObject {
     

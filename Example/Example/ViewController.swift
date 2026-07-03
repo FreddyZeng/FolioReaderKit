@@ -77,7 +77,8 @@ class ViewController: UIViewController {
 
         Task {
             do {
-                let image = try await FREpubParserArchive.parseCoverImage(bookPath)
+                let data = try await FREpubParserArchive.parseCoverImage(bookPath)
+                guard let image = UIImage(data: data) else { return }
                 await MainActor.run {
                     button?.setBackgroundImage(image, for: .normal)
                 }

@@ -7,7 +7,7 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import ReadiumZIPFoundation
 
 open class FRBook: NSObject {
