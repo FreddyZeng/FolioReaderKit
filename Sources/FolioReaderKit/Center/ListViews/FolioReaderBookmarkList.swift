@@ -127,7 +127,7 @@ class FolioReaderBookmarkList: UITableViewController {
         var parent = tocItem.parent
         while let item = parent {
             if self.folioReader.structuralStyle == .bundle,
-               item.level < self.folioReader.structuralTrackingTocLevel.rawValue {
+               (item.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue {
                 break
             }
             if let title = item.title {

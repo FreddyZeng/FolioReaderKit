@@ -221,15 +221,15 @@ writingMode
                     folioLogger("updateStyleBackgroundPadding pageNumber=\(self.pageNumber!) minScreenCount=\(minScreenCount) totalPages=\(self.totalPages ?? 0) tryShrinking=\(tryShrinking)")
                     if self.byWritingMode(self.readerConfig.scrollDirection == .horitonzalWithPagedContent, true) {
                         if tryShrinking {
-                            if self.totalPages < minScreenCount {   //shrinked one page, try again
+                            if (self.totalPages ?? 0) < minScreenCount {   //shrinked one page, try again
                                 self.updateStyleBackgroundPadding(delay: bySecond, tryShrinking: true, completion: completion)
                             } else {  //stop shrinking
                                 self.updateStyleBackgroundPadding(delay: bySecond, tryShrinking: false, completion: completion)
                             }
                         } else {
-                            if self.totalPages > minScreenCount {
+                            if (self.totalPages ?? 0) > minScreenCount {
                                 self.updateStyleBackgroundPadding(delay: bySecond, tryShrinking: true, completion: completion)
-                            } else if self.totalPages < minScreenCount {
+                            } else if (self.totalPages ?? 0) < minScreenCount {
                                 self.updateStyleBackgroundPadding(delay: bySecond, tryShrinking: false, completion: completion)
                             } else {
                                 completion?()

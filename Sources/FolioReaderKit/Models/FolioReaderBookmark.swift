@@ -65,7 +65,7 @@ extension FolioReaderBookmark: Comparable {
                 }
             }
         }
-        return lhs.title < rhs.title    //fallback
+        return (lhs.title ?? "") < (rhs.title ?? "")    //fallback
     }
     
 }

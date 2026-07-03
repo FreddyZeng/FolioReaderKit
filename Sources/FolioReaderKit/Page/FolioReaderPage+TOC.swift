@@ -174,7 +174,7 @@ extension FolioReaderPage {
         while (firstChapterTocReference != nil) {
             chapterTocReferences.append(firstChapterTocReference!)
             firstChapterTocReference = firstChapterTocReference?.parent
-            if self.folioReader.structuralStyle != .atom, firstChapterTocReference?.level < self.folioReader.structuralTrackingTocLevel.rawValue - 1 {
+            if self.folioReader.structuralStyle != .atom, (firstChapterTocReference?.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue - 1 {
                 break
             }
         }

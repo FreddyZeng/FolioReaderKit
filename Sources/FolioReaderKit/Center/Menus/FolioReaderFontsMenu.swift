@@ -221,7 +221,7 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
                     return FontFamilyInfo(familyName: familyName, localizedName: ctFontName, regularFont: uiFont)
                 }
                 .sorted {
-                    $0.localizedName < $1.localizedName
+                    ($0.localizedName ?? "") < ($1.localizedName ?? "")
                 }
         )
     }

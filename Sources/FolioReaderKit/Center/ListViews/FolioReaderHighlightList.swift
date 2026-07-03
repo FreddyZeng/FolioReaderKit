@@ -62,7 +62,7 @@ class FolioReaderHighlightList: UITableViewController {
         }).reduce(into: sectionHighlights) { partialResult, highlight in
             if partialResult[highlight.page] != nil {
                 partialResult[highlight.page]?.append(highlight)
-                partialResult[highlight.page]?.sort(by: { $0.cfiStart < $1.cfiStart })
+                partialResult[highlight.page]?.sort(by: { ($0.cfiStart ?? "") < ($1.cfiStart ?? "") })
             } else {
                 partialResult[highlight.page] = [highlight]
             }
@@ -105,7 +105,7 @@ class FolioReaderHighlightList: UITableViewController {
         var parent = tocItem.parent
         while let item = parent {
             if self.folioReader.structuralStyle == .bundle,
-               item.level < self.folioReader.structuralTrackingTocLevel.rawValue {
+               (item.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue {
                 break
             }
             if let title = item.title {

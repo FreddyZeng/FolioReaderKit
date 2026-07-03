@@ -297,11 +297,11 @@ open class FolioReaderAudioPlayer: NSObject {
         // if player is initialized properly, begin playing
         guard let player = player else { return false }
 
-        // the audio may be playing already, so only set the player time if it is NOT already within the fragment timeframe
-        // this is done to mitigate milisecond skips in the audio when changing fragments
-        if player.currentTime < currentBeginTime || ( currentEndTime > 0 && player.currentTime > currentEndTime) {
-            player.currentTime = currentBeginTime;
-            updateNowPlayingInfo()
+        if let beginTime = currentBeginTime, let endTime = currentEndTime {
+            if player.currentTime < beginTime || ( endTime > 0 && player.currentTime > endTime) {
+                player.currentTime = beginTime
+                updateNowPlayingInfo()
+            }
         }
 
         player.play()
@@ -429,7 +429,7 @@ open class FolioReaderAudioPlayer: NSObject {
     @objc func playerTimerObserver() {
         guard let player = player else { return }
 
-        if currentEndTime != nil && currentEndTime > 0 && player.currentTime > currentEndTime {
+        if let endTime = currentEndTime, endTime > 0, player.currentTime > endTime {
             _playFragment(self.nextAudioFragment())
         }
     }
