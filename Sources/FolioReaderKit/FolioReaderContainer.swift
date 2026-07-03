@@ -28,10 +28,8 @@ open class FolioReaderContainer: UIViewController {
 
     fileprivate var errorOnLoad = false
     
-    let dateFormatter = DateFormatter()
-    
     var webServer: ReadiumGCDWebServer
-    internal let kGCDWebServerPreferredPort = 46436
+    private var resourceServer: EpubResourceServer?
 
     // MARK: - Init
 
@@ -51,6 +49,8 @@ open class FolioReaderContainer: UIViewController {
         self.webServer = webServer
 
         super.init(nibName: nil, bundle: Bundle.frameworkBundle())
+
+        self.resourceServer = EpubResourceServer(webServer: webServer, container: self)
 
         // Configure the folio reader.
         self.folioReader.readerContainer = self
@@ -74,6 +74,8 @@ open class FolioReaderContainer: UIViewController {
 
         super.init(coder: aDecoder)
 
+        self.resourceServer = EpubResourceServer(webServer: self.webServer, container: self)
+
         // Configure the folio reader.
         self.folioReader.readerContainer = self
     }
@@ -96,6 +98,7 @@ open class FolioReaderContainer: UIViewController {
         self.folioReader = FolioReader()
         self.folioReader.readerContainer = self
         self.epubPath = path
+        self.resourceServer = EpubResourceServer(webServer: self.webServer, container: self)
     }
 
     // MARK: - View life cicle
@@ -208,7 +211,7 @@ open class FolioReaderContainer: UIViewController {
                     
                     self.folioReader.delegate?.folioReader?(self.folioReader, didFinishedLoading: self.book)
                     
-                    self.initializeWebServer()
+                    self.resourceServer?.start()
 
                     self.centerViewController.reloadData()
                     self.folioReader.isReaderReady = true
@@ -230,7 +233,7 @@ open class FolioReaderContainer: UIViewController {
     
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        stopWebServer()
+        resourceServer?.stop()
     }
 
     override open func viewDidAppear(_ animated: Bool) {
@@ -308,139 +311,6 @@ open class FolioReaderContainer: UIViewController {
         return self.centerNavigationController?.shouldAutorotate ?? false
     }
 
-    func initializeWebServer() -> Void {
-        dateFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-        dateFormatter.locale = Locale(identifier: "en_US")
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
-        webServer.addDefaultHandler(forMethod: "GET", request: ReadiumGCDWebServerRequest.self, asyncProcessBlock: { [weak self] request, completion in
-            guard let self = self else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            guard let path = request.path.removingPercentEncoding else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            print("\(#function) GCDREQUEST path=\(path)")
-            
-            var pathSegs = path.split(separator: "/")
-            guard pathSegs.count > 1 else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            pathSegs.removeFirst()
-            let resourcePath = pathSegs.joined(separator: "/")
-            
-            Task {
-                do {
-                    guard let archiveURL = self.book.epubURL else {
-                        completion(ReadiumGCDWebServerErrorResponse())
-                        return
-                    }
-                    
-                    // The Archive class maintains the state of its underlying file descriptor for performance reasons and is therefore not re-entrant. #29
-                    // However, we use the cached entry to avoid O(N) lookup.
-                    guard let entry = self.book.archiveEntriesCache[resourcePath] else {
-                        completion(ReadiumGCDWebServerErrorResponse())
-                        return
-                    }
-                    
-                    let archive = try await Archive(url: archiveURL, accessMode: .read)
-                    
-                    var contentType = ReadiumGCDWebServerGetMimeTypeForExtension((resourcePath as NSString).pathExtension, nil)
-                    if contentType.contains("text/") {
-                        contentType += ";charset=utf-8"
-                    }
-                    
-                    let stream = AsyncStream<Data> { continuation in
-                        Task {
-                            do {
-                                _ = try await archive.extract(entry) { data in
-                                    continuation.yield(data)
-                                }
-                                continuation.finish()
-                            } catch {
-                                print("\(#function) zipfile-deflate-error \(resourcePath) error=\(error.localizedDescription)")
-                                continuation.finish()
-                            }
-                        }
-                    }
-                    
-                    let streamIterator = ReadiumStreamIterator(stream.makeAsyncIterator())
-                    
-                    let streamResponse = ReadiumGCDWebServerStreamedResponse(
-                        contentType: contentType,
-                        asyncStreamBlock: { streamCompletion in
-                            Task {
-                                let data = await streamIterator.next()
-                                streamCompletion(data ?? Data(), nil)
-                            }
-                        }
-                    )
-                    
-                    if let modificationDate = entry.fileAttributes[.modificationDate] as? Date {
-                        streamResponse.setValue(self.dateFormatter.string(from: modificationDate), forAdditionalHeader: "Last-Modified")
-                        streamResponse.cacheControlMaxAge = 60
-                    }
-                    
-                    completion(streamResponse)
-                } catch {
-                    print("\(#function) archive-error \(resourcePath) error=\(error.localizedDescription)")
-                    completion(ReadiumGCDWebServerErrorResponse())
-                }
-            }
-        })
-        
-        webServer.addHandler(forMethod: "GET", pathRegex: "^/_fonts/.+?(otf|ttf)$", request: ReadiumGCDWebServerRequest.self, asyncProcessBlock: { request, completion in
-            let fileName = (request.path as NSString).lastPathComponent
-            print("\(#function) GCDREQUEST FONT fileName=\(fileName) path=\(request.path)")
-
-            guard let documentDirectory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            let fontFileURL = documentDirectory.appendingPathComponent("Fonts",  isDirectory: true).appendingPathComponent(fileName, isDirectory: false)
-            guard FileManager.default.fileExists(atPath: fontFileURL.path) else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            guard let fileResponse = ReadiumGCDWebServerFileResponse(file: fontFileURL.path) else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            completion(fileResponse)
-        })
-        
-        try? webServer.start(options: [
-            ReadiumGCDWebServerOption_Port: kGCDWebServerPreferredPort,
-            ReadiumGCDWebServerOption_BindToLocalhost: true
-        ])
-        
-        // fallback
-        if webServer.isRunning == false {
-            try? webServer.start(options: [
-                ReadiumGCDWebServerOption_BindToLocalhost: true,
-            ])
-            
-            if webServer.isRunning == false {
-                try? webServer.start(options: [
-                    ReadiumGCDWebServerOption_BindToLocalhost: true
-                ])
-            }
-        }
-    }
-    
-    open func stopWebServer() {
-        if webServer.isRunning {
-            webServer.stop()
-        }
-    }
 }
 
 extension FolioReaderContainer {
@@ -462,18 +332,5 @@ extension FolioReaderContainer {
         alertController.addAction(ignoreAction)
         
         self.present(alertController, animated: true, completion: nil)
-    }
-}
-
-private actor ReadiumStreamIterator {
-    private var iterator: AsyncStream<Data>.AsyncIterator
-    init(_ iterator: AsyncStream<Data>.AsyncIterator) {
-        self.iterator = iterator
-    }
-    func next() async -> Data? {
-        var it = iterator
-        let data = await it.next()
-        iterator = it
-        return data
     }
 }
