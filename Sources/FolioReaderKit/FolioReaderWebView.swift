@@ -37,19 +37,22 @@ open class FolioReaderWebView: WKWebView {
     }
 
     
-    fileprivate weak var readerContainer: FolioReaderContainer?
+    lazy var highlightManager = WebViewHighlightManager(webView: self)
+    lazy var menuManager = WebViewMenuManager(webView: self)
 
-    fileprivate var readerConfig: FolioReaderConfig {
+    weak var readerContainer: FolioReaderContainer?
+
+    var readerConfig: FolioReaderConfig {
         guard let readerContainer = readerContainer else { return FolioReaderConfig() }
         return readerContainer.readerConfig
     }
 
-    fileprivate var book: FRBook {
+    var book: FRBook {
         guard let readerContainer = readerContainer else { return FRBook() }
         return readerContainer.book
     }
 
-    fileprivate var folioReader: FolioReader {
+    var folioReader: FolioReader {
         guard let readerContainer = readerContainer else { return FolioReader() }
         return readerContainer.folioReader
     }
@@ -81,564 +84,96 @@ open class FolioReaderWebView: WKWebView {
 
     // MARK: - UIMenuController
 
-    open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        guard readerConfig.useReaderMenuController else {
-            return super.canPerformAction(action, withSender: sender)
-        }
+    func superCanPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        return super.canPerformAction(action, withSender: sender)
+    }
 
-        var result = false
-        if isSharingHighlight {
-            result = false
-            let canPerform = action == #selector(updateHighlightNote(_:))
-            
-            print("\(#function) canPerform=\(canPerform) action=\(action)")
-            if canPerform {
-                result = true
-            }
-        } else if isColors {
-            result = false
-        } else {
-            let canPerform = action == #selector(highlight(_:))
-            || action == #selector(highlightWithNote(_:))
-            || action == #selector(updateHighlightNote(_:))
-            || (action == #selector(define(_:)))
-            || (action == #selector(reference(_:)))
-            || (action == #selector(lookup(_:)) && self.mDictView != nil)
-            || (action == #selector(play(_:)) && (book.hasAudio || readerConfig.enableTTS))
-            || (action == #selector(share(_:)) && readerConfig.allowSharing)
-            || (action == #selector(copy(_:)) && readerConfig.allowCopy)
-            print("\(#function) canPerform=\(canPerform) action=\(action)")
-            if canPerform {
-                result = true
-            }
-        }
-        
-        if folioReader.readerContainer?.readerConfig.debug.contains(.contentMenu) ?? false {
-            let menuItems = UIMenuController.shared.menuItems ?? [UIMenuItem]()
-            let menuItemTitle = menuItems.compactMap { $0.title }
-            
-            print("FRWV canPerformAction \(readerConfig.useReaderMenuController) \(isSharingHighlight) \(isColors) \(result) \(action) \(menuItemTitle)")
-        }
-        
-        return result
+    open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        return menuManager.canPerformAction(action, withSender: sender)
     }
 
     // MARK: - UIMenuController - Actions
 
     @objc func share(_ sender: UIMenuController?) {
-        guard let sender = sender else { return }
-        
-        guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let webView = currentPage.webView
-        else {
-            return
-        }
-        
-        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-
-        let shareImage = UIAlertAction(title: self.readerConfig.localizedShareImageQuote, style: .default, handler: { (action) -> Void in
-            if webView.isSharingHighlight {
-                webView.js("getHighlightContent()") { textToShare in
-                    guard let textToShare = textToShare else { return }
-                    self.folioReader.readerCenter?.presentQuoteShare(textToShare)
-                }
-            } else {
-                webView.js("getSelectedText()") { textToShare in
-                    guard let textToShare = textToShare else { return }
-                    self.folioReader.readerCenter?.presentQuoteShare(textToShare)
-
-                    self.clearTextSelection()
-                }
-            }
-            self.setMenuVisible(false)
-        })
-
-        let shareText = UIAlertAction(title: self.readerConfig.localizedShareTextQuote, style: .default) { (action) -> Void in
-            if webView.isSharingHighlight {
-                webView.js("getHighlightContent()") { textToShare in
-                    guard let textToShare = textToShare else { return }
-                    self.folioReader.readerCenter?.shareHighlight(textToShare, rect: sender.menuFrame)
-                }
-            } else {
-                webView.js("getSelectedText()") { textToShare in
-                    guard let textToShare = textToShare else { return }
-                    self.folioReader.readerCenter?.shareHighlight(textToShare, rect: sender.menuFrame)
-                }
-            }
-            self.setMenuVisible(false)
-        }
-
-        let cancel = UIAlertAction(title: self.readerConfig.localizedCancel, style: .cancel, handler: nil)
-
-        alertController.addAction(shareImage)
-        alertController.addAction(shareText)
-        alertController.addAction(cancel)
-
-        if let alert = alertController.popoverPresentationController {
-            alert.sourceView = self.folioReader.readerCenter?.currentPage
-            alert.sourceRect = sender.menuFrame
-        }
-
-        self.folioReader.readerCenter?.present(alertController, animated: true, completion: nil)
+        menuManager.share(sender)
     }
 
     func colors(_ sender: UIMenuController?) {
-        isColors = true
-        createMenu(onHighlight: false)
-        setMenuVisible(true)
+        menuManager.colors(sender)
     }
 
     func remove(_ sender: UIMenuController?) {
-        js("removeThisHighlight()") { removedId in
-            guard let removedId = removedId else { return }
-            self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(self.folioReader, removedId: removedId)
-        }
-        createMenu(onHighlight: false)
-        setMenuVisible(false)
+        menuManager.remove(sender)
     }
 
     @objc func highlight(_ sender: UIMenuController?) {
-        js("highlightStringCFI('\(FolioReaderHighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))', false)") { highlightAndReturn in
-            guard let highlightAndReturn = highlightAndReturn else { return }
-            
-            print(highlightAndReturn)
-            guard let jsonData = highlightAndReturn.data(using: .utf8) else {
-                return
-            }
-            self.handleHighlightReturn(jsonData)
-        }
+        highlightManager.highlight(sender)
     }
     
     @objc func highlightWithNote(_ sender: UIMenuController?) {
-        js("highlightStringCFI('\(FolioReaderHighlightStyle.classForStyle(self.folioReader.currentHighlightStyle))', true)") { highlightAndReturn in
-            guard let highlightAndReturn = highlightAndReturn else { return }
-
-            print(highlightAndReturn)
-            guard let jsonData = highlightAndReturn.data(using: .utf8) else {
-                return
-            }
-
-            self.handleHighlightReturn(jsonData, withNote: true)
-        }
+        highlightManager.highlightWithNote(sender)
     }
     
-    // will keep original's id and date if presented
     func handleHighlightReturn(_ jsonData: Data, withNote: Bool = false, original: FolioReaderHighlight? = nil, completion: ((FolioReaderHighlight?, FolioReaderHighlightError?) -> Void)? = nil) {
-        do {
-            guard let json = try JSONSerialization.jsonObject(with: jsonData, options: []) as? NSArray,
-                  let dic = json.firstObject as? [String: String] else {
-                      throw FolioReaderHighlightError.runtimeError("no json result, string=\(String(data: jsonData, encoding: .utf8) ?? "(invalid data)")")
-            }
-            guard let startOffset = dic["startOffset"], let startOffsetInt = Int(startOffset) else {
-                throw FolioReaderHighlightError.runtimeError("no start offset")
-            }
-            guard let endOffset = dic["endOffset"], let endOffsetInt = Int(endOffset) else {
-                throw FolioReaderHighlightError.runtimeError("no end offset")
-            }
-            guard let prevHighlightLengthStart = dic["prevHighlightLengthStart"], let prevHighlightLengthStartInt = Int(prevHighlightLengthStart) else {
-                throw FolioReaderHighlightError.runtimeError("no prevHighlightLengthStart")
-            }
-            guard let prevHighlightLengthEnd = dic["prevHighlightLengthEnd"], let prevHighlightLengthEndInt = Int(prevHighlightLengthEnd) else {
-                throw FolioReaderHighlightError.runtimeError("no prevHighlightLengthEnd")
-            }
-            
-            let highlight = FolioReaderHighlight()
-            highlight.bookId = self.book.name?.deletingPathExtension
-            highlight.startOffset = startOffsetInt
-            highlight.endOffset = endOffsetInt
-            highlight.content = dic["content"]
-            highlight.cfiStart = dic["cfiStart"]
-            highlight.cfiEnd = dic["cfiEnd"]
-            highlight.contentPost = dic["contentPost"]
-            highlight.contentPre = dic["contentPre"]
-            if let date = original?.date {
-                highlight.date = date + 0.001
-            } else {
-                highlight.date = Date()
-            }
-            highlight.highlightId = original?.highlightId ?? dic["id"]
-            highlight.page = self.folioReader.readerCenter?.currentPageNumber ?? 1
-            highlight.type = self.folioReader.currentHighlightStyle
-            highlight.style = FolioReaderHighlightStyle.classForStyle(highlight.type)
-
-            if prevHighlightLengthStartInt > 0,
-               let cfiStart = highlight.cfiStart,
-               let idx = cfiStart.firstIndex(of: ":") {
-                let offsetIdx = cfiStart.index(after: idx)
-                if let offset = Int(cfiStart[offsetIdx...]) {
-                    highlight.cfiStart = String(cfiStart[..<offsetIdx]) + Int(offset + prevHighlightLengthStartInt).description
-                }
-            }
-            if prevHighlightLengthEndInt > 0,
-               let cfiEnd = highlight.cfiEnd,
-               let idx = cfiEnd.firstIndex(of: ":") {
-                let offsetIdx = cfiEnd.index(after: idx)
-                if let offset = Int(cfiEnd[offsetIdx...]) {
-                    highlight.cfiEnd = String(cfiEnd[..<offsetIdx]) + Int(offset + prevHighlightLengthEndInt).description
-                }
-            }
-            
-            highlight.encodeContents()
-            
-            let serializedData = try JSONEncoder().encode([highlight])
-            let encodedData = serializedData.base64EncodedString()
-            self.js("injectHighlights('\(encodedData)')") { result in
-                var errMsg: String = "Unknown Error"
-                var deferred: (() -> Void)? = {
-                    if original == nil {
-                        self.folioReader.readerCenter?.presentAddHighlightError(errMsg)
-                    } else {
-                        completion?(original, FolioReaderHighlightError.runtimeError(errMsg))
-                    }
-                    return
-                }
-                
-                defer {
-                    deferred?()
-                }
-                
-                guard let result = result else {
-                    return
-                }
-                
-                let decoder = JSONDecoder()
-                
-                guard let encodedData = result.data(using: .utf8),
-                      let encodedObjects = try? decoder.decode([String].self, from: encodedData)
-                else {
-                    return
-                }
-                
-                var boundingRect: NodeBoundingClientRect? = nil
-                
-                if let objectData = encodedObjects.first?.data(using: .utf8) {
-                    boundingRect = try? JSONDecoder().decode(NodeBoundingClientRect.self, from: objectData)
-                }
-                
-                guard boundingRect != nil, boundingRect!.err.isEmpty else {
-                    errMsg = boundingRect?.err ?? errMsg
-                    return
-                }
-                
-                let contentOffset = CGPoint(x: boundingRect!.left, y: boundingRect!.top)
-            
-                let highlightChapterNames = self.folioReader.readerCenter?.currentPage?.getChapterTocReferences(for: contentOffset, by: self.frame.size).compactMap { $0.title } ?? ["TODO"]
-                highlight.tocFamilyTitles = highlightChapterNames.reversed()
-                
-                highlight.spineName = self.book.spine.spineReferences[highlight.page - 1].resource.href
-                if let resHref = highlight.spineName,
-                   let opfUrl = URL(string: self.book.opfResource.href),
-                   let resUrl = URL(string: resHref, relativeTo: opfUrl) {
-                    highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
-                    while highlight.spineName.hasPrefix("/") {
-                        highlight.spineName.removeFirst()
-                    }
-                }
-
-                if let cfiStart = highlight.cfiStart, cfiStart.hasPrefix("/2") == false {
-                    highlight.cfiStart = "/2\(cfiStart)"
-                }
-                if let cfiEnd = highlight.cfiEnd, cfiEnd.hasPrefix("/2") == false {
-                    highlight.cfiEnd = "/2\(cfiEnd)"
-                }
-                
-                if withNote {
-                    if original == nil {
-                        self.folioReader.readerCenter?.presentAddHighlightNote(highlight, edit: false)
-                    } else {
-                        completion?(highlight, nil)
-                    }
-                } else {
-                    self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(self.folioReader, added: highlight) { error in
-                        guard error == nil else {
-                            if original == nil {
-                                self.folioReader.readerCenter?.presentAddHighlightError(error!.localizedDescription)
-                            } else {
-                                completion?(highlight, FolioReaderHighlightError.runtimeError(error!.localizedDescription))
-                            }
-                            return
-                        }
-                        
-                        self.clearTextSelection()
-                        self.setMenuVisible(false)
-                        
-                        self.folioReader.readerCenter?.highlightErrors.removeValue(forKey: highlight.highlightId)
-                        
-                        completion?(highlight, nil)
-                    }
-                }
-                
-                deferred = nil
-            }
-            
-        } catch FolioReaderHighlightError.runtimeError(let hlError) {
-            completion?(original, FolioReaderHighlightError.runtimeError(hlError))
-        } catch {
-            completion?(original, FolioReaderHighlightError.runtimeError("\(error.localizedDescription)"))
-        }
+        highlightManager.handleHighlightReturn(jsonData, withNote: withNote, original: original, completion: completion)
     }
     
-    @objc func updateHighlightNote (_ sender: UIMenuController?) {
-        guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let webView = currentPage.webView
-        else {
-            return
-        }
-        webView.js("getHighlightId()") { highlightId in
-            guard
-                let highlightId = highlightId,
-                let highlightNote = self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(self.folioReader, getById: highlightId)
-            else { return }
-            
-            self.folioReader.readerCenter?.presentAddHighlightNote(highlightNote, edit: true)
-            self.createMenu(onHighlight: false)
-        }
+    @objc func updateHighlightNote(_ sender: UIMenuController?) {
+        highlightManager.updateHighlightNote(sender)
     }
 
     @objc func define(_ sender: UIMenuController?) {
-        guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let webView = currentPage.webView
-        else {
-            return
-        }
-        webView.js("getSelectedText()") { selectedText in
-            guard let selectedText = selectedText else { return }
-
-            self.setMenuVisible(false)
-            self.clearTextSelection()
-
-            let vc = UIReferenceLibraryViewController(term: selectedText)
-            vc.view.backgroundColor = self.readerConfig.menuBackgroundColor
-            vc.view.tintColor = self.readerConfig.tintColor
-            guard let readerContainer = self.readerContainer else { return }
-            // readerContainer.show(vc, sender: nil)    // will close reader container
-            readerContainer.present(vc, animated: true, completion: nil)
-        }
+        menuManager.define(sender)
     }
 
     @objc func lookup(_ sender: UIMenuController?) {
-        guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let webView = currentPage.webView
-        else {
-            return
-        }
-        webView.js("getSelectedText()") { selectedText in
-            guard let selectedText = selectedText else { return }
-            guard let mDictView = self.mDictView else { return }
-
-            self.setMenuVisible(false)
-            self.clearTextSelection()
-
-            mDictView.title = selectedText
-            self.folioReader.readerCenter?.pageDelegate?.pageStyleChanged?(currentPage, self.folioReader)
-            
-            guard let readerContainer = self.readerContainer else { return }
-//            readerContainer.show(mDictView, sender: nil)
-            readerContainer.present(mDictView, animated: true)
-        }
+        menuManager.lookup(sender)
     }
     
     @objc func reference(_ sender: UIMenuController?) {
-        guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let webView = currentPage.webView
-        else {
-            return
-        }
-        webView.js("getSelectedTextCFI()") { selJsonStr in
-            guard let selJsonData = selJsonStr?.data(using: .utf8),
-                  let selJson = try? JSONSerialization.jsonObject(with: selJsonData) as? [String:String],
-                  let selectedText = selJson["sel"],
-                  let selectedCFI = selJson["cfi"]
-            else { return }
-            
-            self.clearTextSelection()
-            self.setMenuVisible(false)
-            
-            guard let readerCenter = self.readerContainer?.centerViewController,
-                  let bookmarkBarButtonItem = readerCenter.navigationItem.leftBarButtonItems?[safe: 2],
-                  let selector = bookmarkBarButtonItem.action else { return }
-            
-            readerCenter.tempRefText = selectedText
-            readerCenter.tempRefCFI = selectedCFI
-            self.folioReader.currentAnnotationMenuIndex = 0
-            UIApplication.shared.sendAction(selector, to: readerCenter, from: bookmarkBarButtonItem, for: nil)
-        }
+        menuManager.reference(sender)
     }
     
     @objc func play(_ sender: UIMenuController?) {
-        self.folioReader.readerAudioPlayer?.play()
-
-        self.clearTextSelection()
-    }
-
-    open func setMDictView(mDictView: UINavigationController) {
-        self.mDictView = mDictView
+        menuManager.play(sender)
     }
     
     func setYellow(_ sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .yellow)
+        highlightManager.setYellow(sender)
     }
 
     func setGreen(_ sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .green)
+        highlightManager.setGreen(sender)
     }
 
     func setBlue(_ sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .blue)
+        highlightManager.setBlue(sender)
     }
 
     func setPink(_ sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .pink)
+        highlightManager.setPink(sender)
     }
 
     func setUnderline(_ sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .underline)
+        highlightManager.setUnderline(sender)
     }
 
     func changeHighlightStyle(_ sender: UIMenuController?, style: FolioReaderHighlightStyle) {
-        self.folioReader.currentHighlightStyle = style.rawValue
-
-        js("setHighlightStyle('\(FolioReaderHighlightStyle.classForStyle(style.rawValue))')") { updateId in
-            guard let updateId = updateId else { return }
-            self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(self.folioReader, updateById: updateId, type: style)
-        }
-        
-        //FIX: https://github.com/FolioReader/FolioReaderKit/issues/316
-        setMenuVisible(false)
+        highlightManager.changeHighlightStyle(sender, style: style)
     }
 
-    
     // MARK: - Create and show menu
 
     func createMenu(onHighlight: Bool) {
-        guard (self.readerConfig.useReaderMenuController == true) else {
-            return
-        }
-
-        isSharingHighlight = onHighlight
-
-        let colors = UIImage(readerImageNamed: "colors-marker")
-        var share = UIImage(readerImageNamed: "share-marker")
-        let remove = UIImage(readerImageNamed: "no-marker")
-        let yellow = UIImage(readerImageNamed: "yellow-marker")
-        let green = UIImage(readerImageNamed: "green-marker")
-        let blue = UIImage(readerImageNamed: "blue-marker")
-        let pink = UIImage(readerImageNamed: "pink-marker")
-        let underline = UIImage(readerImageNamed: "underline-marker")
-        var mdictImage = UIImage(readerImageNamed: "icon-dictionary")
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            share = share?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
-            mdictImage = mdictImage?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
-        } else {
-            share = share?.withTintColor(.white)
-            mdictImage = mdictImage?.withTintColor(.white)
-        }
-
-        let menuController = UIMenuController.shared
-
-        let highlightItem = UIMenuItem(title: self.readerConfig.localizedHighlightMenu, action: #selector(highlight(_:)))
-        let highlightNoteItem = UIMenuItem(title: self.readerConfig.localizedHighlightNote, action: #selector(highlightWithNote(_:)))
-        let editNoteItem = UIMenuItem(title: self.readerConfig.localizedHighlightNote, action: #selector(updateHighlightNote(_:)))
-        let playAudioItem = UIMenuItem(title: self.readerConfig.localizedPlayMenu, action: #selector(play(_:)))
-        let defineItem = UIMenuItem(title: self.readerConfig.localizedDefineMenu, action: #selector(define(_:)))
-        let referenceItem = UIMenuItem(title: "Ref.", action: #selector(reference(_:)))
-        
-        let mDictItem = UIMenuItem(title: self.readerConfig.localizedMDictMenu, image: mdictImage) { [weak self] _ in
-            self?.lookup(menuController)
-        }
-        
-        let colorsItem = UIMenuItem(title: "C", image: colors) { [weak self] _ in
-            self?.colors(menuController)
-        }
-        let shareItem = UIMenuItem(title: "S", image: share) { [weak self] _ in
-            self?.share(menuController)
-        }
-        let removeItem = UIMenuItem(title: "R", image: remove) { [weak self] _ in
-            self?.remove(menuController)
-        }
-        let yellowItem = UIMenuItem(title: "Y", image: yellow) { [weak self] _ in
-            self?.setYellow(menuController)
-        }
-        let greenItem = UIMenuItem(title: "G", image: green) { [weak self] _ in
-            self?.setGreen(menuController)
-        }
-        let blueItem = UIMenuItem(title: "B", image: blue) { [weak self] _ in
-            self?.setBlue(menuController)
-        }
-        let pinkItem = UIMenuItem(title: "P", image: pink) { [weak self] _ in
-            self?.setPink(menuController)
-        }
-        let underlineItem = UIMenuItem(title: "U", image: underline) { [weak self] _ in
-            self?.setUnderline(menuController)
-        }
-
-        var menuItems: [UIMenuItem] = []
-
-        // menu on existing highlight
-        if onHighlight {
-            menuItems = [colorsItem, editNoteItem, removeItem]
-            
-            if (self.readerConfig.allowSharing == true) {
-                menuItems.append(shareItem)
-            }
-            
-        } else if isColors {
-            // menu for selecting highlight color
-            menuItems = [yellowItem, greenItem, blueItem, pinkItem, underlineItem]
-        } else {
-            // default menu
-            menuItems = [highlightItem, defineItem, referenceItem, highlightNoteItem]
-            if self.readerConfig.enableMDictViewer {
-                menuItems.append(mDictItem)
-            }
-
-            if self.book.hasAudio || self.readerConfig.enableTTS {
-                menuItems.insert(playAudioItem, at: 0)
-            }
-
-            if (self.readerConfig.allowSharing == true) {
-                menuItems.append(shareItem)
-            }
-        }
-        
-        menuController.menuItems = menuItems
-        menuController.update()
-        
-        if let readerContainer = self.folioReader.readerContainer {
-            UIMenuController.installTo(responder: readerContainer)
-        }
+        menuManager.createMenu(onHighlight: onHighlight)
     }
     
-    open func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
-        if let currentPage = self.folioReader.readerCenter?.currentPage {
-            currentPage.menuIsVisible = menuVisible
-        }
-        if menuVisible {
-            self.folioReader.readerCenter?.invalidatePendingBarReveal()
-        }
+    open func setMDictView(mDictView: UINavigationController) {
+        self.mDictView = mDictView
+    }
 
-        if menuVisible == false {
-            UIMenuController.shared.hideMenu()
-        }
-        
-        if !menuVisible && isSharingHighlight || !menuVisible && isColors {
-            isColors = false
-            isSharingHighlight = false
-        }
-        
-        if menuVisible  {
-            if !rect.equalTo(CGRect.zero) {
-                UIMenuController.shared.showMenu(from: self, rect: rect)
-            }
-        } else {
-            self.createMenu(onHighlight: false)
-        }
-        
-        if menuVisible {
-            UIMenuController.shared.showMenu(from: self, rect: rect)
-        } else {
-            UIMenuController.shared.hideMenu()
-        }
+    open func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
+        menuManager.setMenuVisible(menuVisible, animated: animated, andRect: rect)
     }
     
     // MARK: - Java Script Bridge
