@@ -334,11 +334,11 @@ open class FREpubParserArchive: NSObject {
     /// - Parameter element: An `AEXMLElement`, usually the `<body>`
     /// - Returns: If found the `<nav>` `AEXMLElement`
     @discardableResult func findNavTag(_ element: AEXMLElement) -> AEXMLElement? {
-        for element in element.children {
-            if let nav = element["nav"].first {
+        for child in element.children {
+            if let nav = child["nav"].first {
                 return nav
-            } else {
-                findNavTag(element)
+            } else if let found = findNavTag(child) {
+                return found
             }
         }
         return nil
