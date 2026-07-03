@@ -4,7 +4,7 @@ import ReadiumGCDWebServer
 
 @MainActor
 final class NavigationBarVisibilityTests: XCTestCase {
-    private func makeReaderCenter(hideBars: Bool = false) -> (FolioReaderCenter, UINavigationController) {
+    private func makeReaderCenter(hideBars: Bool = false) -> (FolioReaderCenter, FolioReaderNavigationController) {
         let readerConfig = FolioReaderConfig()
         readerConfig.hideBars = hideBars
 
@@ -17,7 +17,7 @@ final class NavigationBarVisibilityTests: XCTestCase {
         )
 
         let readerCenter = FolioReaderCenter(withContainer: readerContainer)
-        let navigationController = UINavigationController(rootViewController: readerCenter)
+        let navigationController = FolioReaderNavigationController(rootViewController: readerCenter)
         readerContainer.centerViewController = readerCenter
         readerContainer.centerNavigationController = navigationController
 

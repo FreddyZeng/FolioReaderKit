@@ -37,7 +37,7 @@ extension FolioReaderCenter {
             pageController.segmentedControlItems.insert(readerConfig.localizedTopicsTitle, at: 0)
         }
         
-        let nav = UINavigationController(rootViewController: pageController)
+        let nav = FolioReaderNavigationController(rootViewController: pageController)
         
         present(nav, animated: true, completion: nil)
     }
@@ -63,7 +63,7 @@ extension FolioReaderCenter {
             pageController.tabBarItem = UITabBarItem(title: refText, image: nil, tag: 101)
         }
         
-        let nav = UINavigationController(rootViewController: pageController)
+        let nav = FolioReaderNavigationController(rootViewController: pageController)
 
         present(nav, animated: true, completion: nil)
     }
@@ -148,7 +148,7 @@ extension FolioReaderCenter {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
         let quoteShare = FolioReaderQuoteShare(initWithText: string, readerConfig: readerConfig, folioReader: folioReader, book: book)
-        let nav = UINavigationController(rootViewController: quoteShare)
+        let nav = FolioReaderNavigationController(rootViewController: quoteShare)
 
         if UIDevice.current.userInterfaceIdiom == .pad {
             nav.modalPresentationStyle = .formSheet
@@ -164,7 +164,7 @@ extension FolioReaderCenter {
 
         let addHighlightView = FolioReaderAddHighlightNote(withHighlight: highlight, folioReader: folioReader, readerConfig: readerConfig)
         addHighlightView.isEditHighlight = edit
-        let nav = UINavigationController(rootViewController: addHighlightView)
+        let nav = FolioReaderNavigationController(rootViewController: addHighlightView)
         nav.modalPresentationStyle = .formSheet
         
         present(nav, animated: true, completion: nil)
@@ -177,7 +177,7 @@ extension FolioReaderCenter {
         let vc = UIViewController()
         vc.view = textView
         
-        let nav = UINavigationController(rootViewController: vc)
+        let nav = FolioReaderNavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .formSheet
         
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)

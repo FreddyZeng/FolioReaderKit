@@ -500,40 +500,6 @@ func findHairlineImageViewUnderView(view: UIView?) -> UIImageView? {
     return nil
 }
 
-/// :nodoc:
-extension UINavigationController {
-    
-    open override var preferredStatusBarStyle : UIStatusBarStyle {
-        guard let viewController = visibleViewController else { return .default }
-        return viewController.preferredStatusBarStyle
-    }
-    
-    open override var supportedInterfaceOrientations : UIInterfaceOrientationMask {
-        guard let viewController = visibleViewController else { return .portrait }
-        return viewController.supportedInterfaceOrientations
-    }
-    
-    open override var shouldAutorotate : Bool {
-        guard let viewController = visibleViewController else { return false }
-        return viewController.shouldAutorotate
-    }
-}
-
-/**
- This fixes iOS 9 crash
- http://stackoverflow.com/a/32010520/517707
- */
-
-/// :nodoc:
-extension UIAlertController {
-    open override var supportedInterfaceOrientations : UIInterfaceOrientationMask {
-        return .portrait
-    }
-    
-    open override var shouldAutorotate : Bool {
-        return false
-    }
-}
 
 /// :nodoc:
 extension Array {

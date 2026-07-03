@@ -19,7 +19,7 @@ open class FolioReaderContainer: UIViewController {
     public var epubPath: String
     public var book: FRBook
     
-    public var centerNavigationController: UINavigationController!
+    public var centerNavigationController: FolioReaderNavigationController!
     public var centerViewController: FolioReaderCenter!
     public var audioPlayer: FolioReaderAudioPlayer?
     
@@ -120,7 +120,7 @@ open class FolioReaderContainer: UIViewController {
         self.readerConfig.shouldHideNavigationOnTap = ((hideBars == true) ? true : self.readerConfig.shouldHideNavigationOnTap)
 
         let rootViewController = FolioReaderCenter(withContainer: self)
-        let centerNavigationController = UINavigationController(rootViewController: rootViewController)
+        let centerNavigationController = FolioReaderNavigationController(rootViewController: rootViewController)
         
         if readerConfig.debug.contains(.borderHighlight) {
             rootViewController.view.layer.borderWidth = 6
@@ -298,6 +298,14 @@ open class FolioReaderContainer: UIViewController {
 
     override open var preferredStatusBarStyle: UIStatusBarStyle {
         return self.folioReader.isNight(.lightContent, .default)
+    }
+
+    override open var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return self.centerNavigationController?.supportedInterfaceOrientations ?? .all
+    }
+    
+    override open var shouldAutorotate: Bool {
+        return self.centerNavigationController?.shouldAutorotate ?? false
     }
 
     func initializeWebServer() -> Void {
