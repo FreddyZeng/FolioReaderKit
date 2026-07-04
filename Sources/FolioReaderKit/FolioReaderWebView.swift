@@ -71,10 +71,10 @@ open class FolioReaderWebView: WKWebView {
 
         FolioReaderScript.cssInjection.addIfNeeded(to: self)
         FolioReaderScript(
-            source: FolioReaderScript.cssInjectionSource(for: folioReader.cssUserFontFaces(), id: "folio_style_user_font_faces")
+            source: FolioReaderScript.cssInjectionSource(for: folioReader.cssGenerator.cssUserFontFaces(), id: "folio_style_user_font_faces")
         ).addIfNeeded(to: self)
         FolioReaderScript(
-            source: FolioReaderScript.cssInjectionSource(for: folioReader.cssFontFamilies(), id: "folio_style_font_families")
+            source: FolioReaderScript.cssInjectionSource(for: folioReader.cssGenerator.cssFontFamilies(), id: "folio_style_font_families")
         ).addIfNeeded(to: self)
     }
 
