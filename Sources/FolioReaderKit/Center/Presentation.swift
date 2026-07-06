@@ -14,7 +14,7 @@ extension FolioReaderCenter {
      Present chapter list
      */
     @objc func presentChapterList(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
 
@@ -43,7 +43,7 @@ extension FolioReaderCenter {
     }
 
     @objc func presentBookmarkList(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
 
@@ -72,7 +72,7 @@ extension FolioReaderCenter {
      Present fonts and settings menu
      */
     @objc func presentFontsMenu() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
         hideBars()
@@ -122,7 +122,7 @@ extension FolioReaderCenter {
      Present audio player menu
      */
     @objc func presentPlayerMenu(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
         hideBars()
@@ -147,7 +147,7 @@ extension FolioReaderCenter {
      Present Quote Share
      */
     func presentQuoteShare(_ string: String) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let quoteShare = FolioReaderQuoteShare(initWithText: string, readerConfig: readerConfig, folioReader: folioReader, book: book)
         let nav = FolioReaderNavigationController(rootViewController: quoteShare)
@@ -162,7 +162,7 @@ extension FolioReaderCenter {
      Present add highlight note
      */
     func presentAddHighlightNote(_ highlight: FolioReaderHighlight, edit: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let addHighlightView = FolioReaderAddHighlightNote(withHighlight: highlight, folioReader: folioReader, readerConfig: readerConfig)
         addHighlightView.isEditHighlight = edit

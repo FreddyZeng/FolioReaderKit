@@ -8,7 +8,7 @@ import UIKit
 extension FolioReaderPage {
     // MARK: Change layout orientation
     func setScrollDirection(_ direction: FolioReaderScrollDirection) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let readerCenter = self.folioReader.readerCenter, let webView = webView else { return }
         let currentPageNumber = readerCenter.currentPageNumber
@@ -28,19 +28,19 @@ extension FolioReaderPage {
 
         // Page progressive direction
         readerCenter.setCollectionViewProgressiveDirection()
-        delay(0.2) { readerCenter.setPageProgressiveDirection(self) }
+        DispatchQueue.main.asyncAfter(delay: 0.2) { readerCenter.setPageProgressiveDirection(self) }
 
         /**
          *  This delay is needed because the page will not be ready yet
          *  so the delay wait until layout finished the changes.
          */
         
-        delay(delaySec()) {
+        DispatchQueue.main.asyncAfter(delay: delaySec()) {
             webView.setupScrollDirection()
             self.updateOverflowStyle(delay: self.delaySec()) {
                 self.scrollWebViewByPageOffsetRate(animated: false)
                 
-                delay(self.delaySec() + 0.2) {
+                DispatchQueue.main.asyncAfter(delay: self.delaySec() + 0.2) {
                     self.updatePageInfo() {
                         self.updateScrollPosition(delay: self.delaySec()) {
                             self.updateStyleBackgroundPadding(delay: self.delaySec()) {
@@ -117,7 +117,7 @@ writingMode
             if let writingMode = writingMode {
                 self.writingMode = writingMode
             }
-            delay(bySecond) {
+            DispatchQueue.main.asyncAfter(delay: bySecond) {
                 completion?()
             }
         }
@@ -173,14 +173,14 @@ writingMode
 """
         ) { _ in
             let delaySec = self.delaySec() + bySecond
-            delay(delaySec) {
+            DispatchQueue.main.asyncAfter(delay: delaySec) {
                 self.layoutAdapting = "Almost Ready..."
                 self.updatePageInfo {
-                    delay(delaySec) {
+                    DispatchQueue.main.asyncAfter(delay: delaySec) {
                         self.updateStyleBackgroundPadding(delay: delaySec, completion: completion != nil ? completion : {
                             self.updatePageInfo() {
                                 self.scrollWebViewByPageOffsetRate()
-                                delay(delaySec) {
+                                DispatchQueue.main.asyncAfter(delay: delaySec) {
                                     self.updatePageOffsetRate()
                                     self.layoutAdapting = nil
                                     self.updatePageInfo()
@@ -216,9 +216,9 @@ writingMode
             }
             """
         ) { _ in
-            delay(bySecond) {
+            DispatchQueue.main.asyncAfter(delay: bySecond) {
                 self.updatePageInfo {
-                    folioLogger("updateStyleBackgroundPadding pageNumber=\(self.pageNumber!) minScreenCount=\(minScreenCount) totalPages=\(self.totalPages ?? 0) tryShrinking=\(tryShrinking)")
+                    FolioLogger.log("updateStyleBackgroundPadding pageNumber=\(self.pageNumber!) minScreenCount=\(minScreenCount) totalPages=\(self.totalPages ?? 0) tryShrinking=\(tryShrinking)")
                     if self.byWritingMode(self.readerConfig.scrollDirection == .horizontalWithPagedContent, true) {
                         if tryShrinking {
                             if (self.totalPages ?? 0) < minScreenCount {   //shrinked one page, try again
@@ -256,11 +256,11 @@ writingMode
         """) { _ in
             self.setNeedsLayout()
             
-            delay(self.delaySec() + bySecond) {
+            DispatchQueue.main.asyncAfter(delay: self.delaySec() + bySecond) {
                 self.updatePageInfo {
                     self.updateStyleBackgroundPadding(delay: self.delaySec()) {
                         self.scrollWebViewByPageOffsetRate()
-                        delay(0.2) {
+                        DispatchQueue.main.asyncAfter(delay: 0.2) {
                             self.updatePageOffsetRate()
                             self.layoutAdapting = nil
                             self.updatePageInfo()

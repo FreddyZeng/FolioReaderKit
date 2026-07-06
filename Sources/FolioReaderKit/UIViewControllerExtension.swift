@@ -58,19 +58,16 @@ internal extension UIViewController {
     }
 }
 
-/**
- Fix for Swift 4 / iOS 12
- https://stackoverflow.com/questions/34452920/removing-the-hairline-under-navigation-bar
- */
-func findHairlineImageViewUnderView(view: UIView?) -> UIImageView? {
-    guard let view = view else { return nil }
-    if view.isKind(of: UIImageView.classForCoder()) && view.bounds.height <= 1 {
-        return view as? UIImageView
-    }
-    for subView in view.subviews {
-        if let imageView = findHairlineImageViewUnderView(view: subView) {
-            return imageView
+extension UIView {
+    func findHairlineImageView() -> UIImageView? {
+        if self.isKind(of: UIImageView.classForCoder()) && self.bounds.height <= 1 {
+            return self as? UIImageView
         }
+        for subView in self.subviews {
+            if let imageView = subView.findHairlineImageView() {
+                return imageView
+            }
+        }
+        return nil
     }
-    return nil
 }

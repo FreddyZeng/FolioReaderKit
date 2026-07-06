@@ -143,7 +143,7 @@ open class FolioReaderCenter: UIViewController {
      Common Initialization
      */
     func initialization() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if (self.readerConfig.hideBars == true) {
             self.pageIndicatorHeight = 0
@@ -165,7 +165,7 @@ open class FolioReaderCenter: UIViewController {
     // MARK: - View life cicle
 
     override open func viewDidLoad() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         
         super.viewDidLoad()
 
@@ -235,7 +235,7 @@ open class FolioReaderCenter: UIViewController {
     }
 
     override open func viewWillAppear(_ animated: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         super.viewWillAppear(animated)
 
@@ -247,13 +247,13 @@ open class FolioReaderCenter: UIViewController {
     }
 
     override open func viewWillDisappear(_ animated: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
     }
     
     override open func viewWillLayoutSubviews() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         super.viewWillLayoutSubviews()
         
@@ -261,7 +261,7 @@ open class FolioReaderCenter: UIViewController {
     }
     
     override open func viewDidLayoutSubviews() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         super.viewDidLayoutSubviews()
 
@@ -279,13 +279,13 @@ open class FolioReaderCenter: UIViewController {
      - parameter scrollEnabled: `Bool` which enables or disables the scrolling between `FolioReaderPage`s.
      */
     open func enableScrollBetweenChapters(scrollEnabled: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.collectionView.isScrollEnabled = scrollEnabled
     }
 
     func reloadData() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.loadingView?.stopAnimating()
         self.totalPages = book.spine.spineReferences.count
@@ -333,7 +333,7 @@ open class FolioReaderCenter: UIViewController {
         bounds.size = size
         bounds.size.height = bounds.size.height - view.safeAreaInsets.bottom
         if readerConfig.debug.contains(.viewTransition) {
-            folioLogger("size=\(size) newBounds=\(bounds) screenBounds=\(String(describing: screenBounds)) collectionViewFrame=\(collectionView.frame)")
+            FolioLogger.log("size=\(size) newBounds=\(bounds) screenBounds=\(String(describing: screenBounds)) collectionViewFrame=\(collectionView.frame)")
         }
         
         guard let currentPage = self.currentPage else { return }
@@ -346,7 +346,7 @@ open class FolioReaderCenter: UIViewController {
         }
         let pageOffsetRate = currentPage.pageOffsetRate
         
-        folioLogger("TRANS1 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
+        FolioLogger.log("TRANS1 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
         
         coordinator.animate { _ in
             
@@ -357,8 +357,8 @@ open class FolioReaderCenter: UIViewController {
                 self.setPageProgressiveDirection(currentPage)
 
                 // After rotation fix internal page offset
-                delay(currentPage.delaySec()) {    //wait for webView finish resizing
-                    folioLogger("TRANS2 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
+                DispatchQueue.main.asyncAfter(delay: currentPage.delaySec()) {    //wait for webView finish resizing
+                    FolioLogger.log("TRANS2 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
                     
     //                currentPage.scrollPageToOffset(
     //                    currentPage.byWritingMode(
@@ -374,16 +374,16 @@ open class FolioReaderCenter: UIViewController {
                     """) { _ in
                         currentPage.setNeedsLayout()
                         
-                        delay(currentPage.delaySec() + 0.5) {   //need some time for webView finishing paging
+                        DispatchQueue.main.asyncAfter(delay: currentPage.delaySec() + 0.5) {   //need some time for webView finishing paging
                             currentPage.updatePageInfo() {
                                 currentPage.updateStyleBackgroundPadding(delay: 0.2) {
                                     currentPage.pageOffsetRate = pageOffsetRate
                                     currentPage.scrollWebViewByPageOffsetRate(animated: false)
-                                    delay(0.2) {
-                                        folioLogger("TRANS3 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
+                                    DispatchQueue.main.asyncAfter(delay: 0.2) {
+                                        FolioLogger.log("TRANS3 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
                                         currentPage.updatePageOffsetRate()
                                         currentPage.layoutAdapting = nil
-                                        folioLogger("TRANS4 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
+                                        FolioLogger.log("TRANS4 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
                                         currentPage.updatePageInfo()
                                     }
                                 }
@@ -400,7 +400,7 @@ open class FolioReaderCenter: UIViewController {
     // MARK: NavigationBar Actions
 
     @objc func closeReader(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         dismiss()
         folioReader.close()

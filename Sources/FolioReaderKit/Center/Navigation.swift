@@ -12,7 +12,7 @@ import UIKit
 extension FolioReaderCenter {
     
     func getCurrentIndexPath() -> IndexPath {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let contentOffset = self.collectionView.contentOffset
         let indexPaths = collectionView.indexPathsForVisibleItems.compactMap { indexPath -> (indexPath: IndexPath, layoutAttributes: UICollectionViewLayoutAttributes)? in
@@ -96,7 +96,7 @@ extension FolioReaderCenter {
      Find and return the chapter name, first of current page, or last of previous pages
      */
     public func getChapterName(pageNumber: Int) -> FRTocReference? {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var foundChapterName: FRTocReference?
         
@@ -124,7 +124,7 @@ extension FolioReaderCenter {
      Find and return the chapter name, limit to current page only
      */
     public func getChapterNames(pageNumber: Int) -> [FRTocReference] {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var foundChapterNames = [FRTocReference]()
         

@@ -177,9 +177,9 @@ open class FolioReaderContainer: UIViewController {
                     throw FolioReaderError.errorInContainer
                 }
                 
-                folioLogger("BEFORE readEpub")
+                FolioLogger.log("BEFORE readEpub")
                 let parsedBook = try await FREpubParserArchive(book: self.book, archive: archive).readEpub(epubPath: self.epubPath)
-                folioLogger("AFTER readEpub")
+                FolioLogger.log("AFTER readEpub")
 
                 self.book = parsedBook
                 

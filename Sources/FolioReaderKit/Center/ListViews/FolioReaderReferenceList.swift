@@ -170,7 +170,7 @@ class FolioReaderReferenceList: UITableViewController {
                     self.sections = self.sectionBookmarks.keys.sorted()
                     self.tableView.reloadData()
                     
-                    delay(0.2) {
+                    DispatchQueue.main.asyncAfter(delay: 0.2) {
                         self.scrollToVisible()
                     }
                 }

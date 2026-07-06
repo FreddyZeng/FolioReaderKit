@@ -26,7 +26,7 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
 
     open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         guard let center = center else { return }
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         center.invalidatePendingBarReveal()
         center.isScrolling = true
@@ -48,7 +48,7 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
 
     open func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard let center = center else { return }
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER"); }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER"); }
 
         if scrollView.isDragging || scrollView.isDecelerating {
             center.invalidatePendingBarReveal()
@@ -71,12 +71,12 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         guard let center = center else { return }
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         center.isScrolling = false
         
         // Perform the page after a short delay as the collection view hasn't completed it's transition if this method is called (the index paths aren't right during fast scrolls).
-        delay(0.2, closure: { [weak center] in
+        DispatchQueue.main.asyncAfter(delay: 0.2, execute: { [weak center] in
             guard let center = center else { return }
 
             if (scrollView is UICollectionView) {
@@ -100,7 +100,7 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
 
     open func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard let center = center else { return }
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if decelerate == false {
             center.isScrolling = false
@@ -113,7 +113,7 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
 
     open func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
         guard let center = center else { return }
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         center.scrollScrubber?.scrollViewDidEndScrollingAnimation(scrollView)
     }
@@ -121,7 +121,7 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
 
 extension FolioReaderCenter {
     func updatePageScrollDirection(inScrollView scrollView: UIScrollView, forScrollType scrollType: ScrollType) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let scrollViewContentOffsetForDirection = scrollView.contentOffset.forDirection(withConfiguration: self.readerConfig, scrollType: scrollType)
         let pointNowForDirection = pointNow.forDirection(withConfiguration: self.readerConfig, scrollType: scrollType)
@@ -140,7 +140,7 @@ extension FolioReaderCenter {
     }
     
     @objc func clearRecentlyScrolled() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         recentlyScrolledTimer?.invalidate()
         recentlyScrolledTimer = nil

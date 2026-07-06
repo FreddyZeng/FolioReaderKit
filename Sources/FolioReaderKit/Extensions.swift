@@ -55,15 +55,15 @@ extension ScrollDirection {
 
 // MARK: Helpers
 
-/**
- Delay function
- From: http://stackoverflow.com/a/24318861/517707
- 
- - parameter delay:   Delay in seconds
- - parameter closure: Closure
- */
-public func delay(_ delay:Double, closure:@escaping ()->()) {
-    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(delay * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: closure)
+@available(*, deprecated, message: "Use DispatchQueue.main.asyncAfter(delay:execute:) instead")
+public func delay(_ delay: Double, closure: @escaping () -> Void) {
+    DispatchQueue.main.asyncAfter(delay: delay, execute: closure)
+}
+
+extension DispatchQueue {
+    public func asyncAfter(delay: Double, execute work: @escaping () -> Void) {
+        self.asyncAfter(deadline: .now() + delay, execute: work)
+    }
 }
 
 /// :nodoc:

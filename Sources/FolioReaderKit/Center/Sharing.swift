@@ -14,7 +14,7 @@ extension FolioReaderCenter {
      Sharing chapter method.
      */
     @objc func shareChapter(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let currentPage = currentPage else { return }
 
@@ -83,7 +83,7 @@ extension FolioReaderCenter {
      Sharing highlight method.
      */
     func shareHighlight(_ string: String, rect: CGRect) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var subject = readerConfig.localizedShareHighlightSubject
         var html = ""

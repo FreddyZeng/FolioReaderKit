@@ -12,7 +12,7 @@ import UIKit
 extension FolioReaderCenter: UICollectionViewDelegateFlowLayout {
     
     open func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var size = CGSize(width: pageWidth, height: pageHeight)
         
@@ -29,7 +29,7 @@ extension FolioReaderCenter: UICollectionViewDelegateFlowLayout {
     
     
     open func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         if readerConfig.debug.contains(.viewTransition) {
             print("WILLDISPLAYTRANSROTATE \(indexPath)")
         }

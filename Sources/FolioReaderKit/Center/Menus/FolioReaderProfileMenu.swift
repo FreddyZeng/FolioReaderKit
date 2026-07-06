@@ -223,7 +223,7 @@ extension FolioReaderProfileMenu: UITableViewDataSource {
 
 extension FolioReaderProfileMenu {
     @objc func loadButtonAction(_ sender: UIButton?) {
-        folioLogger("load")
+        FolioLogger.log("load")
         guard let provider = self.folioReader.delegate?.folioReaderPreferenceProvider?(self.folioReader) else { return }
         guard let selectedIndex = self.tableView.indexPathForSelectedRow,
               let profileName = profileNames[safe: selectedIndex.row]
@@ -272,7 +272,7 @@ extension FolioReaderProfileMenu {
     }
     
     @objc func saveasButtonAction(_ sender: UIButton?) {
-        folioLogger("save as")
+        FolioLogger.log("save as")
         
         guard let provider = self.folioReader.delegate?.folioReaderPreferenceProvider?(self.folioReader) else { return }
         

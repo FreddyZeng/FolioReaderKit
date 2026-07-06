@@ -57,7 +57,7 @@ open class ReaderPaginationEngine {
     // MARK: - Pagination methods
 
     func frameForPage(_ page: Int) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         return self.readerConfig.isDirection(
             CGRect(x: 0, y: self.pageHeight * CGFloat(page-1), width: self.pageWidth, height: self.pageHeight),
@@ -67,7 +67,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageWith(page: Int, andFragment fragment: String, animated: Bool = false, completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if (self.currentPageNumber == page) {
             if let currentPage = center?.currentPage , fragment != "" {
@@ -83,7 +83,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageWith(href: String, animated: Bool = false, completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let item = self.book.resources.findByHref(href)?.spineIndices.first else { return }
         let indexPath = IndexPath(row: item, section: 0)
@@ -93,7 +93,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageWith(href: String, andAudioMarkID markID: String) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if center?.recentlyScrolled == true { return } // if user recently scrolled, do not change pages or scroll the webview
         guard let currentPage = center?.currentPage else { return }
@@ -113,7 +113,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageWith(indexPath: IndexPath, retryDelaySec: Double = 0.4, animated: Bool = false, completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard indexPathIsValid(indexPath) else {
             print("ERROR: Attempt to scroll to invalid index path")
@@ -121,14 +121,14 @@ open class ReaderPaginationEngine {
             return
         }
         
-        folioLogger("\(indexPath)")
+        FolioLogger.log("\(indexPath)")
         let frameForPage = self.frameForPage(indexPath.row + 1)
         print("changePageWith frameForPage origin=\(frameForPage.origin)")
         self.collectionView?.setContentOffset(frameForPage.origin, animated: false)
         center?.collectionViewLayout.invalidateLayout()
         self.collectionView?.layoutIfNeeded()
         
-        delay(retryDelaySec) {
+        DispatchQueue.main.asyncAfter(delay: retryDelaySec) {
             let indexPaths = self.collectionView?.indexPathsForVisibleItems ?? []
             if indexPaths.contains(indexPath) || retryDelaySec < 0.05 {
                 completion?()
@@ -139,7 +139,7 @@ open class ReaderPaginationEngine {
     }
     
     public func changePageWith(href: String, pageItem: Int, animated: Bool = false, completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         changePageWith(href: href, animated: animated) {
             self.changePageItem(to: pageItem)
@@ -147,7 +147,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageToNext(_ completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         changePageWith(page: self.nextPageNumber, animated: true) { () -> Void in
             completion?()
@@ -155,7 +155,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageToPrevious(_ completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         changePageWith(page: self.previousPageNumber, animated: true) { () -> Void in
             completion?()
@@ -163,7 +163,7 @@ open class ReaderPaginationEngine {
     }
     
     public func changePageItemToNext(_ completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard
             let cell = center?.currentPage,
@@ -186,7 +186,7 @@ open class ReaderPaginationEngine {
     }
 
     func indexPathIsValid(_ indexPath: IndexPath) -> Bool {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let section = indexPath.section
         let row = indexPath.row
@@ -202,7 +202,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageItemToPrevious(_ completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard
             let cell = center?.currentPage,
@@ -224,7 +224,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageItemToLast(animated: Bool = true, _ completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard
             let cell = center?.currentPage,
@@ -250,7 +250,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageItem(to: Int, animated: Bool = true, completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard
             let cell = center?.currentPage,
@@ -285,7 +285,7 @@ open class ReaderPaginationEngine {
     }
 
     public func changePageWith(page: Int, animated: Bool = false, completion: (() -> Void)? = nil) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if page > 0 && page-1 < totalPages {
             let indexPath = IndexPath(row: page-1, section: 0)

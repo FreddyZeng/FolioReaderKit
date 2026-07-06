@@ -158,7 +158,7 @@ class FolioReaderBookList: UICollectionViewController {
         super.viewDidAppear(animated)
         
         // Jump to the current book
-        delay(0.2) {
+        DispatchQueue.main.asyncAfter(delay: 0.2) {
             guard let index = self.tocItems.firstIndex(where: { self.highlightResourceIds.contains($0.resource?.id ?? "___NIL___") }) else { return }
             guard let indexPath = { () -> IndexPath? in
             switch self.folioReader.currentNavigationMenuBookListStyle {

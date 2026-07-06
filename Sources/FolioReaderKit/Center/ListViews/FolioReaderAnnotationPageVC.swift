@@ -137,7 +137,7 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
     // MARK: - NavBar Button
     
     @objc func addBookmark(_ sender: UIBarButtonItem) {
-        folioLogger("bookmark")
+        FolioLogger.log("bookmark")
         
         guard let bookmarkList = self.viewControllerOne as? FolioReaderBookmarkList else { return }
         

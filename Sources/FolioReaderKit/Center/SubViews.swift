@@ -63,7 +63,7 @@ extension FolioReaderCenter {
     }
 
     func updateSubviewFrames() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var collectionViewFrame = self.frameForCollectionView(outerBounds: screenBounds)
         collectionViewFrame = collectionViewFrame.insetBy(dx: tempCollectionViewInset, dy: tempCollectionViewInset)
@@ -90,7 +90,7 @@ extension FolioReaderCenter {
     }
 
     func frameForPageIndicatorView(outerBounds: CGRect) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let safeAreaBottom = view.safeAreaInsets.bottom
         
@@ -111,7 +111,7 @@ extension FolioReaderCenter {
     }
 
     func frameForScrollScrubber(outerBounds: CGRect) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let currentPage = currentPage else { return .zero }
         
@@ -129,7 +129,7 @@ extension FolioReaderCenter {
     }
 
     func frameForCollectionView(outerBounds: CGRect) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var bounds = CGRect(x: 0, y: 0, width: outerBounds.size.width, height: outerBounds.size.height)
         bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
@@ -137,7 +137,7 @@ extension FolioReaderCenter {
     }
     
     func getScreenBounds() -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var bounds = view.frame
         
@@ -155,7 +155,7 @@ extension FolioReaderCenter {
     }
     
     func configureNavBar() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let navBackground = folioReader.preferences.navBackgroundColor(withConfiguration: readerConfig)
         let tintColor = readerConfig.tintColor
@@ -165,7 +165,7 @@ extension FolioReaderCenter {
     }
 
     func configureNavBarButtons() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
 
         // Navbar buttons
@@ -209,7 +209,7 @@ extension FolioReaderCenter {
     // MARK: Change page progressive direction
 
     private func transformViewForRTL(_ view: UIView?) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if folioReader.needsRTLChange {
             view?.transform = CGAffineTransform(scaleX: -1, y: 1)
@@ -219,27 +219,27 @@ extension FolioReaderCenter {
     }
 
     func setCollectionViewProgressiveDirection() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.transformViewForRTL(self.collectionView)
     }
 
     func setPageProgressiveDirection(_ page: FolioReaderPage) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.transformViewForRTL(page)
     }
     // MARK: Status bar and Navigation bar
 
     func hideBars() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         invalidatePendingBarReveal()
         self.updateBarsStatus(true)
     }
 
     func showBars() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         guard readerConfig.hideBars == false else { return }
 
         invalidatePendingBarReveal()
@@ -248,7 +248,7 @@ extension FolioReaderCenter {
     }
 
     func toggleBars() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         guard let navigationController = barHostingNavigationController else { return }
 
         if readerConfig.hideBars == true {
@@ -265,7 +265,7 @@ extension FolioReaderCenter {
     }
 
     private func updateBarsStatus(_ shouldHide: Bool, shouldShowIndicator: Bool = false) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let readerContainer = readerContainer else { return }
         readerContainer.shouldHideStatusBar = shouldHide

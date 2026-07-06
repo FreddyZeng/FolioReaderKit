@@ -20,14 +20,14 @@ extension FolioReaderCenter: UICollectionViewDataSource {
     }
 
     open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let reuseableCell = collectionView.dequeueReusableCell(withReuseIdentifier: kReuseCellIdentifier, for: indexPath) as? FolioReaderPage
         return self.configure(readerPageCell: reuseableCell, atIndexPath: indexPath)
     }
 
     private func configure(readerPageCell cell: FolioReaderPage?, atIndexPath indexPath: IndexPath) -> UICollectionViewCell {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let cell = cell, let readerContainer = readerContainer else {
             return UICollectionViewCell()
@@ -66,7 +66,7 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         
         guard let url = urlComponents.url else { return cell }
         
-        folioLogger("webView.load url=\(url.absoluteString)")
+        FolioLogger.log("webView.load url=\(url.absoluteString)")
         cell.webView?.load(URLRequest(url: url))
         
         return cell

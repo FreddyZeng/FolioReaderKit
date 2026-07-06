@@ -403,7 +403,7 @@ public class ReaderPreferences {
     @objc dynamic public var savedPositionForCurrentBook: FolioReaderReadPosition? {
         get {
             guard let bookId = folioReader?.readerCenter?.book.name?.deletingPathExtension else { return nil }
-            folioLogger("savedPositionForCurrentBook get")
+            FolioLogger.log("savedPositionForCurrentBook get")
             guard let folioReader = folioReader else { return nil }
             return folioReader.delegate?.folioReaderReadPositionProvider?(folioReader).folioReaderReadPosition(folioReader, bookId: bookId)
         }
@@ -416,10 +416,10 @@ public class ReaderPreferences {
             
             if let debug = folioReader.readerConfig?.debug, debug.contains(.functionTrace) {
                 Thread.callStackSymbols.forEach {
-                    folioLogger($0)
+                    FolioLogger.log($0)
                 }
                 if position.bookProgress < 5.0 {
-                    folioLogger(position.bookProgress.description)
+                    FolioLogger.log(position.bookProgress.description)
                 }
             }
             

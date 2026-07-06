@@ -17,7 +17,7 @@ extension FolioReaderPage {
         guard !anchor.isEmpty else { return }
         
         guard let webView = webView, webView.isHidden == false, self.layoutAdapting == nil else {
-            delay(0.1) {
+            DispatchQueue.main.asyncAfter(delay: 0.1) {
                 self.handleAnchor(anchor, offsetInWindow: offsetInWindow, avoidBeginningAnchors: avoidBeginningAnchors, animated: animated, completion: completion)
             }
             return

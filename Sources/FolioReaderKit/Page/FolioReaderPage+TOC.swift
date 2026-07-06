@@ -10,7 +10,7 @@ extension FolioReaderPage {
      Find and return the current chapter resource.
      */
     public func getChapter() -> FRResource? {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var foundResource: FRResource?
 
@@ -37,7 +37,7 @@ extension FolioReaderPage {
      Find and return the current chapter name.
      */
     public func getChapterName() -> String? {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var foundChapterName: String?
         

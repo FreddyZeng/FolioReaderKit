@@ -12,7 +12,7 @@ import UIKit
 extension FolioReaderCenter: FolioReaderPageDelegate {
 
     public func pageDidLoad(_ page: FolioReaderPage) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         invalidatePendingBarReveal()
 
@@ -33,7 +33,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
            let readPosition = self.folioReader.delegate?.folioReaderReadPositionProvider?(self.folioReader).folioReaderReadPosition(self.folioReader, bookId: bookId, by: page.pageNumber),
            readPosition.pageNumber != page.pageNumber {
             
-            folioLogger("NEW_BOOK_NAV readPosition=\(readPosition.pageNumber)")
+            FolioLogger.log("NEW_BOOK_NAV readPosition=\(readPosition.pageNumber)")
             currentWebViewScrollPositions[readPosition.pageNumber - 1] = readPosition
             let indexPath = IndexPath(row: readPosition.pageNumber - 1, section: 0)
             changePageWith(indexPath: indexPath, animated: true) {
@@ -66,10 +66,10 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         if let fragmentID = tempFragment,
            fragmentID.isEmpty == false,
            page.pageNumber == currentPage?.pageNumber {
-            delay(0.2) {
+            DispatchQueue.main.asyncAfter(delay: 0.2) {
                 page.handleAnchor(fragmentID, offsetInWindow: 0, avoidBeginningAnchors: true, animated: true) {
                     self.tempFragment = nil
-                    delay(0.5) {
+                    DispatchQueue.main.asyncAfter(delay: 0.5) {
                         page.getWebViewScrollPosition { position in
                             self.currentWebViewScrollPositions[page.pageNumber - 1] = position
                         }
@@ -81,9 +81,9 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
                   (page.pageNumber > 1 ? position.cfi != "epubcfi(/2/2)" : true),
                   position.cfi != "epubcfi(/\(page.pageNumber * 2)/2)" {
             self.readerContainer?.centerViewController?.pageIndicatorView?.infoLabel.text = position.cfi
-            delay(0.2) {
+            DispatchQueue.main.asyncAfter(delay: 0.2) {
                 page.handleAnchor(position.cfi, offsetInWindow: 0, avoidBeginningAnchors: true, animated: true) {
-                    delay(0.5) {
+                    DispatchQueue.main.asyncAfter(delay: 0.5) {
                         page.getWebViewScrollPosition { position in
                             self.currentWebViewScrollPositions[page.pageNumber - 1] = position
                         }
@@ -92,7 +92,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
             }
         } else if let position = self.folioReader.readerCenter?.currentWebViewScrollPositions[page.pageNumber - 1] {
             self.readerContainer?.centerViewController?.pageIndicatorView?.infoLabel.text = position.cfi
-            folioLogger("bridgeFinished isFirstLoad pageNumber=\(String(describing: page.pageNumber))")
+            FolioLogger.log("bridgeFinished isFirstLoad pageNumber=\(String(describing: page.pageNumber))")
             
             page.scrollWebViewByPosition(
                 pageOffset: position.pageOffset.forDirection(withConfiguration: self.readerConfig),
@@ -107,14 +107,14 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
     }
     
     public func pageWillLoad(_ page: FolioReaderPage) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         // Pass the event to the centers `pageDelegate`
         pageDelegate?.pageWillLoad?(page)
     }
     
     public func pageTap(_ recognizer: UITapGestureRecognizer) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         // Pass the event to the centers `pageDelegate`
         pageDelegate?.pageTap?(recognizer)

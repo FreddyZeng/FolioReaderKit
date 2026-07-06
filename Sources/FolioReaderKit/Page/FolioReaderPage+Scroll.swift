@@ -9,7 +9,7 @@ extension FolioReaderPage {
     /// Get internal page offset before layout change.
     /// Represent upper-left point regardless of layout
     public func updatePageOffsetRate() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let webView = self.webView else { return }
 
@@ -28,7 +28,7 @@ extension FolioReaderPage {
     public func updateScrollPosition(delay bySecond: Double = 0.1, completion: (() -> Void)?) {
         // After rotation fix internal page offset
         if self.pageOffsetRate > 0 {
-            delay(bySecond) {
+            DispatchQueue.main.asyncAfter(delay: bySecond) {
                 self.scrollWebViewByPageOffsetRate()
                 self.updatePageOffsetRate()
                 completion?()
@@ -44,7 +44,7 @@ extension FolioReaderPage {
         
         let fileSize = self.book.spine.spineReferences[safe: self.pageNumber - 1]?.resource.size ?? 102400
         let delaySec = 0.2 + Double(fileSize / 51200) * (self.readerConfig.scrollDirection == .horizontalWithPagedContent ? 0.25 : 0.1)
-        delay(delaySec) {
+        DispatchQueue.main.asyncAfter(delay: delaySec) {
             guard let webView = self.webView,
                   let readerCenter = self.folioReader.readerCenter else {
                 completion?()
@@ -75,7 +75,7 @@ extension FolioReaderPage {
             }
             self.pageOffsetRate = pageOffset / self.byWritingMode(contentSize.forDirection(withConfiguration: self.readerConfig), contentSize.width)
             self.scrollWebViewByPageOffsetRate(animated: animated) {
-                delay(0.5) {
+                DispatchQueue.main.asyncAfter(delay: 0.5) {
                     self.getWebViewScrollPosition { position in
                         readerCenter.currentWebViewScrollPositions[self.pageNumber - 1] = position
                         completion?()
@@ -108,7 +108,7 @@ extension FolioReaderPage {
     }
     
     public func setScrollViewContentOffset(_ contentOffset: CGPoint, animated: Bool) {
-        folioLogger("pageNumber=\(pageNumber!) contentOffset=\(contentOffset)")
+        FolioLogger.log("pageNumber=\(pageNumber!) contentOffset=\(contentOffset)")
         webView?.scrollView.setContentOffset(contentOffset, animated: animated)
         getAndRecordScrollPosition()
     }
@@ -131,7 +131,7 @@ extension FolioReaderPage {
         setScrollViewContentOffset(pageOffsetPoint, animated: animated)
         
         if retry > 0 {
-            delay(0.1 * Double(retry)) {
+            DispatchQueue.main.asyncAfter(delay: 0.1 * Double(retry)) {
                 if pageOffsetPoint != webView.scrollView.contentOffset {
                     self.scrollPageToOffset(offset, animated: animated, retry: retry - 1, completion: completion)
                 } else {
