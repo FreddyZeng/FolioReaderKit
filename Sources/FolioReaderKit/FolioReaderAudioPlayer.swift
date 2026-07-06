@@ -10,7 +10,19 @@ import UIKit
 import AVFoundation
 import MediaPlayer
 
+public protocol FolioReaderAudioPlayerDelegate: AnyObject {
+    func audioPlayer(_ player: FolioReaderAudioPlayer, executeJavaScript script: String, completion: ((Any?) -> Void)?)
+    func audioPlayerDidNeedNextChapter(_ player: FolioReaderAudioPlayer, completion: (() -> Void)?)
+    func audioPlayerDidNeedPrevChapter(_ player: FolioReaderAudioPlayer, completion: (() -> Void)?)
+    func audioPlayer(_ player: FolioReaderAudioPlayer, didUpdateAudioMark href: String, fragmentID: String)
+    func audioPlayerCurrentChapter(_ player: FolioReaderAudioPlayer) -> FRResource?
+    func audioPlayerIsLastPage(_ player: FolioReaderAudioPlayer) -> Bool
+}
+
 open class FolioReaderAudioPlayer: NSObject {
+
+    open weak var delegate: FolioReaderAudioPlayerDelegate?
+
 
     var isTextToSpeech = false
     var synthesizer: AVSpeechSynthesizer?
@@ -169,8 +181,7 @@ open class FolioReaderAudioPlayer: NSObject {
 
     @objc func play() {
         if book.hasAudio {
-            guard let currentPage = self.folioReader.readerCenter?.currentPage else { return }
-            currentPage.webView?.js("playAudio()")
+            delegate?.audioPlayer(self, executeJavaScript: "playAudio()", completion: nil)
         } else {
             self.readCurrentSentence()
         }
@@ -227,7 +238,7 @@ open class FolioReaderAudioPlayer: NSObject {
     @objc func playPrevChapter() {
         stopPlayerTimer()
         // Wait for "currentPage" to update, then request to play audio
-        self.folioReader.readerCenter?.changePageToPrevious {
+        self.delegate?.audioPlayerDidNeedPrevChapter(self) {
             if self.isPlaying() {
                 self.play()
             } else {
@@ -239,7 +250,7 @@ open class FolioReaderAudioPlayer: NSObject {
     @objc func playNextChapter() {
         stopPlayerTimer()
         // Wait for "currentPage" to update, then request to play audio
-        self.folioReader.readerCenter?.changePageToNext {
+        self.delegate?.audioPlayerDidNeedNextChapter(self) {
             if self.isPlaying() {
                 self.play()
             }
@@ -312,7 +323,7 @@ open class FolioReaderAudioPlayer: NSObject {
         guard let textFragment = textFragment else { return false }
         let textParts = textFragment.components(separatedBy: "#")
         let fragmentID = textParts.count > 1 ? textParts[1] : ""
-        self.folioReader.readerCenter?.audioMark(href: currentHref ?? "", fragmentID: fragmentID)
+        self.delegate?.audioPlayer(self, didUpdateAudioMark: currentHref ?? "", fragmentID: fragmentID)
 
         return true
     }
@@ -375,23 +386,18 @@ open class FolioReaderAudioPlayer: NSObject {
     // MARK: TTS Sentence
 
     func speakSentence() {
-        guard
-            let readerCenter = self.folioReader.readerCenter,
-            let currentPage = readerCenter.currentPage else {
-                return
-        }
-
         let playbackActiveClass = book.playbackActiveClass
-        currentPage.webView?.js("getSentenceWithIndex('\(playbackActiveClass)')") { sentence in
-            guard let sentence = sentence else {
-                if readerCenter.isLastPage {
+        delegate?.audioPlayer(self, executeJavaScript: "getSentenceWithIndex('\(playbackActiveClass)')") { [weak self] result in
+            guard let self = self else { return }
+            guard let sentence = result as? String else {
+                if self.delegate?.audioPlayerIsLastPage(self) == true {
                     self.stop()
                 } else {
-                    readerCenter.changePageToNext()
+                    self.delegate?.audioPlayerDidNeedNextChapter(self, completion: nil)
                 }
                 return
             }
-            guard let href = readerCenter.currentPage?.getChapter()?.href else { return }
+            guard let href = self.delegate?.audioPlayerCurrentChapter(self)?.href else { return }
             // TODO QUESTION: The previous code made it possible to call `playText` with the parameter `href` being an empty string. Was that valid? should this logic be kept?
             self.playText(href, text: sentence)
         }
@@ -406,9 +412,7 @@ open class FolioReaderAudioPlayer: NSObject {
         } else {
             if synthesizer.isSpeaking {
                 stopSynthesizer(immediate: false, completion: {
-                    if let currentPage = self.folioReader.readerCenter?.currentPage {
-                        currentPage.webView?.js("resetCurrentSentenceIndex()")
-                    }
+                    self.delegate?.audioPlayer(self, executeJavaScript: "resetCurrentSentenceIndex()", completion: nil)
                     self.speakSentence()
                 })
             } else {
@@ -493,7 +497,7 @@ open class FolioReaderAudioPlayer: NSObject {
      the `currentPage` in ReaderCenter may not have updated just yet
      */
     func getCurrentChapterName() -> String? {
-        guard let chapter = self.folioReader.readerCenter?.currentPage?.getChapter() else {
+        guard let chapter = self.delegate?.audioPlayerCurrentChapter(self) else {
             return nil
         }
 

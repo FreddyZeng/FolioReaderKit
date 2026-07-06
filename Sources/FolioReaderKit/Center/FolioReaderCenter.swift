@@ -158,6 +158,8 @@ open class FolioReaderCenter: UIViewController {
         indicator.startAnimating()
         self.view.addSubview(indicator)
         loadingView = indicator
+
+        self.folioReader.readerAudioPlayer?.delegate = self
     }
 
     // MARK: - View life cicle
