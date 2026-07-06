@@ -253,50 +253,54 @@ class FolioReaderReferenceList: UITableViewController {
         let dateString = dateFormatter.string(from: bookmark.date)
 
         // Date
-        var dateLabel: UILabel!
+        // Date
+        var dateLabel: UILabel?
         if cell.contentView.viewWithTag(456) == nil {
-            dateLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
-            dateLabel.tag = 456
-            dateLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            dateLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-            cell.contentView.addSubview(dateLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
+            label.tag = 456
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.font = UIFont(name: "Avenir-Medium", size: 12)
+            cell.contentView.addSubview(label)
+            dateLabel = label
         } else {
             dateLabel = cell.contentView.viewWithTag(456) as? UILabel
         }
 
-        dateLabel.text = dateString.uppercased()
-        dateLabel.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
-        dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
+        dateLabel?.text = dateString.uppercased()
+        dateLabel?.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
+        dateLabel?.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel?.frame.height ?? 16)
         
         if let pos = bookmark.pos, let _ = self.folioReader.readerCenter?.bookmarkErrors[pos] {
-            var errorLabel: UILabel!
+            var errorLabel: UILabel?
             if cell.contentView.viewWithTag(4567) == nil {
-                errorLabel = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
-                errorLabel.tag = 4567
-                errorLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-                errorLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-                cell.contentView.addSubview(errorLabel)
+                let label = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
+                label.tag = 4567
+                label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+                label.font = UIFont(name: "Avenir-Medium", size: 12)
+                cell.contentView.addSubview(label)
+                errorLabel = label
             } else {
                 errorLabel = cell.contentView.viewWithTag(4567) as? UILabel
             }
-            errorLabel.text = "Cannot Locate, Touch to Fix"
-            errorLabel.textColor = UIColor.systemRed
-            errorLabel.sizeToFit()
-            errorLabel.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel.frame.height)
+            errorLabel?.text = "Cannot Locate, Touch to Fix"
+            errorLabel?.textColor = UIColor.systemRed
+            errorLabel?.sizeToFit()
+            errorLabel?.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel?.frame.height ?? 16)
         } else {
             cell.contentView.viewWithTag(4567)?.removeFromSuperview()
         }
 
         // Text
-        var bookmarkLabel: UILabel!
+        var bookmarkLabel: UILabel?
         if cell.contentView.viewWithTag(123) == nil {
-            bookmarkLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            bookmarkLabel.tag = 123
-            bookmarkLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            bookmarkLabel.numberOfLines = 0
-            bookmarkLabel.lineBreakMode = .byWordWrapping
-            bookmarkLabel.textColor = UIColor.black
-            cell.contentView.addSubview(bookmarkLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            label.tag = 123
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.numberOfLines = 0
+            label.lineBreakMode = .byWordWrapping
+            label.textColor = UIColor.black
+            cell.contentView.addSubview(label)
+            bookmarkLabel = label
         } else {
             bookmarkLabel = cell.contentView.viewWithTag(123) as? UILabel
         }
@@ -322,47 +326,50 @@ class FolioReaderReferenceList: UITableViewController {
             }
         }
         
-        bookmarkLabel.attributedText = titleAttributedString
-        bookmarkLabel.sizeToFit()
-        bookmarkLabel.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: bookmarkLabel.frame.height)
+        bookmarkLabel?.attributedText = titleAttributedString
+        bookmarkLabel?.sizeToFit()
+        let labelHeight = bookmarkLabel?.frame.height ?? 0
+        bookmarkLabel?.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: labelHeight)
         
-        var bookmarkTitleEdit: UITextField!
-        if let view = cell.contentView.viewWithTag(1234){
-            bookmarkTitleEdit = view as? UITextField
+        var bookmarkTitleEdit: UITextField?
+        if let view = cell.contentView.viewWithTag(1234) as? UITextField {
+            bookmarkTitleEdit = view
         } else {
-            bookmarkTitleEdit = UITextField(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            bookmarkTitleEdit.tag = 1234
-            bookmarkTitleEdit.autoresizingMask = .flexibleWidth
-            bookmarkTitleEdit.textColor = .black
-            cell.contentView.addSubview(bookmarkTitleEdit)
+            let tf = UITextField(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            tf.tag = 1234
+            tf.autoresizingMask = .flexibleWidth
+            tf.textColor = .black
+            cell.contentView.addSubview(tf)
+            bookmarkTitleEdit = tf
         }
         
         let isEditingItem = (bookmark.pos == self.editingBookmarkPos) || (bookmark.pos == self.addingBookmarkPos)
-        bookmarkTitleEdit.isHidden = !isEditingItem
-        bookmarkTitleEdit.backgroundColor = isEditingItem ? .white : .clear
+        bookmarkTitleEdit?.isHidden = !isEditingItem
+        bookmarkTitleEdit?.backgroundColor = isEditingItem ? .white : .clear
         
         if isEditingItem {
-            bookmarkTitleEdit.becomeFirstResponder()
+            bookmarkTitleEdit?.becomeFirstResponder()
         }
         
-        bookmarkTitleEdit.text = bookmark.title
-        bookmarkTitleEdit.sizeToFit()
-        bookmarkTitleEdit.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: bookmarkLabel.frame.height)
+        bookmarkTitleEdit?.text = bookmark.title
+        bookmarkTitleEdit?.sizeToFit()
+        bookmarkTitleEdit?.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: labelHeight)
         
-        var bookmarkTitleSaveButton: UIButton!
-        if let view = cell.contentView.viewWithTag(987) {
-            bookmarkTitleSaveButton = view as? UIButton
+        var bookmarkTitleSaveButton: UIButton?
+        if let view = cell.contentView.viewWithTag(987) as? UIButton {
+            bookmarkTitleSaveButton = view
         } else {
-            bookmarkTitleSaveButton = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            bookmarkTitleSaveButton.tag = 987
-            bookmarkTitleSaveButton.setTitle("Save", for: .normal)
-            bookmarkTitleSaveButton.setTitleColor(self.readerConfig.tintColor, for: .normal)
-            bookmarkTitleSaveButton.addTarget(self, action: #selector(saveBookmarkTitleAction(_:)), for: .primaryActionTriggered)
-            cell.contentView.addSubview(bookmarkTitleSaveButton)
+            let btn = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            btn.tag = 987
+            btn.setTitle("Save", for: .normal)
+            btn.setTitleColor(self.readerConfig.tintColor, for: .normal)
+            btn.addTarget(self, action: #selector(saveBookmarkTitleAction(_:)), for: .primaryActionTriggered)
+            cell.contentView.addSubview(btn)
+            bookmarkTitleSaveButton = btn
         }
-        bookmarkTitleSaveButton.sizeToFit()
-        bookmarkTitleSaveButton.isHidden = !isEditingItem
-        bookmarkTitleSaveButton.frame = CGRect(x: view.frame.width-60, y: 20, width: 40, height: dateLabel.frame.height)
+        bookmarkTitleSaveButton?.sizeToFit()
+        bookmarkTitleSaveButton?.isHidden = !isEditingItem
+        bookmarkTitleSaveButton?.frame = CGRect(x: view.frame.width-60, y: 20, width: 40, height: dateLabel?.frame.height ?? 16)
 
         cell.layoutMargins = UIEdgeInsets.zero
         cell.preservesSuperviewLayoutMargins = false

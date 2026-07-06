@@ -10,14 +10,14 @@ import UIKit
 
 class FolioReaderNavigationPageVC: UIPageViewController {
 
-    var segmentedControl: UISegmentedControl!
+    var segmentedControl: UISegmentedControl?
     var viewList = [UIViewController]()
     var segmentedControlItems = [String]()
     
-    var viewControllerZero: UIViewController!
-    var viewControllerOne: UIViewController!
-    var viewControllerTwo: UIViewController!
-    var viewControllerThree: UIViewController!
+    var viewControllerZero: UIViewController?
+    var viewControllerOne: UIViewController?
+    var viewControllerTwo: UIViewController?
+    var viewControllerThree: UIViewController?
 
     var index: Int
     fileprivate var readerConfig: FolioReaderConfig
@@ -42,23 +42,31 @@ class FolioReaderNavigationPageVC: UIPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        segmentedControl = UISegmentedControl(items: segmentedControlItems)
-        segmentedControl.addTarget(self, action: #selector(FolioReaderNavigationPageVC.didSwitchMenu(_:)), for: UIControl.Event.valueChanged)
-        segmentedControl.selectedSegmentIndex = index
-//        segmentedControl.setWidth(100, forSegmentAt: 0)
-//        segmentedControl.setWidth(100, forSegmentAt: 1)
-        self.navigationItem.titleView = segmentedControl
+        let control = UISegmentedControl(items: segmentedControlItems)
+        control.addTarget(self, action: #selector(FolioReaderNavigationPageVC.didSwitchMenu(_:)), for: UIControl.Event.valueChanged)
+        control.selectedSegmentIndex = index
+        self.navigationItem.titleView = control
+        segmentedControl = control
 
-        viewList = [viewControllerOne, viewControllerTwo, viewControllerThree]
-
-        viewControllerOne.didMove(toParent: self)
-        viewControllerTwo.didMove(toParent: self)
-        viewControllerThree.didMove(toParent: self)
-        
-        if self.folioReader.structuralStyle == .bundle || self.folioReader.structuralStyle == .topic {
-            viewList.insert(viewControllerZero, at: 0)
-            viewControllerZero.didMove(toParent: self)
+        var tempViewList = [UIViewController]()
+        if let vc1 = viewControllerOne {
+            tempViewList.append(vc1)
+            vc1.didMove(toParent: self)
         }
+        if let vc2 = viewControllerTwo {
+            tempViewList.append(vc2)
+            vc2.didMove(toParent: self)
+        }
+        if let vc3 = viewControllerThree {
+            tempViewList.append(vc3)
+            vc3.didMove(toParent: self)
+        }
+        
+        if (self.folioReader.structuralStyle == .bundle || self.folioReader.structuralStyle == .topic), let vc0 = viewControllerZero {
+            tempViewList.insert(vc0, at: 0)
+            vc0.didMove(toParent: self)
+        }
+        viewList = tempViewList
 
         self.delegate = self
         self.dataSource = self
@@ -95,25 +103,25 @@ class FolioReaderNavigationPageVC: UIPageViewController {
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
         
-        segmentedControl.selectedSegmentTintColor = tintColor
-        segmentedControl.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
-        segmentedControl.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
+        segmentedControl?.selectedSegmentTintColor = tintColor
+        segmentedControl?.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
+        segmentedControl?.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
         
-        if self.index == viewList.firstIndex(of: viewControllerZero) {
+        if let vc0 = viewControllerZero, self.index == viewList.firstIndex(of: vc0) {
             switch self.folioReader.structuralStyle {
             case .bundle:
                 self.navigationItem.rightBarButtonItem = UIBarButtonItem(
-                    title: self.folioReader.currentNavigationMenuBookListStyle == .Grid ? "List" : "Grid",
-                    style: .plain,
-                    target: self,
-                    action: #selector(switchBookListStyle(_:))
+                     title: self.folioReader.currentNavigationMenuBookListStyle == .Grid ? "List" : "Grid",
+                     style: .plain,
+                     target: self,
+                     action: #selector(switchBookListStyle(_:))
                 )
             case .topic:
                 self.navigationItem.rightBarButtonItem = UIBarButtonItem(
-                    title: "Random",
-                    style: .plain,
-                    target: self,
-                    action: #selector(randomTopic(_:))
+                     title: "Random",
+                     style: .plain,
+                     target: self,
+                     action: #selector(randomTopic(_:))
                 )
             case .atom:
                 break
@@ -167,8 +175,10 @@ extension FolioReaderNavigationPageVC: UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
 
         if finished && completed {
-            let viewController = pageViewController.viewControllers?.last
-            segmentedControl.selectedSegmentIndex = viewList.firstIndex(of: viewController!)!
+            if let viewController = pageViewController.viewControllers?.last,
+               let idx = viewList.firstIndex(of: viewController) {
+                segmentedControl?.selectedSegmentIndex = idx
+            }
         }
     }
 }

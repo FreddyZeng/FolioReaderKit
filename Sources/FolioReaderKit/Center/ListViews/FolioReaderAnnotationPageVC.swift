@@ -10,13 +10,13 @@ import UIKit
 
 class FolioReaderAnnotationPageVC: UIPageViewController {
 
-    var segmentedControl: UISegmentedControl!
+    var segmentedControl: UISegmentedControl?
     var viewList = [UIViewController]()
     var segmentedControlItems = [String]()
     
-    var viewControllerZero: UIViewController!
-    var viewControllerOne: UIViewController!
-    var viewControllerTwo: UIViewController!
+    var viewControllerZero: UIViewController?
+    var viewControllerOne: UIViewController?
+    var viewControllerTwo: UIViewController?
 
     var index: Int
     fileprivate var readerConfig: FolioReaderConfig
@@ -41,22 +41,27 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        segmentedControl = UISegmentedControl(items: segmentedControlItems)
-        segmentedControl.addTarget(self, action: #selector(FolioReaderAnnotationPageVC.didSwitchMenu(_:)), for: UIControl.Event.valueChanged)
-        segmentedControl.selectedSegmentIndex = index
-//        segmentedControl.setWidth(100, forSegmentAt: 0)
-//        segmentedControl.setWidth(100, forSegmentAt: 1)
-        self.navigationItem.titleView = segmentedControl
+        let control = UISegmentedControl(items: segmentedControlItems)
+        control.addTarget(self, action: #selector(FolioReaderAnnotationPageVC.didSwitchMenu(_:)), for: UIControl.Event.valueChanged)
+        control.selectedSegmentIndex = index
+        self.navigationItem.titleView = control
+        segmentedControl = control
 
-        viewList = [viewControllerOne, viewControllerTwo]
-
-        viewControllerOne.didMove(toParent: self)
-        viewControllerTwo.didMove(toParent: self)
-        
-        if (self.folioReader.readerCenter?.tempRefText) != nil {
-            viewList.insert(viewControllerZero, at: 0)
-            viewControllerZero.didMove(toParent: self)
+        var tempViewList = [UIViewController]()
+        if let vc1 = viewControllerOne {
+            tempViewList.append(vc1)
+            vc1.didMove(toParent: self)
         }
+        if let vc2 = viewControllerTwo {
+            tempViewList.append(vc2)
+            vc2.didMove(toParent: self)
+        }
+        
+        if (self.folioReader.readerCenter?.tempRefText) != nil, let vc0 = viewControllerZero {
+            tempViewList.insert(vc0, at: 0)
+            vc0.didMove(toParent: self)
+        }
+        viewList = tempViewList
 
         self.delegate = self
         self.dataSource = self
@@ -84,7 +89,7 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
         super.viewWillAppear(animated)
         configureNavBar()
         
-        if self.index == viewList.firstIndex(of: viewControllerOne) {
+        if let vc1 = viewControllerOne, self.index == viewList.firstIndex(of: vc1) {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", style: .plain, target: self, action: #selector(addBookmark(_:)))
         } else {
             self.navigationItem.rightBarButtonItem = nil
@@ -103,9 +108,9 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
         
-        segmentedControl.selectedSegmentTintColor = tintColor
-        segmentedControl.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
-        segmentedControl.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
+        segmentedControl?.selectedSegmentTintColor = tintColor
+        segmentedControl?.setTitleTextAttributes([.foregroundColor: self.readerConfig.themeModeTextColor[self.folioReader.themeMode]], for: .selected)
+        segmentedControl?.setTitleTextAttributes([.foregroundColor: navText.withAlphaComponent(0.7)], for: .normal)
     }
 
     // MARK: - Segmented control changes
@@ -116,7 +121,7 @@ class FolioReaderAnnotationPageVC: UIPageViewController {
         setViewControllers([viewList[index]], direction: direction, animated: true, completion: nil)
         self.folioReader.currentAnnotationMenuIndex = index
         
-        if self.index == viewList.firstIndex(of: viewControllerOne) {
+        if let vc1 = viewControllerOne, self.index == viewList.firstIndex(of: vc1) {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", style: .plain, target: self, action: #selector(addBookmark(_:)))
         } else {
             self.navigationItem.rightBarButtonItem = nil
@@ -151,8 +156,10 @@ extension FolioReaderAnnotationPageVC: UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
 
         if finished && completed {
-            let viewController = pageViewController.viewControllers?.last
-            segmentedControl.selectedSegmentIndex = viewList.firstIndex(of: viewController!)!
+            if let viewController = pageViewController.viewControllers?.last,
+               let idx = viewList.firstIndex(of: viewController) {
+                segmentedControl?.selectedSegmentIndex = idx
+            }
         }
     }
 }

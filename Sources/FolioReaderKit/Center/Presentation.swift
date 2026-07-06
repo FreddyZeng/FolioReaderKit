@@ -104,15 +104,16 @@ extension FolioReaderCenter {
         menuBarController.modalPresentationStyle = .custom
         menuBarController.selectedIndex = lastMenuSelectedIndex
         
-        animator = FolioModalTransitionAnimator(modalViewController: menuBarController)
-        animator.isDragable = false
-        animator.bounces = false
-        animator.behindViewAlpha = 1.0
-        animator.behindViewScale = 1.0
-        animator.transitionDuration = 0.6
-        animator.direction = .bottom
+        let newAnimator = FolioModalTransitionAnimator(modalViewController: menuBarController)
+        newAnimator.isDragable = false
+        newAnimator.bounces = false
+        newAnimator.behindViewAlpha = 1.0
+        newAnimator.behindViewScale = 1.0
+        newAnimator.transitionDuration = 0.6
+        newAnimator.direction = .bottom
 
-        menuBarController.transitioningDelegate = animator
+        animator = newAnimator
+        menuBarController.transitioningDelegate = newAnimator
         
         self.present(menuBarController, animated: true, completion: nil)
     }
@@ -129,15 +130,16 @@ extension FolioReaderCenter {
         let menu = FolioReaderPlayerMenu(folioReader: folioReader, readerConfig: readerConfig)
         menu.modalPresentationStyle = .custom
 
-        animator = FolioModalTransitionAnimator(modalViewController: menu)
-        animator.isDragable = true
-        animator.bounces = false
-        //animator.behindViewAlpha = 0.4
-        animator.behindViewScale = 1
-        animator.transitionDuration = 0.6
-        animator.direction = .bottom
+        let newAnimator = FolioModalTransitionAnimator(modalViewController: menu)
+        newAnimator.isDragable = true
+        newAnimator.bounces = false
+        //newAnimator.behindViewAlpha = 0.4
+        newAnimator.behindViewScale = 1
+        newAnimator.transitionDuration = 0.6
+        newAnimator.direction = .bottom
 
-        menu.transitioningDelegate = animator
+        animator = newAnimator
+        menu.transitioningDelegate = newAnimator
         present(menu, animated: true, completion: nil)
     }
 

@@ -13,7 +13,7 @@ class FolioReaderAddBookmarkNote: UIViewController {
     let bookmarkLabel = UILabel()
     let scrollView = UIScrollView()
     let containerView = UIView()
-    var bookmark: FolioReaderBookmark!
+    var bookmark: FolioReaderBookmark
     var bookmarkSaved = false
     var isEditBookmark = false
     var resizedTextView = false

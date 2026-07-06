@@ -13,16 +13,16 @@ import MediaPlayer
 open class FolioReaderAudioPlayer: NSObject {
 
     var isTextToSpeech = false
-    var synthesizer: AVSpeechSynthesizer!
+    var synthesizer: AVSpeechSynthesizer?
     var playing = false
     var player: AVAudioPlayer?
-    var currentHref: String!
-    var currentFragment: String!
-    var currentSmilFile: FRSmilFile!
-    var currentAudioFile: String!
-    var currentBeginTime: Double!
-    var currentEndTime: Double!
-    var playingTimer: Timer!
+    var currentHref: String?
+    var currentFragment: String?
+    var currentSmilFile: FRSmilFile?
+    var currentAudioFile: String?
+    var currentBeginTime: Double?
+    var currentEndTime: Double?
+    var playingTimer: Timer?
     var registeredCommands = false
     var completionHandler: () -> Void = {}
     var utteranceRate: Float = 0
@@ -145,7 +145,7 @@ open class FolioReaderAudioPlayer: NSObject {
     }
 
     func stopSynthesizer(immediate: Bool = false, completion: (() -> Void)? = nil) {
-        synthesizer.stopSpeaking(at: immediate ? .immediate : .word)
+        synthesizer?.stopSpeaking(at: immediate ? .immediate : .word)
         completion?()
     }
 
@@ -157,7 +157,7 @@ open class FolioReaderAudioPlayer: NSObject {
                 player.pause()
             }
         } else {
-            if synthesizer.isSpeaking {
+            if let synthesizer = synthesizer, synthesizer.isSpeaking {
                 synthesizer.pauseSpeaking(at: .word)
             }
         }
@@ -273,23 +273,25 @@ open class FolioReaderAudioPlayer: NSObject {
 
             currentAudioFile = audioFile
 
-            let fileURL = currentSmilFile.resource.basePath() + ("/"+audioFile!)
-            let audioData = try? Data(contentsOf: URL(fileURLWithPath: fileURL))
+            guard let currentSmilFile = currentSmilFile, let audioFile = audioFile else { return false }
+            let fileURL = currentSmilFile.resource.basePath() + ("/"+audioFile)
+            guard let audioData = try? Data(contentsOf: URL(fileURLWithPath: fileURL)) else {
+                print("could not read audio file:", audioFile)
+                return false
+            }
 
             do {
-
-                player = try AVAudioPlayer(data: audioData!)
-
-                guard let player = player else { return false }
+                let audioPlayer = try AVAudioPlayer(data: audioData)
+                player = audioPlayer
 
                 setRate(self.folioReader.currentAudioRate)
-                player.enableRate = true
-                player.prepareToPlay()
-                player.delegate = self
+                audioPlayer.enableRate = true
+                audioPlayer.prepareToPlay()
+                audioPlayer.delegate = self
 
                 updateNowPlayingInfo()
             } catch {
-                print("could not read audio file:", audioFile ?? "nil")
+                print("could not read audio file:", audioFile)
                 return false
             }
         }
@@ -307,9 +309,10 @@ open class FolioReaderAudioPlayer: NSObject {
         player.play()
 
         // get the fragment ID so we can "mark" it in the webview
-        let textParts = textFragment!.components(separatedBy: "#")
-        let fragmentID = textParts[1];
-        self.folioReader.readerCenter?.audioMark(href: currentHref, fragmentID: fragmentID)
+        guard let textFragment = textFragment else { return false }
+        let textParts = textFragment.components(separatedBy: "#")
+        let fragmentID = textParts.count > 1 ? textParts[1] : ""
+        self.folioReader.readerCenter?.audioMark(href: currentHref ?? "", fragmentID: fragmentID)
 
         return true
     }
@@ -321,11 +324,11 @@ open class FolioReaderAudioPlayer: NSObject {
      */
     fileprivate func nextAudioFragment() -> FRSmilElement? {
 
-        guard let smilFile = book.smilFile(forHref: currentHref) else {
+        guard let currentHref = currentHref, let smilFile = book.smilFile(forHref: currentHref) else {
             return nil
         }
 
-        let smil = (self.currentFragment == nil ? smilFile.parallelAudioForFragment(nil) : smilFile.nextParallelAudioForFragment(currentFragment))
+        let smil = (self.currentFragment == nil ? smilFile.parallelAudioForFragment(nil) : smilFile.nextParallelAudioForFragment(currentFragment ?? ""))
 
         if (smil != nil) {
             self.currentFragment = smil?.textElement().attributes["src"]
@@ -349,8 +352,9 @@ open class FolioReaderAudioPlayer: NSObject {
         currentHref = href
 
         if synthesizer == nil {
-            synthesizer = AVSpeechSynthesizer()
-            synthesizer.delegate = self
+            let newSynthesizer = AVSpeechSynthesizer()
+            newSynthesizer.delegate = self
+            synthesizer = newSynthesizer
             setRate(self.folioReader.currentAudioRate)
         }
 
@@ -358,10 +362,12 @@ open class FolioReaderAudioPlayer: NSObject {
         utterance.rate = utteranceRate
         utterance.voice = AVSpeechSynthesisVoice(language: self.book.metadata.language)
 
-        if synthesizer.isSpeaking {
-            stopSynthesizer()
+        if let synthesizer = synthesizer {
+            if synthesizer.isSpeaking {
+                stopSynthesizer()
+            }
+            synthesizer.speak(utterance)
         }
-        synthesizer.speak(utterance)
 
         updateNowPlayingInfo()
     }
@@ -392,7 +398,7 @@ open class FolioReaderAudioPlayer: NSObject {
     }
 
     func readCurrentSentence() {
-        guard synthesizer != nil else { return speakSentence() }
+        guard let synthesizer = synthesizer else { return speakSentence() }
 
         if synthesizer.isPaused {
             playing = true
@@ -415,15 +421,14 @@ open class FolioReaderAudioPlayer: NSObject {
 
     fileprivate func startPlayerTimer() {
         // we must add the timer in this mode in order for it to continue working even when the user is scrolling a webview
-        playingTimer = Timer(timeInterval: 0.01, target: self, selector: #selector(playerTimerObserver), userInfo: nil, repeats: true)
-        RunLoop.current.add(playingTimer, forMode: RunLoop.Mode.common)
+        let timer = Timer(timeInterval: 0.01, target: self, selector: #selector(playerTimerObserver), userInfo: nil, repeats: true)
+        playingTimer = timer
+        RunLoop.current.add(timer, forMode: RunLoop.Mode.common)
     }
 
     fileprivate func stopPlayerTimer() {
-        if playingTimer != nil {
-            playingTimer.invalidate()
-            playingTimer = nil
-        }
+        playingTimer?.invalidate()
+        playingTimer = nil
     }
 
     @objc func playerTimerObserver() {

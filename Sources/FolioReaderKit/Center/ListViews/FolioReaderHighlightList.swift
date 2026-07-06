@@ -130,36 +130,39 @@ class FolioReaderHighlightList: UITableViewController {
         let dateString = dateFormatter.string(from: highlight.date)
 
         // Date
-        var dateLabel: UILabel!
+        // Date
+        var dateLabel: UILabel?
         if cell.contentView.viewWithTag(456) == nil {
-            dateLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
-            dateLabel.tag = 456
-            dateLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            dateLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-            cell.contentView.addSubview(dateLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
+            label.tag = 456
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.font = UIFont(name: "Avenir-Medium", size: 12)
+            cell.contentView.addSubview(label)
+            dateLabel = label
         } else {
             dateLabel = cell.contentView.viewWithTag(456) as? UILabel
         }
 
-        dateLabel.text = dateString.uppercased()
-        dateLabel.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
-        dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
+        dateLabel?.text = dateString.uppercased()
+        dateLabel?.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
+        dateLabel?.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel?.frame.height ?? 16)
         
         if let _ = self.folioReader.readerCenter?.highlightErrors[highlight.highlightId] {
-            var errorLabel: UILabel!
+            var errorLabel: UILabel?
             if cell.contentView.viewWithTag(4567) == nil {
-                errorLabel = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
-                errorLabel.tag = 4567
-                errorLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-                errorLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-                cell.contentView.addSubview(errorLabel)
+                let label = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
+                label.tag = 4567
+                label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+                label.font = UIFont(name: "Avenir-Medium", size: 12)
+                cell.contentView.addSubview(label)
+                errorLabel = label
             } else {
                 errorLabel = cell.contentView.viewWithTag(4567) as? UILabel
             }
-            errorLabel.text = "Cannot Locate, Touch to Fix"
-            errorLabel.textColor = UIColor.systemRed
-            errorLabel.sizeToFit()
-            errorLabel.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel.frame.height)
+            errorLabel?.text = "Cannot Locate, Touch to Fix"
+            errorLabel?.textColor = UIColor.systemRed
+            errorLabel?.sizeToFit()
+            errorLabel?.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel?.frame.height ?? 16)
         } else {
             cell.contentView.viewWithTag(4567)?.removeFromSuperview()
         }
@@ -185,40 +188,43 @@ class FolioReaderHighlightList: UITableViewController {
         }
 
         // Text
-        var highlightLabel: UILabel!
+        var highlightLabel: UILabel?
         if cell.contentView.viewWithTag(123) == nil {
-            highlightLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            highlightLabel.tag = 123
-            highlightLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            highlightLabel.numberOfLines = 0
-            highlightLabel.textColor = UIColor.black
-            cell.contentView.addSubview(highlightLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            label.tag = 123
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.numberOfLines = 0
+            label.textColor = UIColor.black
+            cell.contentView.addSubview(label)
+            highlightLabel = label
         } else {
             highlightLabel = cell.contentView.viewWithTag(123) as? UILabel
         }
 
-        highlightLabel.attributedText = text
-        highlightLabel.sizeToFit()
-        highlightLabel.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: highlightLabel.frame.height)
+        highlightLabel?.attributedText = text
+        highlightLabel?.sizeToFit()
+        let labelHeight = highlightLabel?.frame.height ?? 0
+        highlightLabel?.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: labelHeight)
         
         // Note text if it exists
         if let note = highlight.noteForHighlight {
-            var noteLabel: UILabel!
+            var noteLabel: UILabel?
             if cell.contentView.viewWithTag(789) == nil {
-                noteLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-                noteLabel.tag = 789
-                noteLabel.font = UIFont.systemFont(ofSize: 14)
-                noteLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-                noteLabel.numberOfLines = 3
-                noteLabel.textColor = UIColor.gray
-                cell.contentView.addSubview(noteLabel)
+                let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+                label.tag = 789
+                label.font = UIFont.systemFont(ofSize: 14)
+                label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+                label.numberOfLines = 3
+                label.textColor = UIColor.gray
+                cell.contentView.addSubview(label)
+                noteLabel = label
             } else {
                 noteLabel = cell.contentView.viewWithTag(789) as? UILabel
             }
             
-            noteLabel.text = note
-            noteLabel.sizeToFit()
-            noteLabel.frame = CGRect(x: 20, y: 46 + highlightLabel.frame.height + 10, width: view.frame.width-40, height: noteLabel.frame.height)
+            noteLabel?.text = note
+            noteLabel?.sizeToFit()
+            noteLabel?.frame = CGRect(x: 20, y: 46 + labelHeight + 10, width: view.frame.width-40, height: noteLabel?.frame.height ?? 0)
         } else {
             cell.contentView.viewWithTag(789)?.removeFromSuperview()
         }

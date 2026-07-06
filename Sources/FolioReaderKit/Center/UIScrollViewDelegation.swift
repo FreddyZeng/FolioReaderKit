@@ -106,8 +106,9 @@ class ReaderScrollDelegateHandler: NSObject, UIScrollViewDelegate, UICollectionV
             center.isScrolling = false
         }
 
-        center.recentlyScrolledTimer = Timer(timeInterval:center.recentlyScrolledDelay, target: center, selector: #selector(FolioReaderCenter.clearRecentlyScrolled), userInfo: nil, repeats: false)
-        RunLoop.current.add(center.recentlyScrolledTimer, forMode: RunLoop.Mode.common)
+        let timer = Timer(timeInterval:center.recentlyScrolledDelay, target: center, selector: #selector(FolioReaderCenter.clearRecentlyScrolled), userInfo: nil, repeats: false)
+        center.recentlyScrolledTimer = timer
+        RunLoop.current.add(timer, forMode: RunLoop.Mode.common)
     }
 
     open func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
@@ -141,10 +142,8 @@ extension FolioReaderCenter {
     @objc func clearRecentlyScrolled() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        if(recentlyScrolledTimer != nil) {
-            recentlyScrolledTimer.invalidate()
-            recentlyScrolledTimer = nil
-        }
+        recentlyScrolledTimer?.invalidate()
+        recentlyScrolledTimer = nil
         recentlyScrolled = false
     }
 }

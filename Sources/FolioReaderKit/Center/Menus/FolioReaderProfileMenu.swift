@@ -276,7 +276,7 @@ extension FolioReaderProfileMenu {
         
         guard let provider = self.folioReader.delegate?.folioReaderPreferenceProvider?(self.folioReader) else { return }
         
-        var profileName: String!
+        var profileName = ""
         if let bookTitle = self.folioReader.readerCenter?.book.title ?? self.folioReader.readerCenter?.book.name ?? self.folioReader.readerConfig?.identifier {
             profileName = "Based on \(bookTitle)"
         } else {
@@ -287,7 +287,7 @@ extension FolioReaderProfileMenu {
             profileName = "Profile #\(i)"
         }
         
-        let alertVC = UIAlertController(title: "Confirm Save As", message: "Save current style as profile \"\(profileName!)\"", preferredStyle: .actionSheet)
+        let alertVC = UIAlertController(title: "Confirm Save As", message: "Save current style as profile \"\(profileName)\"", preferredStyle: .actionSheet)
         alertVC.popoverPresentationController?.sourceView = sender
         alertVC.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
             alertVC.dismiss()

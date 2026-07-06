@@ -29,16 +29,16 @@ open class FolioReaderCenter: UIViewController {
     open var collectionView: UICollectionView!
     
     let collectionViewLayout = FolioReaderCenterLayout()
-    var loadingView: UIActivityIndicatorView!
+    var loadingView: UIActivityIndicatorView?
     var totalPages: Int = 0
     var tempFragment: String?
     var tempOffset: CGPoint?
-    var animator: FolioModalTransitionAnimator!
+    var animator: FolioModalTransitionAnimator?
     var pageIndicatorView: FolioReaderPageIndicator?
     var pageIndicatorHeight: CGFloat = 20
     var recentlyScrolled = false
     var recentlyScrolledDelay = 2.0 // 2 second delay until we clear recentlyScrolled
-    var recentlyScrolledTimer: Timer!
+    var recentlyScrolledTimer: Timer?
     var scrollScrubber: ScrollScrubber?
     var activityIndicator = UIActivityIndicatorView()
     var isScrolling = false
@@ -77,7 +77,7 @@ open class FolioReaderCenter: UIViewController {
     
     var lastMenuSelectedIndex = 0
 
-    var screenBounds: CGRect!
+    var screenBounds = CGRect.zero
     var pointNow = CGPoint.zero
     var tempReference: FRTocReference?
 //    var isFirstLoad = true
@@ -153,10 +153,11 @@ open class FolioReaderCenter: UIViewController {
 
         // Loading indicator
         let style: UIActivityIndicatorView.Style = folioReader.isNight(.white, .gray)
-        loadingView = UIActivityIndicatorView(style: style)
-        loadingView.hidesWhenStopped = true
-        loadingView.startAnimating()
-        self.view.addSubview(loadingView)
+        let indicator = UIActivityIndicatorView(style: style)
+        indicator.hidesWhenStopped = true
+        indicator.startAnimating()
+        self.view.addSubview(indicator)
+        loadingView = indicator
     }
 
     // MARK: - View life cicle
@@ -263,7 +264,7 @@ open class FolioReaderCenter: UIViewController {
         super.viewDidLayoutSubviews()
 
         screenBounds = self.getScreenBounds()
-        loadingView.center = view.center
+        loadingView?.center = view.center
 
         updateSubviewFrames()
     }
@@ -284,7 +285,7 @@ open class FolioReaderCenter: UIViewController {
     func reloadData() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        self.loadingView.stopAnimating()
+        self.loadingView?.stopAnimating()
         self.totalPages = book.spine.spineReferences.count
 
         self.collectionView.reloadData()
