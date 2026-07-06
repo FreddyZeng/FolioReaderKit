@@ -64,7 +64,7 @@ public class ReaderPreferences {
                     readerCenter.scrollScrubber?.reloadColors()
                     readerCenter.collectionView.backgroundColor = (value == true ? self.folioReader?.readerContainer?.readerConfig.nightModeBackground : UIColor.white)
                 }, completion: { (finished: Bool) in
-                    NotificationCenter.default.post(name: Notification.Name(rawValue: "needRefreshPageMode"), object: nil)
+                    NotificationCenter.default.post(name: .folioReaderNeedRefreshPageMode, object: nil)
                 })
             }
         }
@@ -122,7 +122,7 @@ public class ReaderPreferences {
                     page.panDeadZoneRight?.backgroundColor = backgroundColor
                 }
             }, completion: { (finished: Bool) in
-                NotificationCenter.default.post(name: Notification.Name(rawValue: "needRefreshPageMode"), object: nil)
+                NotificationCenter.default.post(name: .folioReaderNeedRefreshPageMode, object: nil)
             })
         }
     }

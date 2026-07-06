@@ -132,7 +132,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
 
-        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: NSNotification.Name(rawValue: "needRefreshPageMode"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: .folioReaderNeedRefreshPageMode, object: nil)
     }
 
     public func setup(withReaderContainer readerContainer: FolioReaderContainer) {
