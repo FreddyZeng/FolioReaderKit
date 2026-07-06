@@ -233,7 +233,7 @@ open class FolioReaderWebView: WKWebView {
             cssOverflowProperty = "scroll"
             scrollView.bounces = true
             break
-        case .horitonzalWithPagedContent:
+        case .horizontalWithPagedContent:
             scrollView.isPagingEnabled = true
             cssOverflowProperty = "-webkit-paged-x"
             scrollView.bounces = false

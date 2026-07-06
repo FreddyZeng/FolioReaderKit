@@ -194,7 +194,7 @@ public class ReaderPreferences {
     }
 
     public var defaultScrollDirection: FolioReaderScrollDirection {
-        folioReader?.readerContainer?.book.spine.isRtl == true ? .horitonzalWithPagedContent : .horizontalWithScrollContent
+        folioReader?.readerContainer?.book.spine.isRtl == true ? .horizontalWithPagedContent : .horizontalWithScrollContent
     }
     /// Check the current scroll direction. Default .defaultVertical
     public var currentScrollDirection: Int {

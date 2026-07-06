@@ -160,9 +160,9 @@ class FolioReaderPageMenu: FolioReaderMenu, SMSegmentViewDelegate {
         case .vertical, .defaultVertical:
             layoutDirectionHorizontalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.vertical.rawValue)
             layoutDirectionVerticalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horizontalWithScrollContent.rawValue-1)
-        case .horitonzalWithPagedContent:
-            layoutDirectionHorizontalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horitonzalWithPagedContent.rawValue)
-            layoutDirectionVerticalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horitonzalWithPagedContent.rawValue-1)
+        case .horizontalWithPagedContent:
+            layoutDirectionHorizontalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horizontalWithPagedContent.rawValue)
+            layoutDirectionVerticalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horizontalWithPagedContent.rawValue-1)
         case .horizontalWithScrollContent:
             layoutDirectionHorizontalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horizontalWithScrollContent.rawValue)
             layoutDirectionVerticalSegment.selectSegmentAtIndex(FolioReaderScrollDirection.horizontalWithScrollContent.rawValue-1)

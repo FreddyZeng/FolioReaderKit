@@ -193,7 +193,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard readerConfig.scrollDirection != .horitonzalWithPagedContent else { return }
+        guard readerConfig.scrollDirection != .horizontalWithPagedContent else { return }
 
         if visible && usingSlider == false {
             setSliderVal()

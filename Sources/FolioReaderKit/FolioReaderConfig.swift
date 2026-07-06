@@ -18,9 +18,12 @@ import UIKit
 /// - defaultVertical: The default scroll direction, if not overridden; works as .vertical.
 public enum FolioReaderScrollDirection: Int {
     case vertical
-    case horitonzalWithPagedContent
+    case horizontalWithPagedContent
     case horizontalWithScrollContent
     case defaultVertical
+
+    @available(*, deprecated, renamed: "horizontalWithPagedContent")
+    public static let horitonzalWithPagedContent = FolioReaderScrollDirection.horizontalWithPagedContent
 
     /// The current scroll direction
     ///
@@ -29,7 +32,7 @@ public enum FolioReaderScrollDirection: Int {
         switch self {
         case .vertical, .defaultVertical:
             return .vertical
-        case .horitonzalWithPagedContent, .horizontalWithScrollContent:
+        case .horizontalWithPagedContent, .horizontalWithScrollContent:
             return .horizontal
         }
     }
@@ -321,7 +324,7 @@ open class FolioReaderConfig: NSObject {
     func isDirection<T> (_ vertical: T, _ horizontalContentPaged: T, _ horizontalContentScroll: T) -> T {
         switch self.scrollDirection {
         case .vertical, .defaultVertical:       return vertical
-        case .horitonzalWithPagedContent:       return horizontalContentPaged
+        case .horizontalWithPagedContent:       return horizontalContentPaged
         case .horizontalWithScrollContent:      return horizontalContentScroll
         }
     }

@@ -197,7 +197,7 @@ writingMode
         self.layoutAdapting = "Finalizing..."
         
         var minScreenCount = 1
-        if self.byWritingMode(self.readerConfig.scrollDirection == .horitonzalWithPagedContent, true) {
+        if self.byWritingMode(self.readerConfig.scrollDirection == .horizontalWithPagedContent, true) {
             minScreenCount = self.totalPages ?? minScreenCount
             if minScreenCount < 1 {
                 minScreenCount = 1
@@ -219,7 +219,7 @@ writingMode
             delay(bySecond) {
                 self.updatePageInfo {
                     folioLogger("updateStyleBackgroundPadding pageNumber=\(self.pageNumber!) minScreenCount=\(minScreenCount) totalPages=\(self.totalPages ?? 0) tryShrinking=\(tryShrinking)")
-                    if self.byWritingMode(self.readerConfig.scrollDirection == .horitonzalWithPagedContent, true) {
+                    if self.byWritingMode(self.readerConfig.scrollDirection == .horizontalWithPagedContent, true) {
                         if tryShrinking {
                             if (self.totalPages ?? 0) < minScreenCount {   //shrinked one page, try again
                                 self.updateStyleBackgroundPadding(delay: bySecond, tryShrinking: true, completion: completion)
