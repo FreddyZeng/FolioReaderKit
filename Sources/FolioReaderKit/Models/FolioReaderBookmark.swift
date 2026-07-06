@@ -10,13 +10,31 @@ import Foundation
 
 /// A Bookmark object
 @objc open class FolioReaderBookmark: NSObject, Codable {
-    open var bookId: String!
+    open var bookId: String
     
-    open var date: Date!
-    open var title: String!
+    open var date: Date
+    open var title: String
     open var page: Int = 0
     open var pos_type: String?      //should be epubcfi
     open var pos: String?       //like epubcfi(/2/4/4/1:10)
+
+    public override init() {
+        self.bookId = ""
+        self.date = Date()
+        self.title = ""
+        super.init()
+    }
+
+    public required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.bookId = try container.decodeIfPresent(String.self, forKey: .bookId) ?? ""
+        self.date = try container.decodeIfPresent(Date.self, forKey: .date) ?? Date()
+        self.title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        self.page = try container.decodeIfPresent(Int.self, forKey: .page) ?? 0
+        self.pos_type = try container.decodeIfPresent(String.self, forKey: .pos_type)
+        self.pos = try container.decodeIfPresent(String.self, forKey: .pos)
+        super.init()
+    }
     
     open override func copy() -> Any {
         let bookmark = FolioReaderBookmark()
@@ -65,7 +83,7 @@ extension FolioReaderBookmark: Comparable {
                 }
             }
         }
-        return (lhs.title ?? "") < (rhs.title ?? "")    //fallback
+        return lhs.title < rhs.title    //fallback
     }
     
 }

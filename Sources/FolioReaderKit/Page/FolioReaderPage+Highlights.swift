@@ -73,7 +73,7 @@ extension FolioReaderPage {
                 highlight.tocFamilyTitles = highlightChapterNames.reversed()
                 highlight.date += 0.001
                 
-                print("\(#function) fixHighlight \(boundingRect) \(highlight.tocFamilyTitles) \(highlight.content!)")
+                print("\(#function) fixHighlight \(boundingRect) \(highlight.tocFamilyTitles) \(highlight.content)")
                 folioReaderHighlightProvider.folioReaderHighlight(self.folioReader, added: highlight, completion: nil)
             }
         }

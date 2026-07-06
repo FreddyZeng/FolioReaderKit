@@ -258,7 +258,7 @@ class FolioReaderBookmarkList: UITableViewController {
             return 0.0
         }
 
-        let cleanString = bookmark.title ?? "Untitled Bookmark"
+        let cleanString = bookmark.title
         let text = NSMutableAttributedString(string: cleanString)
         let range = NSRange(location: 0, length: text.length)
         let paragraph = NSMutableParagraphStyle()
@@ -386,7 +386,7 @@ class FolioReaderBookmarkList: UITableViewController {
             bookmark.pos_type = "epubcfi"
             bookmark.page = currentPage.pageNumber
             bookmark.pos = position.cfi
-            bookmark.bookId = self.readerConfig.identifier
+            bookmark.bookId = self.readerConfig.identifier ?? ""
             bookmark.title = "[\(position.chapterName)] \(position.snippet.prefix(32))..."
             bookmark.date = Date()
             

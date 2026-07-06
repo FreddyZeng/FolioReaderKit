@@ -10,34 +10,68 @@ import Foundation
 
 /// A Highlight object
 @objc open class FolioReaderHighlight: NSObject, Codable {
-    open var bookId: String!
-    open var content: String!
-    open var contentPost: String!
-    open var contentPre: String!
+    open var bookId: String
+    open var content: String
+    open var contentPost: String?
+    open var contentPre: String?
     
-    open var date: Date!
-    open var highlightId: String!
+    open var date: Date
+    open var highlightId: String
     open var page: Int = 0
     open var type: Int = 0
-    open var style: String!
+    open var style: String
     open var startOffset: Int = -1
     open var endOffset: Int = -1
     open var noteForHighlight: String?
     open var cfiStart: String?
     open var cfiEnd: String?
     
-    open var contentEncoded: String!
-    open var contentPreEncoded: String!
-    open var contentPostEncoded: String!
+    open var contentEncoded: String?
+    open var contentPreEncoded: String?
+    open var contentPostEncoded: String?
     
-    open var spineName: String!
+    open var spineName: String
     
     open var tocFamilyTitles = [String]()
+
+    public override init() {
+        self.bookId = ""
+        self.content = ""
+        self.date = Date()
+        self.highlightId = UUID().uuidString
+        self.style = "yellow"
+        self.spineName = ""
+        super.init()
+    }
+
+    public required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.bookId = try container.decodeIfPresent(String.self, forKey: .bookId) ?? ""
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
+        self.contentPost = try container.decodeIfPresent(String.self, forKey: .contentPost)
+        self.contentPre = try container.decodeIfPresent(String.self, forKey: .contentPre)
+        self.date = try container.decodeIfPresent(Date.self, forKey: .date) ?? Date()
+        self.highlightId = try container.decodeIfPresent(String.self, forKey: .highlightId) ?? UUID().uuidString
+        self.page = try container.decodeIfPresent(Int.self, forKey: .page) ?? 0
+        self.type = try container.decodeIfPresent(Int.self, forKey: .type) ?? 0
+        self.style = try container.decodeIfPresent(String.self, forKey: .style) ?? "yellow"
+        self.startOffset = try container.decodeIfPresent(Int.self, forKey: .startOffset) ?? -1
+        self.endOffset = try container.decodeIfPresent(Int.self, forKey: .endOffset) ?? -1
+        self.noteForHighlight = try container.decodeIfPresent(String.self, forKey: .noteForHighlight)
+        self.cfiStart = try container.decodeIfPresent(String.self, forKey: .cfiStart)
+        self.cfiEnd = try container.decodeIfPresent(String.self, forKey: .cfiEnd)
+        self.contentEncoded = try container.decodeIfPresent(String.self, forKey: .contentEncoded)
+        self.contentPreEncoded = try container.decodeIfPresent(String.self, forKey: .contentPreEncoded)
+        self.contentPostEncoded = try container.decodeIfPresent(String.self, forKey: .contentPostEncoded)
+        self.spineName = try container.decodeIfPresent(String.self, forKey: .spineName) ?? ""
+        self.tocFamilyTitles = try container.decodeIfPresent([String].self, forKey: .tocFamilyTitles) ?? []
+        super.init()
+    }
     
     open func encodeContents() {
         contentEncoded = content.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
-        contentPreEncoded = contentPre.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
-        contentPostEncoded = contentPost.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+        contentPreEncoded = contentPre?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+        contentPostEncoded = contentPost?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
     }
 }
 

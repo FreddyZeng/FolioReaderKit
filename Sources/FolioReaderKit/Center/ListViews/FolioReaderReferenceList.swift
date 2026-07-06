@@ -510,7 +510,7 @@ class FolioReaderReferenceList: UITableViewController {
             bookmark.pos_type = "epubcfi"
             bookmark.page = currentPage.pageNumber
             bookmark.pos = position.cfi
-            bookmark.bookId = self.readerConfig.identifier
+            bookmark.bookId = self.readerConfig.identifier ?? ""
             bookmark.title = "[\(position.chapterName)] \(position.snippet.prefix(32))..."
             bookmark.date = Date()
             

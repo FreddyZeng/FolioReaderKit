@@ -65,10 +65,10 @@ class WebViewHighlightManager {
             }
             
             let highlight = FolioReaderHighlight()
-            highlight.bookId = webView.book.name?.deletingPathExtension
+            highlight.bookId = webView.book.name?.deletingPathExtension ?? ""
             highlight.startOffset = startOffsetInt
             highlight.endOffset = endOffsetInt
-            highlight.content = dic["content"]
+            highlight.content = dic["content"] ?? ""
             highlight.cfiStart = dic["cfiStart"]
             highlight.cfiEnd = dic["cfiEnd"]
             highlight.contentPost = dic["contentPost"]
@@ -78,7 +78,7 @@ class WebViewHighlightManager {
             } else {
                 highlight.date = Date()
             }
-            highlight.highlightId = original?.highlightId ?? dic["id"]
+            highlight.highlightId = original?.highlightId ?? dic["id"] ?? UUID().uuidString
             highlight.page = webView.folioReader.readerCenter?.currentPageNumber ?? 1
             highlight.type = webView.folioReader.currentHighlightStyle
             highlight.style = FolioReaderHighlightStyle.classForStyle(highlight.type)
@@ -149,8 +149,8 @@ class WebViewHighlightManager {
                 highlight.tocFamilyTitles = highlightChapterNames.reversed()
                 
                 highlight.spineName = webView.book.spine.spineReferences[highlight.page - 1].resource.href
-                if let resHref = highlight.spineName,
-                   let opfUrl = URL(string: webView.book.opfResource.href),
+                let resHref = highlight.spineName
+                if let opfUrl = URL(string: webView.book.opfResource.href),
                    let resUrl = URL(string: resHref, relativeTo: opfUrl) {
                     highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
                     while highlight.spineName.hasPrefix("/") {
