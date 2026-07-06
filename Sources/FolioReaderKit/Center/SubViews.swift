@@ -157,10 +157,9 @@ extension FolioReaderCenter {
     func configureNavBar() {
         if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
 
-        //let navBackground = folioReader.isNight(self.readerConfig.nightModeNavBackground, self.readerConfig.daysModeNavBackground)
-        let navBackground = self.readerConfig.themeModeNavBackground[folioReader.themeMode]
+        let navBackground = folioReader.preferences.navBackgroundColor(withConfiguration: readerConfig)
         let tintColor = readerConfig.tintColor
-        let navText = folioReader.isNight(UIColor.white, UIColor.black)
+        let navText = folioReader.preferences.navTextColor()
         let font = UIFont(name: "Avenir-Light", size: 17)!
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }

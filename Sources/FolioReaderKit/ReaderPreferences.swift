@@ -447,3 +447,18 @@ public class ReaderPreferences {
         }
     }
 }
+
+extension ReaderPreferences {
+    /// Return the appropriate navigation bar background color based on the current theme configuration.
+    public func navBackgroundColor(withConfiguration readerConfig: FolioReaderConfig) -> UIColor {
+        guard let folioReader = self.folioReader else { return .white }
+        return readerConfig.themeModeNavBackground[folioReader.themeMode]
+    }
+
+    /// Return the appropriate navigation bar text color based on night mode state.
+    public func navTextColor() -> UIColor {
+        guard let folioReader = self.folioReader else { return .black }
+        return folioReader.isNight(.white, .black)
+    }
+}
+
