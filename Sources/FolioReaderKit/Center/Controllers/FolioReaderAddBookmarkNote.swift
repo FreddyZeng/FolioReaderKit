@@ -162,10 +162,16 @@ class FolioReaderAddBookmarkNote: UIViewController {
         if !textView.text.isEmpty {
             bookmark.title = textView.text
             
-            if isEditBookmark {
-                folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(folioReader, updated: bookmark.pos!, title: bookmark.title)
-            } else {
-                folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(folioReader, added: bookmark, completion: nil)
+            let isEdit = isEditBookmark
+            let provider = folioReader.bookmarkProvider
+            let reader = folioReader
+            let bm = bookmark
+            Task {
+                if isEdit {
+                    await provider?.updateBookmark(pos: bm.pos ?? "", title: bm.title, for: reader)
+                } else {
+                    _ = try? await provider?.addBookmark(bm, for: reader)
+                }
             }
             bookmarkSaved = true
         }

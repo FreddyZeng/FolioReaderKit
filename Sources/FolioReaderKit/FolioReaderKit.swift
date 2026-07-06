@@ -509,4 +509,14 @@ extension FolioReader {
     public static func CssImgLevels(type: String, def: String) -> [String] {
         return ReaderCSSGenerator.CssImgLevels(type: type, def: def)
     }
+
+    public var highlightProvider: FolioReaderHighlightProviding? {
+        guard let provider = self.delegate?.folioReaderHighlightProvider?(self) else { return nil }
+        return FolioReaderHighlightProviderWrapper(provider)
+    }
+
+    public var bookmarkProvider: FolioReaderBookmarkProviding? {
+        guard let provider = self.delegate?.folioReaderBookmarkProvider?(self) else { return nil }
+        return FolioReaderBookmarkProviderWrapper(provider)
+    }
 }

@@ -172,22 +172,35 @@ class WebViewHighlightManager {
                         completion?(highlight, nil)
                     }
                 } else {
-                    webView.folioReader.delegate?.folioReaderHighlightProvider?(webView.folioReader).folioReaderHighlight(webView.folioReader, added: highlight) { error in
-                        guard error == nil else {
-                            if original == nil {
-                                webView.folioReader.readerCenter?.presentAddHighlightError(error!.localizedDescription)
-                            } else {
-                                completion?(highlight, FolioReaderHighlightError.runtimeError(error!.localizedDescription))
-                            }
-                            return
+                    let isOriginalNil = original == nil
+                    guard let provider = webView.folioReader.highlightProvider else {
+                        if isOriginalNil {
+                            webView.folioReader.readerCenter?.presentAddHighlightError("Highlight provider is not available.")
+                        } else {
+                            completion?(highlight, FolioReaderHighlightError.runtimeError("Highlight provider is not available."))
                         }
-                        
-                        webView.clearTextSelection()
-                        webView.setMenuVisible(false)
-                        
-                        webView.folioReader.readerCenter?.highlightErrors.removeValue(forKey: highlight.highlightId)
-                        
-                        completion?(highlight, nil)
+                        deferred = nil
+                        return
+                    }
+                    let reader = webView.folioReader
+                    Task {
+                        do {
+                            try await provider.addHighlight(highlight, for: reader)
+                            await MainActor.run {
+                                webView.clearTextSelection()
+                                webView.setMenuVisible(false)
+                                webView.folioReader.readerCenter?.highlightErrors.removeValue(forKey: highlight.highlightId)
+                                completion?(highlight, nil)
+                            }
+                        } catch {
+                            await MainActor.run {
+                                if isOriginalNil {
+                                    webView.folioReader.readerCenter?.presentAddHighlightError(error.localizedDescription)
+                                } else {
+                                    completion?(highlight, FolioReaderHighlightError.runtimeError(error.localizedDescription))
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -205,13 +218,17 @@ class WebViewHighlightManager {
         guard let webView = webView else { return }
         webView.js("getHighlightId()") { [weak self] highlightId in
             guard let self = self, let webView = self.webView else { return }
-            guard
-                let highlightId = highlightId,
-                let highlightNote = webView.folioReader.delegate?.folioReaderHighlightProvider?(webView.folioReader).folioReaderHighlight(webView.folioReader, getById: highlightId)
-            else { return }
+            guard let highlightId = highlightId else { return }
             
-            webView.folioReader.readerCenter?.presentAddHighlightNote(highlightNote, edit: true)
-            webView.createMenu(onHighlight: false)
+            let provider = webView.folioReader.highlightProvider
+            let reader = webView.folioReader
+            Task {
+                guard let highlightNote = await provider?.highlight(byId: highlightId, for: reader) else { return }
+                await MainActor.run {
+                    webView.folioReader.readerCenter?.presentAddHighlightNote(highlightNote, edit: true)
+                    webView.createMenu(onHighlight: false)
+                }
+            }
         }
     }
 
@@ -241,7 +258,11 @@ class WebViewHighlightManager {
 
         webView.js("setHighlightStyle('\(FolioReaderHighlightStyle.classForStyle(style.rawValue))')") { updateId in
             guard let updateId = updateId else { return }
-            webView.folioReader.delegate?.folioReaderHighlightProvider?(webView.folioReader).folioReaderHighlight(webView.folioReader, updateById: updateId, type: style)
+            let provider = webView.folioReader.highlightProvider
+            let reader = webView.folioReader
+            Task {
+                await provider?.updateHighlight(id: updateId, type: style, for: reader)
+            }
         }
         
         webView.setMenuVisible(false)

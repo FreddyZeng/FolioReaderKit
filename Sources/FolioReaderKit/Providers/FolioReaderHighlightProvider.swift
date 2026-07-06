@@ -65,7 +65,7 @@ public class FolioReaderDummyHighlightProvider: FolioReaderHighlightProvider {
         
     }
     public func folioReaderHighlight(_ folioReader: FolioReader, added highlight: FolioReaderHighlight, completion: Completion?) {
-        
+        completion?(nil)
     }
     
     public func folioReaderHighlight(_ folioReader: FolioReader, removedId highlightId: String) {
@@ -92,3 +92,59 @@ public class FolioReaderDummyHighlightProvider: FolioReaderHighlightProvider {
         
     }
 }
+
+public protocol FolioReaderHighlightProviding {
+    func addHighlight(_ highlight: FolioReaderHighlight, for folioReader: FolioReader) async throws
+    func removeHighlight(id: String, for folioReader: FolioReader) async
+    func updateHighlight(id: String, type style: FolioReaderHighlightStyle, for folioReader: FolioReader) async
+    func highlight(byId id: String, for folioReader: FolioReader) async -> FolioReaderHighlight?
+    func highlights(bookId: String, page: Int?, for folioReader: FolioReader) async -> [FolioReaderHighlight]
+    func allHighlights(for folioReader: FolioReader) async -> [FolioReaderHighlight]
+    func saveNote(for highlight: FolioReaderHighlight, folioReader: FolioReader) async
+}
+
+public struct FolioReaderHighlightProviderWrapper: FolioReaderHighlightProviding {
+    private let provider: FolioReaderHighlightProvider
+
+    public init(_ provider: FolioReaderHighlightProvider) {
+        self.provider = provider
+    }
+
+    public func addHighlight(_ highlight: FolioReaderHighlight, for folioReader: FolioReader) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            self.provider.folioReaderHighlight(folioReader, added: highlight) { error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
+    }
+
+    public func removeHighlight(id: String, for folioReader: FolioReader) async {
+        self.provider.folioReaderHighlight(folioReader, removedId: id)
+    }
+
+    public func updateHighlight(id: String, type style: FolioReaderHighlightStyle, for folioReader: FolioReader) async {
+        self.provider.folioReaderHighlight(folioReader, updateById: id, type: style)
+    }
+
+    public func highlight(byId id: String, for folioReader: FolioReader) async -> FolioReaderHighlight? {
+        self.provider.folioReaderHighlight(folioReader, getById: id)
+    }
+
+    public func highlights(bookId: String, page: Int?, for folioReader: FolioReader) async -> [FolioReaderHighlight] {
+        let pageNumber: NSNumber? = page != nil ? NSNumber(value: page!) : nil
+        return self.provider.folioReaderHighlight(folioReader, allByBookId: bookId, andPage: pageNumber)
+    }
+
+    public func allHighlights(for folioReader: FolioReader) async -> [FolioReaderHighlight] {
+        self.provider.folioReaderHighlight(folioReader)
+    }
+
+    public func saveNote(for highlight: FolioReaderHighlight, folioReader: FolioReader) async {
+        self.provider.folioReaderHighlight(folioReader, saveNoteFor: highlight)
+    }
+}
+

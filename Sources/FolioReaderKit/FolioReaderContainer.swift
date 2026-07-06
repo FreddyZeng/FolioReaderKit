@@ -248,37 +248,40 @@ open class FolioReaderContainer: UIViewController {
     }
 
     func tempFixForHighlights() {
-        guard let highlightProvider = self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader),
-           let bookId = (self.book.name as NSString?)?.deletingPathExtension
-        else {
+        guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
             return
         }
         
-        highlightProvider.folioReaderHighlight(self.folioReader, allByBookId: bookId, andPage: nil)
-            .filter {
-                $0.spineName == nil || $0.spineName.isEmpty || $0.spineName == "TODO" || $0.cfiStart?.hasPrefix("/2") == false || $0.cfiEnd?.hasPrefix("/2") == false
-            }.forEach { highlight in
-                if highlight.spineName == "TODO", highlight.page > 1 {
-                    highlight.page -= 1
+        let provider = self.folioReader.highlightProvider
+        let reader = self.folioReader
+        let book = self.book
+        Task {
+            let highlights = await provider?.highlights(bookId: bookId, page: nil, for: reader) ?? []
+            for highlight in highlights {
+                if highlight.spineName.isEmpty || highlight.spineName == "TODO" || highlight.cfiStart?.hasPrefix("/2") == false || highlight.cfiEnd?.hasPrefix("/2") == false {
+                    if highlight.spineName == "TODO", highlight.page > 1 {
+                        highlight.page -= 1
+                    }
+                    if let resHref = book.spine.spineReferences[safe: highlight.page - 1]?.resource.href,
+                       let opfUrl = URL(string: book.opfResource.href),
+                       let resUrl = URL(string: resHref, relativeTo: opfUrl) {
+                        highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
+                        while highlight.spineName.hasPrefix("/") {
+                            highlight.spineName.removeFirst()
+                        }
+                        if let cfiStart = highlight.cfiStart, cfiStart.hasPrefix("/2") == false {
+                            highlight.cfiStart = "/2\(cfiStart)"
+                        }
+                        if let cfiEnd = highlight.cfiEnd, cfiEnd.hasPrefix("/2") == false {
+                            highlight.cfiEnd = "/2\(cfiEnd)"
+                        }
+                        highlight.date += 0.001
+                    }
+                    print("\(#function) fixHighlight \(highlight.page) \(highlight.spineName) \(highlight.cfiStart ?? "Nil") \(highlight.cfiEnd ?? "Nil") \(highlight.style) \(highlight.content.prefix(10))")
+                    _ = try? await provider?.addHighlight(highlight, for: reader)
                 }
-                if let resHref = self.book.spine.spineReferences[safe: highlight.page - 1]?.resource.href,
-                   let opfUrl = URL(string: self.book.opfResource.href),
-                   let resUrl = URL(string: resHref, relativeTo: opfUrl) {
-                    highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
-                    while highlight.spineName.hasPrefix("/") {
-                        highlight.spineName.removeFirst()
-                    }
-                    if let cfiStart = highlight.cfiStart, cfiStart.hasPrefix("/2") == false {
-                        highlight.cfiStart = "/2\(cfiStart)"
-                    }
-                    if let cfiEnd = highlight.cfiEnd, cfiEnd.hasPrefix("/2") == false {
-                        highlight.cfiEnd = "/2\(cfiEnd)"
-                    }
-                    highlight.date += 0.001
-                }
-                print("\(#function) fixHighlight \(highlight.page) \(highlight.spineName ?? "Nil") \(highlight.cfiStart ?? "Nil") \(highlight.cfiEnd ?? "Nil") \(highlight.style ?? "Nil") \(highlight.content.prefix(10))")
-                highlightProvider.folioReaderHighlight(self.folioReader, added: highlight, completion: nil)
             }
+        }
     }
     
     /**

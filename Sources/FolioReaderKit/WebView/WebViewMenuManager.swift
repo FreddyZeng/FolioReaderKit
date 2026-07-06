@@ -127,7 +127,11 @@ class WebViewMenuManager {
         guard let webView = webView else { return }
         webView.js("removeThisHighlight()") { removedId in
             guard let removedId = removedId else { return }
-            webView.folioReader.delegate?.folioReaderHighlightProvider?(webView.folioReader).folioReaderHighlight(webView.folioReader, removedId: removedId)
+            let provider = webView.folioReader.highlightProvider
+            let reader = webView.folioReader
+            Task {
+                await provider?.removeHighlight(id: removedId, for: reader)
+            }
         }
         webView.createMenu(onHighlight: false)
         webView.setMenuVisible(false)

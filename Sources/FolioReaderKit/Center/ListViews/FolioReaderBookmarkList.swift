@@ -52,35 +52,54 @@ class FolioReaderBookmarkList: UITableViewController {
     func loadSections() {
         guard let readerCenter = self.folioReader.readerCenter,
               let book = self.folioReader.readerContainer?.book,
-              let bookId = (book.name as NSString?)?.deletingPathExtension,
-              let bookmarks = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(self.folioReader, allByBookId: bookId, andPage: nil)
+              let bookId = (book.name as NSString?)?.deletingPathExtension
         else {
             return
         }
 
-        let currentPageNumber = readerCenter.currentPageNumber
-        let currentPagePosition = readerCenter.currentWebViewScrollPositions[currentPageNumber - 1]
-        let bookRootIndex = readerCenter.book.bundleRootTableOfContents.firstIndex(where: {
-            $0.resource?.spineIndices.contains((currentPagePosition?.structuralRootPageNumber ?? 0) - 1) == true
-        })
-        
-        sectionBookmarks = bookmarks.filter({
-            guard self.folioReader.structuralStyle == .bundle,
-                  let bookRootIndex = bookRootIndex,
-                  let firstSpineIndex = book.bundleRootTableOfContents[bookRootIndex].resource?.spineIndices.first,
-                  let lastSpineIndex = book.bundleRootTableOfContents[safe: bookRootIndex + 1]?.resource?.spineIndices.first
-            else { return true }
+        let provider = self.folioReader.bookmarkProvider
+        let reader = self.folioReader
+        Task {
+            let bookmarks = await provider?.bookmarks(bookId: bookId, page: nil, for: reader) ?? []
             
-            return $0.page > firstSpineIndex && ($0.page-1) < lastSpineIndex
-        }).reduce(into: [:]) { partialResult, bookmark in
-            if partialResult[bookmark.page] != nil {
-                partialResult[bookmark.page]?.append(bookmark)
-                partialResult[bookmark.page]?.sort()
-            } else {
-                partialResult[bookmark.page] = [bookmark]
+            let currentPageNumber = readerCenter.currentPageNumber
+            let currentPagePosition = readerCenter.currentWebViewScrollPositions[currentPageNumber - 1]
+            let bookRootIndex = readerCenter.book.bundleRootTableOfContents.firstIndex(where: {
+                $0.resource?.spineIndices.contains((currentPagePosition?.structuralRootPageNumber ?? 0) - 1) == true
+            })
+            
+            var newSectionBookmarks = [Int: [FolioReaderBookmark]]()
+            newSectionBookmarks = bookmarks.filter({
+                guard self.folioReader.structuralStyle == .bundle,
+                      let bookRootIndex = bookRootIndex,
+                      let firstSpineIndex = book.bundleRootTableOfContents[bookRootIndex].resource?.spineIndices.first,
+                      let lastSpineIndex = book.bundleRootTableOfContents[safe: bookRootIndex + 1]?.resource?.spineIndices.first
+                else { return true }
+                
+                return $0.page > firstSpineIndex && ($0.page-1) < lastSpineIndex
+            }).reduce(into: [:]) { partialResult, bookmark in
+                if partialResult[bookmark.page] != nil {
+                    partialResult[bookmark.page]?.append(bookmark)
+                    partialResult[bookmark.page]?.sort()
+                } else {
+                    partialResult[bookmark.page] = [bookmark]
+                }
+            }
+            
+            let newSections = newSectionBookmarks.keys.sorted()
+            
+            await MainActor.run {
+                self.sectionBookmarks = newSectionBookmarks
+                self.sections = newSections
+                self.tableView.reloadData()
+                
+                // Jump to the current chapter
+                if let sectionPageNumber = self.sections.filter({ $0 <= currentPageNumber }).last,
+                   let section = self.sections.firstIndex(of: sectionPageNumber) {
+                    self.tableView.scrollToRow(at: IndexPath(row: 0, section: section), at: .top, animated: true)
+                }
             }
         }
-        sections = sectionBookmarks.keys.sorted()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -97,9 +116,12 @@ class FolioReaderBookmarkList: UITableViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        if let addingBookmarkPos = addingBookmarkPos,
-           let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader) {
-            provider.folioReaderBookmark(self.folioReader, removed: addingBookmarkPos)
+        if let addingBookmarkPos = addingBookmarkPos {
+            let provider = self.folioReader.bookmarkProvider
+            let reader = self.folioReader
+            Task {
+                await provider?.removeBookmark(pos: addingBookmarkPos, for: reader)
+            }
         }
         
         super.viewWillDisappear(animated)
@@ -300,7 +322,11 @@ class FolioReaderBookmarkList: UITableViewController {
                 return
             }
 
-            folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(folioReader, removed: pos)
+            let provider = folioReader.bookmarkProvider
+            let reader = folioReader
+            Task {
+                await provider?.removeBookmark(pos: pos, for: reader)
+            }
 
             sectionBookmarks[sections[indexPath.section]]?.remove(at: indexPath.row)
             let isOnlyRowInSection = (sectionBookmarks[sections[indexPath.section]]?.isEmpty == true)
@@ -375,11 +401,13 @@ class FolioReaderBookmarkList: UITableViewController {
     
     func addBookmark(completion: (() -> Void)? = nil) {
         guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader)
+              let provider = self.folioReader.bookmarkProvider
         else {
             completion?()
             return
         }
+        
+        let reader = self.folioReader
         
         currentPage.getWebViewScrollPosition { position in
             let bookmark = FolioReaderBookmark()
@@ -390,26 +418,30 @@ class FolioReaderBookmarkList: UITableViewController {
             bookmark.title = "[\(position.chapterName)] \(position.snippet.prefix(32))..."
             bookmark.date = Date()
             
-            provider.folioReaderBookmark(self.folioReader, added: bookmark) { error in
-                if let error = error {
-                    var message = "Unknown Error"
-                    switch error as! FolioReaderBookmarkError {
-                    case .emptyError(_):
-                        message = "Cannot generate location marker"
-                    case .duplicateError(let msg):
-                        message = "There exists a bookmark with the same location with title \(msg)"
-                    case .runtimeError(let msg):
-                        message = msg
+            Task {
+                do {
+                    try await provider.addBookmark(bookmark, for: reader)
+                    await MainActor.run {
+                        self.loadSections()
+                        self.addingBookmarkPos = bookmark.pos
+                        self.tableView.reloadData()
+                        completion?()
                     }
-                    self.presentAddingBookmarkFailure(message)
-                } else {
-                    self.loadSections()
-                    self.addingBookmarkPos = bookmark.pos
-                    
-                    self.tableView.reloadData()
+                } catch {
+                    await MainActor.run {
+                        var message = "Unknown Error"
+                        switch error as! FolioReaderBookmarkError {
+                        case .emptyError(_):
+                            message = "Cannot generate location marker"
+                        case .duplicateError(let msg):
+                            message = "There exists a bookmark with the same location with title \(msg)"
+                        case .runtimeError(let msg):
+                            message = msg
+                        }
+                        self.presentAddingBookmarkFailure(message)
+                        completion?()
+                    }
                 }
-                
-                completion?()
             }
         }
     }
@@ -421,9 +453,11 @@ class FolioReaderBookmarkList: UITableViewController {
               let editView = cellContentView.viewWithTag(1234) as? UITextField,
               let title = editView.text else { return }
         
-        guard let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader) else { return }
-        
-        provider.folioReaderBookmark(self.folioReader, updated: editingPos, title: title)
+        let provider = self.folioReader.bookmarkProvider
+        let reader = self.folioReader
+        Task {
+            await provider?.updateBookmark(pos: editingPos, title: title, for: reader)
+        }
         
         addingBookmarkPos = nil
         editingBookmarkPos = nil

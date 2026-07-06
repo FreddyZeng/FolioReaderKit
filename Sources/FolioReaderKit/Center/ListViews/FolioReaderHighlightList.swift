@@ -37,37 +37,60 @@ class FolioReaderHighlightList: UITableViewController {
         self.tableView.backgroundColor = self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode]
         self.tableView.separatorColor = self.folioReader.isNight(self.readerConfig.nightModeSeparatorColor, self.readerConfig.menuSeparatorColor)
         
+        loadData()
+    }
+
+    func loadData() {
         guard let readerCenter = self.folioReader.readerCenter,
               let book = self.folioReader.readerContainer?.book,
-              let bookId = (book.name as NSString?)?.deletingPathExtension,
-              let highlights = self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(self.folioReader, allByBookId: bookId, andPage: nil)
+              let bookId = (book.name as NSString?)?.deletingPathExtension
         else {
             return
         }
 
-        let currentPageNumber = readerCenter.currentPageNumber
-        let currentPagePosition = readerCenter.currentWebViewScrollPositions[currentPageNumber - 1]
-        let bookRootIndex = readerCenter.book.bundleRootTableOfContents.firstIndex(where: {
-            $0.resource?.spineIndices.contains((currentPagePosition?.structuralRootPageNumber ?? 0) - 1) == true
-        })
-        
-        sectionHighlights = highlights.filter({
-            guard self.folioReader.structuralStyle == .bundle,
-                  let bookRootIndex = bookRootIndex,
-                  let firstSpineIndex = book.bundleRootTableOfContents[bookRootIndex].resource?.spineIndices.first,
-                  let lastSpineIndex = book.bundleRootTableOfContents[safe: bookRootIndex + 1]?.resource?.spineIndices.first
-            else { return true }
+        let provider = self.folioReader.highlightProvider
+        let reader = self.folioReader
+        Task {
+            let highlights = await provider?.highlights(bookId: bookId, page: nil, for: reader) ?? []
             
-            return $0.page > firstSpineIndex && ($0.page-1) < lastSpineIndex
-        }).reduce(into: sectionHighlights) { partialResult, highlight in
-            if partialResult[highlight.page] != nil {
-                partialResult[highlight.page]?.append(highlight)
-                partialResult[highlight.page]?.sort(by: { ($0.cfiStart ?? "") < ($1.cfiStart ?? "") })
-            } else {
-                partialResult[highlight.page] = [highlight]
+            let currentPageNumber = readerCenter.currentPageNumber
+            let currentPagePosition = readerCenter.currentWebViewScrollPositions[currentPageNumber - 1]
+            let bookRootIndex = readerCenter.book.bundleRootTableOfContents.firstIndex(where: {
+                $0.resource?.spineIndices.contains((currentPagePosition?.structuralRootPageNumber ?? 0) - 1) == true
+            })
+            
+            var newSectionHighlights = [Int: [FolioReaderHighlight]]()
+            newSectionHighlights = highlights.filter({
+                guard self.folioReader.structuralStyle == .bundle,
+                      let bookRootIndex = bookRootIndex,
+                      let firstSpineIndex = book.bundleRootTableOfContents[bookRootIndex].resource?.spineIndices.first,
+                      let lastSpineIndex = book.bundleRootTableOfContents[safe: bookRootIndex + 1]?.resource?.spineIndices.first
+                else { return true }
+                
+                return $0.page > firstSpineIndex && ($0.page-1) < lastSpineIndex
+            }).reduce(into: newSectionHighlights) { partialResult, highlight in
+                if partialResult[highlight.page] != nil {
+                    partialResult[highlight.page]?.append(highlight)
+                    partialResult[highlight.page]?.sort(by: { ($0.cfiStart ?? "") < ($1.cfiStart ?? "") })
+                } else {
+                    partialResult[highlight.page] = [highlight]
+                }
+            }
+            
+            let newSections = newSectionHighlights.keys.sorted()
+            
+            await MainActor.run {
+                self.sectionHighlights = newSectionHighlights
+                self.sections = newSections
+                self.tableView.reloadData()
+                
+                // Jump to the current chapter
+                if let sectionPageNumber = self.sections.filter({ $0 <= currentPageNumber }).last,
+                   let section = self.sections.firstIndex(of: sectionPageNumber) {
+                    self.tableView.scrollToRow(at: IndexPath(row: 0, section: section), at: .top, animated: true)
+                }
             }
         }
-        sections = sectionHighlights.keys.sorted()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -298,7 +321,12 @@ class FolioReaderHighlightList: UITableViewController {
                 FolioReaderHighlight.removeFromHTMLById(withinPage: page, highlightId: highlight.highlightId) // Remove from HTML
             }
 
-            folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(folioReader, removedId: highlight.highlightId)
+            let provider = folioReader.highlightProvider
+            let reader = folioReader
+            let hlId = highlight.highlightId
+            Task {
+                await provider?.removeHighlight(id: hlId, for: reader)
+            }
 
             sectionHighlights[sections[indexPath.section]]?.remove(at: indexPath.row)
             let isOnlyRowInSection = (sectionHighlights[sections[indexPath.section]]?.isEmpty == true)

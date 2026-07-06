@@ -206,9 +206,12 @@ class FolioReaderReferenceList: UITableViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        if let addingBookmarkPos = addingBookmarkPos,
-           let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader) {
-            provider.folioReaderBookmark(self.folioReader, removed: addingBookmarkPos)
+        if let addingBookmarkPos = addingBookmarkPos {
+            let provider = self.folioReader.bookmarkProvider
+            let reader = self.folioReader
+            Task {
+                await provider?.removeBookmark(pos: addingBookmarkPos, for: reader)
+            }
         }
         
         super.viewWillDisappear(animated)
@@ -424,7 +427,11 @@ class FolioReaderReferenceList: UITableViewController {
                 return
             }
 
-            folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(folioReader, removed: pos)
+            let provider = folioReader.bookmarkProvider
+            let reader = folioReader
+            Task {
+                await provider?.removeBookmark(pos: pos, for: reader)
+            }
 
             sectionBookmarks[sections[indexPath.section]]?.remove(at: indexPath.row)
             let isOnlyRowInSection = (sectionBookmarks[sections[indexPath.section]]?.isEmpty == true)
@@ -499,11 +506,13 @@ class FolioReaderReferenceList: UITableViewController {
     
     func addBookmark(completion: (() -> Void)? = nil) {
         guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader)
+              let provider = self.folioReader.bookmarkProvider
         else {
             completion?()
             return
         }
+        
+        let reader = self.folioReader
         
         currentPage.getWebViewScrollPosition { position in
             let bookmark = FolioReaderBookmark()
@@ -514,26 +523,30 @@ class FolioReaderReferenceList: UITableViewController {
             bookmark.title = "[\(position.chapterName)] \(position.snippet.prefix(32))..."
             bookmark.date = Date()
             
-            provider.folioReaderBookmark(self.folioReader, added: bookmark) { error in
-                if let error = error {
-                    var message = "Unknown Error"
-                    switch error as! FolioReaderBookmarkError {
-                    case .emptyError(_):
-                        message = "Cannot generate location marker"
-                    case .duplicateError(let msg):
-                        message = "There exists a bookmark with the same location with title \(msg)"
-                    case .runtimeError(let msg):
-                        message = msg
+            Task {
+                do {
+                    try await provider.addBookmark(bookmark, for: reader)
+                    await MainActor.run {
+                        self.loadSections()
+                        self.addingBookmarkPos = bookmark.pos
+                        self.tableView.reloadData()
+                        completion?()
                     }
-                    self.presentAddingBookmarkFailure(message)
-                } else {
-                    self.loadSections()
-                    self.addingBookmarkPos = bookmark.pos
-                    
-                    self.tableView.reloadData()
+                } catch {
+                    await MainActor.run {
+                        var message = "Unknown Error"
+                        switch error as! FolioReaderBookmarkError {
+                        case .emptyError(_):
+                            message = "Cannot generate location marker"
+                        case .duplicateError(let msg):
+                            message = "There exists a bookmark with the same location with title \(msg)"
+                        case .runtimeError(let msg):
+                            message = msg
+                        }
+                        self.presentAddingBookmarkFailure(message)
+                        completion?()
+                    }
                 }
-                
-                completion?()
             }
         }
     }
@@ -545,9 +558,11 @@ class FolioReaderReferenceList: UITableViewController {
               let editView = cellContentView.viewWithTag(1234) as? UITextField,
               let title = editView.text else { return }
         
-        guard let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader) else { return }
-        
-        provider.folioReaderBookmark(self.folioReader, updated: editingPos, title: title)
+        let provider = self.folioReader.bookmarkProvider
+        let reader = self.folioReader
+        Task {
+            await provider?.updateBookmark(pos: editingPos, title: title, for: reader)
+        }
         
         addingBookmarkPos = nil
         editingBookmarkPos = nil

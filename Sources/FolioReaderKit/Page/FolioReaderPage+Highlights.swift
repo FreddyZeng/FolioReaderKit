@@ -9,72 +9,89 @@ extension FolioReaderPage {
     func injectHighlights(completion: (() -> Void)? = nil) {
         self.layoutAdapting = "Preparing Document Annotations..."
         
-        guard let bookId = (self.book.name as NSString?)?.deletingPathExtension,
-              let folioReaderHighlightProvider = self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader),
-              let highlights = folioReaderHighlightProvider.folioReaderHighlight(self.folioReader, allByBookId: bookId, andPage: pageNumber as NSNumber?).map({ hl -> FolioReaderHighlight in
-                  let prefix = "/2"
-                  if let cfiStart = hl.cfiStart, cfiStart.hasPrefix(prefix) {
-                      hl.cfiStart = String(cfiStart[cfiStart.index(cfiStart.startIndex, offsetBy: prefix.count)..<cfiStart.endIndex])
-                  }
-                  if let cfiEnd = hl.cfiEnd, cfiEnd.hasPrefix(prefix) {
-                      hl.cfiEnd = String(cfiEnd[cfiEnd.index(cfiEnd.startIndex, offsetBy: prefix.count)..<cfiEnd.endIndex])
-                  }
-                  return hl
-              }) as [FolioReaderHighlight]?,
-              highlights.isEmpty == false
-        else {
+        guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
             completion?()
             return
         }
         
+        let provider = self.folioReader.highlightProvider
+        let reader = self.folioReader
+        let pageNum = self.pageNumber
         
-        let encodedData = ((try? JSONEncoder().encode(highlights)) ?? .init()).base64EncodedString()
-        
-        self.webView?.js("injectHighlights('\(encodedData)')") { results in
-            defer {
-                completion?()
-            }
-            
-            //FIXME: populate toc family titles
-            guard let webViewFrameSize = self.webView?.frame.size else { return }
-            
-            let decoder = JSONDecoder()
-            guard let results = results,
-                  let encodedData = results.data(using: .utf8),
-                  let encodedObjects = try? decoder.decode([String].self, from: encodedData)
-            else { return }
-            
-            var highlightIdToBoundingMap = [String: NodeBoundingClientRect]()
-            encodedObjects.forEach { encodedObject in
-                guard let objectData = encodedObject.data(using: .utf8),
-                      let object = try? decoder.decode(NodeBoundingClientRect.self, from: objectData) else { return }
-                
-                guard object.err.isEmpty else {
-                    self.folioReader.readerCenter?.highlightErrors[object.id] = object.err
-                    return
+        Task {
+            let originalHighlights = await provider?.highlights(bookId: bookId, page: pageNum, for: reader) ?? []
+            let highlights = originalHighlights.map({ hl -> FolioReaderHighlight in
+                let prefix = "/2"
+                if let cfiStart = hl.cfiStart, cfiStart.hasPrefix(prefix) {
+                    hl.cfiStart = String(cfiStart[cfiStart.index(cfiStart.startIndex, offsetBy: prefix.count)..<cfiStart.endIndex])
                 }
-                
-                self.folioReader.readerCenter?.highlightErrors.removeValue(forKey: object.id)
-                
-                highlightIdToBoundingMap[object.id] = object
+                if let cfiEnd = hl.cfiEnd, cfiEnd.hasPrefix(prefix) {
+                    hl.cfiEnd = String(cfiEnd[cfiEnd.index(cfiEnd.startIndex, offsetBy: prefix.count)..<cfiEnd.endIndex])
+                }
+                return hl
+            })
+            
+            guard !highlights.isEmpty else {
+                await MainActor.run {
+                    completion?()
+                }
+                return
             }
             
-            highlights.filter {
-                $0.tocFamilyTitles.first == "TODO" || $0.tocFamilyTitles.isEmpty
-            }.forEach { highlight in
-                guard let boundingRect = highlightIdToBoundingMap[highlight.highlightId] else { return }
-                
-                let contentOffset = CGPoint(x: boundingRect.left, y: boundingRect.top)
-                
-                let highlightChapterNames = self.getChapterTocReferences(for: contentOffset, by: webViewFrameSize).compactMap { $0.title }
-                
-                guard highlightChapterNames.first != "TODO" else { return }
-                
-                highlight.tocFamilyTitles = highlightChapterNames.reversed()
-                highlight.date += 0.001
-                
-                print("\(#function) fixHighlight \(boundingRect) \(highlight.tocFamilyTitles) \(highlight.content)")
-                folioReaderHighlightProvider.folioReaderHighlight(self.folioReader, added: highlight, completion: nil)
+            let encodedData = ((try? JSONEncoder().encode(highlights)) ?? .init()).base64EncodedString()
+            
+            await MainActor.run {
+                self.webView?.js("injectHighlights('\(encodedData)')") { results in
+                    defer {
+                        completion?()
+                    }
+                    
+                    //FIXME: populate toc family titles
+                    guard let webViewFrameSize = self.webView?.frame.size else { return }
+                    
+                    let decoder = JSONDecoder()
+                    guard let results = results,
+                          let encodedData = results.data(using: .utf8),
+                          let encodedObjects = try? decoder.decode([String].self, from: encodedData)
+                    else { return }
+                    
+                    var highlightIdToBoundingMap = [String: NodeBoundingClientRect]()
+                    encodedObjects.forEach { encodedObject in
+                        guard let objectData = encodedObject.data(using: .utf8),
+                              let object = try? decoder.decode(NodeBoundingClientRect.self, from: objectData) else { return }
+                        
+                        guard object.err.isEmpty else {
+                            self.folioReader.readerCenter?.highlightErrors[object.id] = object.err
+                            return
+                        }
+                        
+                        self.folioReader.readerCenter?.highlightErrors.removeValue(forKey: object.id)
+                        
+                        highlightIdToBoundingMap[object.id] = object
+                    }
+                    
+                    highlights.filter {
+                        $0.tocFamilyTitles.first == "TODO" || $0.tocFamilyTitles.isEmpty
+                    }.forEach { highlight in
+                        guard let boundingRect = highlightIdToBoundingMap[highlight.highlightId] else { return }
+                        
+                        let contentOffset = CGPoint(x: boundingRect.left, y: boundingRect.top)
+                        
+                        let highlightChapterNames = self.getChapterTocReferences(for: contentOffset, by: webViewFrameSize).compactMap { $0.title }
+                        
+                        guard highlightChapterNames.first != "TODO" else { return }
+                        
+                        highlight.tocFamilyTitles = highlightChapterNames.reversed()
+                        highlight.date += 0.001
+                        
+                        print("\(#function) fixHighlight \(boundingRect) \(highlight.tocFamilyTitles) \(highlight.content)")
+                        let provider = self.folioReader.highlightProvider
+                        let reader = self.folioReader
+                        Task {
+                            _ = try? await provider?.addHighlight(highlight, for: reader)
+                        }
+                    }
+                }
             }
         }
     }

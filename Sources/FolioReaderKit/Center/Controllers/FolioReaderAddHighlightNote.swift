@@ -162,10 +162,16 @@ class FolioReaderAddHighlightNote: UIViewController {
         if !textView.text.isEmpty {
             highlight.noteForHighlight = textView.text
             
-            if isEditHighlight {
-                folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(folioReader, saveNoteFor: highlight)
-            } else {
-                folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(folioReader, added: highlight, completion: nil)
+            let isEdit = isEditHighlight
+            let provider = folioReader.highlightProvider
+            let reader = folioReader
+            let hl = highlight
+            Task {
+                if isEdit {
+                    await provider?.saveNote(for: hl, folioReader: reader)
+                } else {
+                    _ = try? await provider?.addHighlight(hl, for: reader)
+                }
             }
             highlightSaved = true
         }
