@@ -1,0 +1,180 @@
+//
+//  ReaderPreferencesTests.swift
+//  FolioReaderKitTests
+//
+//  Created by DeepMind Antigravity on 7/7/26.
+//  Copyright © 2026 FolioReader. All rights reserved.
+//
+
+import XCTest
+@testable import FolioReaderKit
+
+@MainActor
+class ReaderPreferencesTests: XCTestCase {
+    
+    var folioReader: FolioReader!
+    var delegate: MockFolioReaderDelegate!
+    var preferences: ReaderPreferences!
+    
+    override func setUp() {
+        super.setUp()
+        folioReader = FolioReader()
+        delegate = MockFolioReaderDelegate()
+        folioReader.delegate = delegate
+        preferences = folioReader.preferences
+    }
+    
+    override func tearDown() {
+        preferences = nil
+        delegate = nil
+        folioReader = nil
+        super.tearDown()
+    }
+    
+    func testNightModeDefaultAndRoundtrip() {
+        XCTAssertFalse(preferences.nightMode)
+        preferences.nightMode = true
+        XCTAssertTrue(preferences.nightMode)
+        XCTAssertTrue(delegate.preferenceProvider.preference(boolFor: ReaderPreferenceKey.nightMode.rawKey, default: false))
+    }
+    
+    func testThemeModeDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.themeMode, 1)
+        preferences.themeMode = 3
+        XCTAssertEqual(preferences.themeMode, 3)
+        XCTAssertEqual(delegate.preferenceProvider.preference(intFor: ReaderPreferenceKey.themeMode.rawKey, default: 1), 3)
+    }
+    
+    func testCurrentFontDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentFont, "Georgia")
+        preferences.currentFont = "Arial"
+        XCTAssertEqual(preferences.currentFont, "Arial")
+    }
+    
+    func testCurrentFontSizeDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentFontSize, "20px")
+        preferences.currentFontSize = "25px"
+        XCTAssertEqual(preferences.currentFontSize, "25px")
+    }
+    
+    func testCurrentFontSizeOnly() {
+        preferences.currentFontSize = "20px"
+        XCTAssertEqual(preferences.currentFontSizeOnly, 20)
+        preferences.currentFontSize = "30px"
+        XCTAssertEqual(preferences.currentFontSizeOnly, 30)
+    }
+    
+    func testCurrentFontWeightDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentFontWeight, "500")
+        preferences.currentFontWeight = "bold"
+        XCTAssertEqual(preferences.currentFontWeight, "bold")
+    }
+    
+    func testCurrentAudioRateDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentAudioRate, 1)
+        preferences.currentAudioRate = 4
+        XCTAssertEqual(preferences.currentAudioRate, 4)
+    }
+    
+    func testCurrentHighlightStyleDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentHighlightStyle, 0)
+        preferences.currentHighlightStyle = 2
+        XCTAssertEqual(preferences.currentHighlightStyle, 2)
+    }
+    
+    func testCurrentMediaOverlayStyleDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentMediaOverlayStyle, .default)
+        preferences.currentMediaOverlayStyle = .underline
+        XCTAssertEqual(preferences.currentMediaOverlayStyle, .underline)
+    }
+    
+    func testCurrentScrollDirectionDefaultAndRoundtrip() {
+        XCTAssertEqual(preferences.currentScrollDirection, preferences.defaultScrollDirection.rawValue)
+        preferences.currentScrollDirection = 0
+        XCTAssertEqual(preferences.currentScrollDirection, 0)
+    }
+    
+    func testNavigationMenuIndices() {
+        XCTAssertEqual(preferences.currentNavigationMenuIndex, 0)
+        preferences.currentNavigationMenuIndex = 2
+        XCTAssertEqual(preferences.currentNavigationMenuIndex, 2)
+        
+        XCTAssertEqual(preferences.currentAnnotationMenuIndex, 0)
+        preferences.currentAnnotationMenuIndex = 1
+        XCTAssertEqual(preferences.currentAnnotationMenuIndex, 1)
+    }
+    
+    func testNavigationMenuBookListStyle() {
+        // structuralStyle defaults to .atom, so currentNavigationMenuBookListStyle defaults to .List
+        XCTAssertEqual(preferences.currentNavigationMenuBookListStyle, .List)
+        
+        // To read/write .Grid, we must set structuralStyle to .bundle
+        preferences.structuralStyle = .bundle
+        preferences.currentNavigationMenuBookListStyle = .Grid
+        XCTAssertEqual(preferences.currentNavigationMenuBookListStyle, .Grid)
+    }
+    
+    func testMarginsLinked() {
+        XCTAssertTrue(preferences.currentVMarginLinked)
+        preferences.currentVMarginLinked = false
+        XCTAssertFalse(preferences.currentVMarginLinked)
+        
+        XCTAssertTrue(preferences.currentHMarginLinked)
+        preferences.currentHMarginLinked = false
+        XCTAssertFalse(preferences.currentHMarginLinked)
+    }
+    
+    func testMarginTopBottomLeftRight() {
+        XCTAssertEqual(preferences.currentMarginTop, preferences.defaultMarginTop)
+        preferences.currentMarginTop = 15
+        XCTAssertEqual(preferences.currentMarginTop, 15)
+        
+        XCTAssertEqual(preferences.currentMarginBottom, preferences.defaultMarginBottom)
+        preferences.currentMarginBottom = 25
+        XCTAssertEqual(preferences.currentMarginBottom, 25)
+        
+        XCTAssertEqual(preferences.currentMarginLeft, preferences.defaultMarginLeft)
+        preferences.currentMarginLeft = 35
+        XCTAssertEqual(preferences.currentMarginLeft, 35)
+        
+        XCTAssertEqual(preferences.currentMarginRight, preferences.defaultMarginRight)
+        preferences.currentMarginRight = 45
+        XCTAssertEqual(preferences.currentMarginRight, 45)
+    }
+    
+    func testTypographyAndLayout() {
+        XCTAssertEqual(preferences.currentLetterSpacing, 2)
+        preferences.currentLetterSpacing = 5
+        XCTAssertEqual(preferences.currentLetterSpacing, 5)
+        
+        XCTAssertEqual(preferences.currentLineHeight, 3)
+        preferences.currentLineHeight = 5
+        XCTAssertEqual(preferences.currentLineHeight, 5)
+        
+        XCTAssertEqual(preferences.currentTextIndent, 2)
+        preferences.currentTextIndent = 1
+        XCTAssertEqual(preferences.currentTextIndent, 1)
+        
+        XCTAssertFalse(preferences.doWrapPara)
+        preferences.doWrapPara = true
+        XCTAssertTrue(preferences.doWrapPara)
+        
+        XCTAssertTrue(preferences.doClearClass)
+        preferences.doClearClass = false
+        XCTAssertFalse(preferences.doClearClass)
+        
+        XCTAssertEqual(preferences.styleOverride, .PNode)
+        preferences.styleOverride = .PlusTD
+        XCTAssertEqual(preferences.styleOverride, .PlusTD)
+    }
+    
+    func testStructuralStyleAndTrackingTocLevel() {
+        XCTAssertEqual(preferences.structuralStyle, .atom)
+        preferences.structuralStyle = .bundle
+        XCTAssertEqual(preferences.structuralStyle, .bundle)
+        
+        XCTAssertEqual(preferences.structuralTrackingTocLevel, .linear)
+        preferences.structuralTrackingTocLevel = .level1
+        XCTAssertEqual(preferences.structuralTrackingTocLevel, .level1)
+    }
+}
