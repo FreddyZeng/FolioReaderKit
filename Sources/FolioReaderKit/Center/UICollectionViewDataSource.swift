@@ -54,15 +54,17 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         // Configure the cell
         let resource = self.book.spine.spineReferences[indexPath.row].resource
 
+        let resourceHref = resource.href
         guard let fileName = self.book.name,
-              let resourceHref = resource.href
+              !resourceHref.isEmpty,
+              let opfResource = self.book.opfResource
         else { return cell }
         
         var urlComponents = URLComponents()
         urlComponents.scheme = "http"
         urlComponents.host = "localhost"
         urlComponents.port = Int(readerContainer.webServer.port)
-        urlComponents.path = ["", fileName, self.book.opfResource.href.deletingLastPathComponent, resourceHref].joined(separator: "/")
+        urlComponents.path = ["", fileName, opfResource.href.deletingLastPathComponent, resourceHref].joined(separator: "/")
         
         guard let url = urlComponents.url else { return cell }
         

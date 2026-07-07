@@ -9,9 +9,9 @@
 import Foundation
 
 open class FRTocReference: NSObject {
-    var children: [FRTocReference]!
+    var children = [FRTocReference]()
 
-    public var title: String!
+    public var title: String = ""
     public var resource: FRResource?
     public var fragmentID: String?
     public var level: Int?

@@ -263,7 +263,8 @@ open class FolioReaderContainer: UIViewController {
                         highlight.page -= 1
                     }
                     if let resHref = book.spine.spineReferences[safe: highlight.page - 1]?.resource.href,
-                       let opfUrl = URL(string: book.opfResource.href),
+                       let opfResource = book.opfResource,
+                       let opfUrl = URL(string: opfResource.href),
                        let resUrl = URL(string: resHref, relativeTo: opfUrl) {
                         highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
                         while highlight.spineName.hasPrefix("/") {

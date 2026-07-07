@@ -41,7 +41,7 @@ open class FREpubParserArchive: NSObject {
             throw FolioReaderError.coverNotAvailable
         }
 
-        guard let opfResourceHref = book.opfResource.href else {
+        guard let opfResourceHref = book.opfResource?.href else {
             throw FolioReaderError.coverNotAvailable
         }
         
@@ -135,7 +135,7 @@ open class FREpubParserArchive: NSObject {
     /// - Parameter bookBasePath: The base book path
     /// - Throws: `FolioReaderError`
     private func readOpf() async throws {
-        guard let opfPath = book.opfResource.href,
+        guard let opfPath = book.opfResource?.href,
               let opfEntry = book.archiveEntriesCache[opfPath] else  { throw FolioReaderError.errorInOpf }
         
         var identifier: String?
@@ -159,9 +159,9 @@ open class FREpubParserArchive: NSObject {
         // Parse and save each "manifest item"
         xmlDoc.root["manifest"]["item"].all?.forEach {
             let resource = FRResource()
-            resource.id = $0.attributes["id"]
+            resource.id = $0.attributes["id"] ?? ""
             resource.properties = $0.attributes["properties"]
-            resource.href = $0.attributes["href"]
+            resource.href = $0.attributes["href"] ?? ""
             resource.mediaType = MediaType.by(name: $0.attributes["media-type"] ?? "", fileName: resource.href)
             resource.mediaOverlay = $0.attributes["media-overlay"]
             
@@ -238,8 +238,10 @@ open class FREpubParserArchive: NSObject {
     /// - Parameter resource: A `FRResource` to read the smill
     private func readSmilFile(_ resource: FRResource) async {
         do {
-            guard let smilPath = resource.href,
-                  let smilEntry = book.archiveEntriesCache[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(smilPath)] else { return }
+            let smilPath = resource.href
+            guard !smilPath.isEmpty,
+                  let opfResourceHref = book.opfResource?.href,
+                  let smilEntry = book.archiveEntriesCache[opfResourceHref.deletingLastPathComponent.appendingPathComponent(smilPath)] else { return }
             
             let smilAccumulator = DataAccumulator()
             let crc = try await archive.extract(smilEntry) { data in
@@ -286,9 +288,11 @@ open class FREpubParserArchive: NSObject {
     private func findTableOfContents() async throws -> [FRTocReference] {
         var tableOfContent = [FRTocReference]()
         var tocItems: [AEXMLElement]?
-        guard let tocResource = book.tocResource,
-              let tocPath = tocResource.href,
-              let tocEntry = book.archiveEntriesCache[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(tocPath)] else { return tableOfContent }
+        guard let tocResource = book.tocResource else { return tableOfContent }
+        let tocPath = tocResource.href
+        guard !tocPath.isEmpty,
+              let opfResourceHref = book.opfResource?.href,
+              let tocEntry = book.archiveEntriesCache[opfResourceHref.deletingLastPathComponent.appendingPathComponent(tocPath)] else { return tableOfContent }
         
 
         do {

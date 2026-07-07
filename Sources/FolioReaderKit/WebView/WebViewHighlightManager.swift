@@ -150,7 +150,8 @@ class WebViewHighlightManager {
                 
                 highlight.spineName = webView.book.spine.spineReferences[highlight.page - 1].resource.href
                 let resHref = highlight.spineName
-                if let opfUrl = URL(string: webView.book.opfResource.href),
+                if let opfResource = webView.book.opfResource,
+                   let opfUrl = URL(string: opfResource.href),
                    let resUrl = URL(string: resHref, relativeTo: opfUrl) {
                     highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
                     while highlight.spineName.hasPrefix("/") {

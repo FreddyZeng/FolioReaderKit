@@ -284,8 +284,8 @@ open class FolioReaderAudioPlayer: NSObject {
 
             currentAudioFile = audioFile
 
-            guard let currentSmilFile = currentSmilFile, let audioFile = audioFile else { return false }
-            let fileURL = currentSmilFile.resource.basePath() + ("/"+audioFile)
+            guard let currentSmilFile = currentSmilFile, let audioFile = audioFile, let basePath = currentSmilFile.resource.basePath() else { return false }
+            let fileURL = basePath + ("/"+audioFile)
             guard let audioData = try? Data(contentsOf: URL(fileURLWithPath: fileURL)) else {
                 print("could not read audio file:", audioFile)
                 return false

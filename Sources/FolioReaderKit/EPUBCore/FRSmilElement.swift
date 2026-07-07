@@ -14,12 +14,12 @@ import Foundation
 
 class FRSmilElement: NSObject {
     var name: String // the name of the tag: <seq>, <par>, <text>, <audio>
-    var attributes: [String: String]!
+    var attributes: [String: String]
     var children: [FRSmilElement]
 
-    init(name: String, attributes: [String:String]!) {
+    init(name: String, attributes: [String: String]?) {
         self.name = name
-        self.attributes = attributes
+        self.attributes = attributes ?? [:]
         self.children = [FRSmilElement]()
     }
 

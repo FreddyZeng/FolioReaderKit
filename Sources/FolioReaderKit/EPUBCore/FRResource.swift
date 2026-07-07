@@ -9,18 +9,18 @@
 import Foundation
 
 open class FRResource: NSObject {
-    var id: String!
+    var id: String = ""
     var properties: String?
-    var mediaType: MediaType!
+    var mediaType: MediaType?
     var mediaOverlay: String?
     
-    public var href: String!
-    public var fullHref: String!
+    public var href: String = ""
+    public var fullHref: String = ""
     public var size: UInt64?
     public var spineIndices = [Int]()
 
-    func basePath() -> String! {
-        if href == nil || href.isEmpty { return nil }
+    func basePath() -> String? {
+        if href.isEmpty { return nil }
         var paths = fullHref.components(separatedBy: "/")
         paths.removeLast()
         return paths.joined(separator: "/")

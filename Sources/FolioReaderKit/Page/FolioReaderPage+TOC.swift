@@ -21,8 +21,8 @@ extension FolioReaderPage {
                 if let reference = book.spine.spineReferences[safe: (pageNumber - 1)], let resource = item.resource, resource == reference.resource {
                     foundResource = resource
                     break
-                } else if let children = item.children, children.isEmpty == false {
-                    search(children)
+                } else if !item.children.isEmpty {
+                    search(item.children)
                 }
             }
         }
@@ -47,11 +47,10 @@ extension FolioReaderPage {
                 
                 if let reference = self.book.spine.spineReferences[safe: pageNumber - 1],
                     let resource = item.resource,
-                    resource == reference.resource,
-                    let title = item.title {
-                    foundChapterName = title
-                } else if let children = item.children, children.isEmpty == false {
-                    search(children)
+                    resource == reference.resource {
+                    foundChapterName = item.title
+                } else if !item.children.isEmpty {
+                    search(item.children)
                 }
             }
         }
@@ -91,8 +90,8 @@ extension FolioReaderPage {
                self.readerConfig.displayTitle,
                let bookTocIndex = self.getBundleRootTocIndex(),
                let bookToc = self.book.bundleRootTableOfContents[safe: bookTocIndex],
-               let bookTitle = bookToc.title,
                let bundleTitle = self.book.title {
+                let bookTitle = bookToc.title
                 if readerCenter.navigationItem.titleView == nil {
                     let titleView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 50))
                     readerCenter.navigationItem.titleView = titleView

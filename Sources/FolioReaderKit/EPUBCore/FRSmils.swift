@@ -107,7 +107,7 @@ struct FRSmilFile {
  Holds array of `FRSmilFile`
  */
 class FRSmils: NSObject {
-    var basePath            : String!
+    var basePath            = ""
     var smils               = [String: FRSmilFile]()
 
     /**

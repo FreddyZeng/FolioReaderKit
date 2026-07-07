@@ -55,7 +55,8 @@ class FolioReaderReferenceList: UITableViewController {
         
         guard let epubArchive = await book.getThreadEpubArchive(),
               let spine = book.spine.spineReferences[safe: pageNumber - 1],
-              let opfURL = URL(fileURLWithPath: book.opfResource.href, isDirectory: false) as URL?,
+              let opfResource = book.opfResource,
+              let opfURL = URL(fileURLWithPath: opfResource.href, isDirectory: false) as URL?,
               let spineURL = URL(fileURLWithPath: spine.resource.href, isDirectory: false, relativeTo: opfURL) as URL?
         else { return [] }
         
@@ -232,11 +233,11 @@ class FolioReaderReferenceList: UITableViewController {
         guard let tocItem = self.folioReader.readerCenter?.getChapterName(pageNumber: pageNumber) else {
             return "  Book Item \(pageNumber)"
         }
-        var title = [tocItem.title!]
+        var title = [tocItem.title]
         var parent = tocItem.parent
         while (parent != nil) {
-            if parent?.title != nil {
-                title.append(parent!.title!)
+            if !parent!.title.isEmpty {
+                title.append(parent!.title)
             }
             parent = parent?.parent
         }

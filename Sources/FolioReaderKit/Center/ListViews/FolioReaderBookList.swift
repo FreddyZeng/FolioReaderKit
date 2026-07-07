@@ -118,7 +118,8 @@ class FolioReaderBookList: UICollectionViewController {
         
         if self.folioReader.structuralStyle == .bundle {
             //prepare cover image
-            let opfURL = URL(fileURLWithPath: book.opfResource.href, isDirectory: false)
+            guard let opfResource = book.opfResource else { return }
+            let opfURL = URL(fileURLWithPath: opfResource.href, isDirectory: false)
             
             Task {
                 guard let bookId = self.folioReader.readerConfig?.identifier,
@@ -295,7 +296,8 @@ class FolioReaderBookList: UICollectionViewController {
                   let tocPage = resource.spineIndices.first
             else { return }
 
-            let opfURL = URL(fileURLWithPath: self.book.opfResource.href, isDirectory: false)
+            guard let opfResource = self.book.opfResource else { return }
+            let opfURL = URL(fileURLWithPath: opfResource.href, isDirectory: false)
             var imgNodes = [AEXMLElement]()
             var coverURL = opfURL
 

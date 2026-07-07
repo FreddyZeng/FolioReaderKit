@@ -36,7 +36,7 @@ open class FRResources: NSObject {
      Useful for looking up the table of contents as it's supposed to be the only resource with NCX mediatype.
      */
     func findByMediaType(_ mediaType: MediaType) -> FRResource? {
-        return resources.values.first { $0.mediaType != nil && $0.mediaType == mediaType }
+        return resources.values.first { $0.mediaType == mediaType }
 //        for resource in resources.values {
 //            if resource.mediaType != nil && resource.mediaType == mediaType {
 //                return resource
@@ -51,7 +51,7 @@ open class FRResources: NSObject {
      Useful for looking up the table of contents as it's supposed to be the only resource with NCX extension.
      */
     func findByExtension(_ ext: String) -> FRResource? {
-        return resources.values.first { $0.mediaType != nil && $0.mediaType.defaultExtension == ext }
+        return resources.values.first { $0.mediaType?.defaultExtension == ext }
 //        for resource in resources.values {
 //            if resource.mediaType != nil && resource.mediaType.defaultExtension == ext {
 //                return resource

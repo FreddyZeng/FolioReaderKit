@@ -92,8 +92,10 @@ class FolioReaderResourceList: UITableViewController {
         let spineReference = book.spine.spineReferences[indexPath.row]
 
         cell.indexLabel.text = spineReference.resource.href
-        if let resHref = spineReference.resource.href,
-           let opfUrl = URL(string: self.book.opfResource.href),
+        let resHref = spineReference.resource.href
+        if !resHref.isEmpty,
+           let opfResource = self.book.opfResource,
+           let opfUrl = URL(string: opfResource.href),
            let resUrl = URL(string: resHref, relativeTo: opfUrl) {
             cell.indexLabel.text = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
             while cell.indexLabel.text?.hasPrefix("/") == true {
@@ -114,7 +116,7 @@ class FolioReaderResourceList: UITableViewController {
         cell.indexLabel.font = UIFont(name: "Avenir-Light", size: 11.0)
 
         if let tocList = self.book.resourceTocMap[spineReference.resource] {
-            var tocTitles = tocList.map { $0.title! }.prefix(3)
+            var tocTitles = tocList.map { $0.title }.prefix(3)
             if tocList.count > 3 {
                 tocTitles.append("...")
                 tocTitles.append(tocList.last!.title)

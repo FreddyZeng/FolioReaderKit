@@ -16,15 +16,15 @@ open class FRBook: NSObject {
     var smils = FRSmils()
     var version: Double?
     
-    public var opfResource: FRResource!
+    public var opfResource: FRResource?
     public var tocResource: FRResource?
     public var uniqueIdentifier: String?
     public var coverImage: FRResource?
     public var name: String?
     public var resources = FRResources()
-    public var tableOfContents: [FRTocReference]!
-    public var flatTableOfContents: [FRTocReference]!
-    public var resourceTocMap: [FRResource: [FRTocReference]]!
+    public var tableOfContents = [FRTocReference]()
+    public var flatTableOfContents = [FRTocReference]()
+    public var resourceTocMap = [FRResource: [FRTocReference]]()
 
     public var epubURL: URL?
     public var archiveEntriesCache = [String: Entry]()
@@ -119,8 +119,8 @@ open class FRBook: NSObject {
     }
     
     // MARK: - for Bundle Book
-    public var bundleRootTableOfContents: [FRTocReference]!
-    public var bundleBookSizes: [Int]!
+    public var bundleRootTableOfContents = [FRTocReference]()
+    public var bundleBookSizes = [Int]()
 
     public func updateBundleInfo(rootTocLevel: Int) {
         self.bundleRootTableOfContents = self.flatTableOfContents.filter {

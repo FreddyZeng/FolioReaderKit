@@ -143,8 +143,8 @@ class FolioReaderBookmarkList: UITableViewController {
             return "  Book Item \(pageNumber)"
         }
         var titleFrags = [String]()
-        if let title = tocItem.title {
-            titleFrags.append(title)
+        if !tocItem.title.isEmpty {
+            titleFrags.append(tocItem.title)
         }
         var parent = tocItem.parent
         while let item = parent {
@@ -152,8 +152,8 @@ class FolioReaderBookmarkList: UITableViewController {
                (item.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue {
                 break
             }
-            if let title = item.title {
-                titleFrags.append(title)
+            if !item.title.isEmpty {
+                titleFrags.append(item.title)
             }
             parent = item.parent
         }
