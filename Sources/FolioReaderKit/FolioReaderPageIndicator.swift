@@ -9,9 +9,9 @@
 import UIKit
 
 class FolioReaderPageIndicator: UIView {
-    var pagesLabel: UILabel!
-    var minutesLabel: UILabel!
-    var infoLabel: UILabel!
+    var pagesLabel = UILabel(frame: .zero)
+    var minutesLabel = UILabel(frame: .zero)
+    var infoLabel = UILabel(frame: .zero)
     
     fileprivate var readerConfig: FolioReaderConfig
     fileprivate var folioReader: FolioReader
@@ -33,19 +33,16 @@ class FolioReaderPageIndicator: UIView {
         layer.rasterizationScale = UIScreen.main.scale
         layer.shouldRasterize = true
 
-        pagesLabel = UILabel(frame: CGRect.zero)
-        pagesLabel.font = UIFont(name: "Avenir-Light", size: 10)!
+        pagesLabel.font = UIFont(name: "Avenir-Light", size: 10) ?? UIFont.systemFont(ofSize: 10)
         pagesLabel.textAlignment = NSTextAlignment.right
         addSubview(pagesLabel)
 
-        minutesLabel = UILabel(frame: CGRect.zero)
-        minutesLabel.font = UIFont(name: "Avenir-Light", size: 10)!
+        minutesLabel.font = UIFont(name: "Avenir-Light", size: 10) ?? UIFont.systemFont(ofSize: 10)
         minutesLabel.textAlignment = NSTextAlignment.right
         //        minutesLabel.alpha = 0
         addSubview(minutesLabel)
         
-        infoLabel = UILabel(frame: CGRect.zero)
-        infoLabel.font = UIFont(name: "Avenir-Light", size: 12)!
+        infoLabel.font = UIFont(name: "Avenir-Light", size: 12) ?? UIFont.systemFont(ofSize: 12)
         infoLabel.textAlignment = .center
         addSubview(infoLabel)
     }
@@ -86,7 +83,7 @@ class FolioReaderPageIndicator: UIView {
 
         // Animate the shadow color change
         let animation = CABasicAnimation(keyPath: "shadowColor")
-        let currentColor = UIColor(cgColor: layer.shadowColor!)
+        let currentColor = layer.shadowColor.map(UIColor.init(cgColor:)) ?? color
         animation.fromValue = currentColor.cgColor
         animation.toValue = color.cgColor
         animation.fillMode = CAMediaTimingFillMode.forwards
