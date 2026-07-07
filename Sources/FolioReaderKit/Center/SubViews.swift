@@ -206,6 +206,27 @@ extension FolioReaderCenter {
         
     }
 
+    @objc func closeReader(_ sender: UIBarButtonItem) {
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
+
+        dismiss()
+        folioReader.close()
+    }
+    
+    @objc func logoButtonAction(_ sender: UIBarButtonItem) {
+        print("\(#function) \(self.navigateWebViewScrollPositions)")
+        
+        guard let position = self.navigateWebViewScrollPositions.popLast() else { return }
+        self.navigationItem.rightBarButtonItems?.last?.isEnabled = !self.navigateWebViewScrollPositions.isEmpty
+        if position.0 == currentPageNumber {
+            self.currentPage?.setScrollViewContentOffset(position.1, animated: true)
+        } else {
+            self.changePageWith(page: position.0) {     //depends on `currentWebViewScrollPositions` to in page reposition
+                self.currentPage?.updatePages()
+            }
+        }
+    }
+
     // MARK: Change page progressive direction
 
     private func transformViewForRTL(_ view: UIView?) {
