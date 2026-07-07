@@ -108,7 +108,7 @@ extension FolioReaderPage {
     }
     
     public func setScrollViewContentOffset(_ contentOffset: CGPoint, animated: Bool) {
-        FolioLogger.log("pageNumber=\(pageNumber!) contentOffset=\(contentOffset)")
+        FolioLogger.log("pageNumber=\(pageNumber) contentOffset=\(contentOffset)")
         webView?.scrollView.setContentOffset(contentOffset, animated: animated)
         getAndRecordScrollPosition()
     }

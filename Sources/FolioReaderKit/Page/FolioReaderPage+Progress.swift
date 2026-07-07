@@ -66,7 +66,7 @@ extension FolioReaderPage {
             webView.scrollView.contentOffset.x //+ webView.frame.width
         )
         
-        FolioLogger.log("updatePages pageNumber=\(self.pageNumber!) totalPages=\(self.totalPages!) contentSize=\(contentSize) pageSize=\(pageSize)")
+        FolioLogger.log("updatePages pageNumber=\(self.pageNumber) totalPages=\(self.totalPages ?? 0) contentSize=\(contentSize) pageSize=\(pageSize)")
         self.currentPage = pageForOffset(pageOffSet, pageHeight: pageSize)
         
         self.updateCurrentChapterName()

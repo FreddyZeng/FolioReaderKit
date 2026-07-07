@@ -79,10 +79,10 @@ extension FolioReaderPage {
 
     public func pushNavigateWebViewScrollPositions() {
         guard let readerCenter = self.folioReader.readerCenter,
-              let currentPageNumber = self.pageNumber,
               let currentOffset = self.webView?.scrollView.contentOffset
         else { return }
         
+        let currentPageNumber = self.pageNumber
         readerCenter.navigateWebViewScrollPositions.append((currentPageNumber, currentOffset))
         readerCenter.navigationItem.rightBarButtonItems?.last?.isEnabled = true
     }

@@ -23,7 +23,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     }()
 
     /// The index of the current page. Note: The index start at 1!
-    open var pageNumber: Int! {
+    open var pageNumber: Int = -1 {
         didSet {
             self.pageChapterTocReferences = self.folioReader.readerCenter?.getChapterNames(pageNumber: self.pageNumber)
         }
@@ -34,13 +34,13 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     open var panDeadZoneLeft: UIView?
     open var panDeadZoneRight: UIView?
     
-    var activityView: FolioReaderPageActivity!
+    var activityView: FolioReaderPageActivity?
     
     open var writingMode = "horizontal-tb"
     
     open var pageOffsetRate: CGFloat = 0 {
         didSet {
-            FolioLogger.log("SET pageOffsetRate=\(pageOffsetRate) pageNumber=\(pageNumber!) currentPage=\(currentPage) totalPages=\(totalPages ?? -1)")
+            FolioLogger.log("SET pageOffsetRate=\(pageOffsetRate) pageNumber=\(pageNumber) currentPage=\(currentPage) totalPages=\(totalPages ?? -1)")
         }
     }
 
@@ -61,7 +61,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     var pageChapterTocReferences: [FRTocReference]?
     var idOffsets: [String: Int]?
     
-    var colorView: UIView!
+    var colorView: UIView?
     var tapStartLocation: CGPoint?
     var tapStartPageNumber: Int?
     var tapStartedWhileScrolling = false
@@ -94,17 +94,17 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         didSet {
             if let layoutAdapting = layoutAdapting {
                 if pageNumber != 1 {
-                    if activityView.adView == nil {
-                        activityView.adView = self.folioReader.delegate?.folioReaderAdView?(self.folioReader)
+                    if activityView?.adView == nil {
+                        activityView?.adView = self.folioReader.delegate?.folioReaderAdView?(self.folioReader)
                     }
                     
-                    activityView.activate(layoutAdapting, activityView.adView != nil)
+                    activityView?.activate(layoutAdapting, activityView?.adView != nil)
                     
                 } else {
-                    activityView.activate(layoutAdapting, false)
+                    activityView?.activate(layoutAdapting, false)
                 }
             } else {
-                activityView.deactivate()
+                activityView?.deactivate()
             }
             
         }
@@ -217,9 +217,10 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         }
         
         if colorView == nil {
-            colorView = UIView()
-            colorView.backgroundColor = self.readerConfig.nightModeBackground
-            webView?.scrollView.addSubview(colorView)
+            let view = UIView()
+            view.backgroundColor = self.readerConfig.nightModeBackground
+            webView?.scrollView.addSubview(view)
+            colorView = view
         }
         
         // Remove all gestures before adding new one
@@ -235,15 +236,16 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         webView?.addGestureRecognizer(tapGestureRecognizer)
         
         if activityView == nil {
-            activityView = FolioReaderPageActivity(folioReader: readerContainer.folioReader)
-            activityView.translatesAutoresizingMaskIntoConstraints = false
-            self.contentView.addSubview(activityView)
+            let view = FolioReaderPageActivity(folioReader: readerContainer.folioReader)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            self.contentView.addSubview(view)
             NSLayoutConstraint.activate([
-                activityView.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
-                activityView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
-                activityView.widthAnchor.constraint(equalTo: self.contentView.widthAnchor),
-                activityView.heightAnchor.constraint(equalTo: self.contentView.heightAnchor)
+                view.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
+                view.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+                view.widthAnchor.constraint(equalTo: self.contentView.widthAnchor),
+                view.heightAnchor.constraint(equalTo: self.contentView.heightAnchor)
             ])
+            activityView = view
         }
     }
 
@@ -349,7 +351,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         )
     }
     
-    func loadHTMLString(_ htmlContent: String!, baseURL: URL!) {
+    func loadHTMLString(_ htmlContent: String, baseURL: URL?) {
         // Load the html into the webview
         webView?.alpha = 0
         webView?.loadHTMLString(htmlContent, baseURL: baseURL)
@@ -385,9 +387,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             // let frameHeight = webView.frame.height
             // let lastPageHeight = frameHeight * CGFloat(webView.pageCount) - CGFloat(Double(contentHeight!)!)
             // colorView.frame = CGRect(x: webView.frame.width * CGFloat(webView.pageCount-1), y: webView.frame.height - lastPageHeight, width: webView.frame.width, height: lastPageHeight)
-            colorView.frame = CGRect.zero
+            colorView?.frame = CGRect.zero
         } else {
-            colorView.frame = CGRect.zero
+            colorView?.frame = CGRect.zero
         }
     }
 }

@@ -218,7 +218,7 @@ writingMode
         ) { _ in
             DispatchQueue.main.asyncAfter(delay: bySecond) {
                 self.updatePageInfo {
-                    FolioLogger.log("updateStyleBackgroundPadding pageNumber=\(self.pageNumber!) minScreenCount=\(minScreenCount) totalPages=\(self.totalPages ?? 0) tryShrinking=\(tryShrinking)")
+                    FolioLogger.log("updateStyleBackgroundPadding pageNumber=\(self.pageNumber) minScreenCount=\(minScreenCount) totalPages=\(self.totalPages ?? 0) tryShrinking=\(tryShrinking)")
                     if self.byWritingMode(self.readerConfig.scrollDirection == .horizontalWithPagedContent, true) {
                         if tryShrinking {
                             if (self.totalPages ?? 0) < minScreenCount {   //shrinked one page, try again
