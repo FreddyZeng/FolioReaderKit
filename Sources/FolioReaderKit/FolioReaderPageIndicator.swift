@@ -93,9 +93,10 @@ class FolioReaderPageIndicator: UIView {
         animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
         layer.add(animation, forKey: "shadowColor")
 
-        minutesLabel.textColor = self.folioReader.isNight(UIColor(white: 1, alpha: 0.3), UIColor(white: 0, alpha: 0.6))
-        pagesLabel.textColor = self.folioReader.isNight(UIColor(white: 1, alpha: 0.6), UIColor(white: 0, alpha: 0.9))
-        infoLabel.textColor = self.folioReader.isNight(UIColor(white: 1, alpha: 0.6), UIColor(white: 0, alpha: 0.9))
+        let textColor = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
+        minutesLabel.textColor = textColor.withAlphaComponent(0.6)
+        pagesLabel.textColor = textColor.withAlphaComponent(0.9)
+        infoLabel.textColor = textColor.withAlphaComponent(0.9)
     }
 
     func reloadViewWithPage(_ page: Int) {

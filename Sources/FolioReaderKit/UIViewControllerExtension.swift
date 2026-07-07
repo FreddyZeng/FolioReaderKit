@@ -9,8 +9,9 @@ import UIKit
 
 internal extension UIViewController {
     
-    func setCloseButton(withConfiguration readerConfig: FolioReaderConfig) {
-        let closeImage = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: readerConfig)
+    func setCloseButton(withConfiguration readerConfig: FolioReaderConfig, folioReader: FolioReader? = nil) {
+        let color = folioReader?.preferences.navTextColor() ?? readerConfig.tintColor
+        let closeImage = UIImage(readerImageNamed: "icon-navbar-close")?.imageTintColor(color)?.withRenderingMode(.alwaysOriginal)
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: closeImage, style: .plain, target: self, action: #selector(dismiss as () -> Void))
     }
     

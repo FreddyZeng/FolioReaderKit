@@ -53,7 +53,7 @@ class FolioReaderQuoteShare: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.setCloseButton(withConfiguration: self.readerConfig)
+        self.setCloseButton(withConfiguration: self.readerConfig, folioReader: self.folioReader)
         configureNavBar()
 
         let titleAttrs = [NSAttributedString.Key.foregroundColor: self.readerConfig.tintColor]
@@ -201,7 +201,7 @@ class FolioReaderQuoteShare: UIViewController {
         //let navBackground = self.folioReader.isNight(self.readerConfig.nightModeNavBackground, self.readerConfig.daysModeNavBackground)
         let navBackground = self.readerConfig.themeModeNavBackground[self.folioReader.themeMode]
         let tintColor = self.readerConfig.tintColor
-        let navText = self.folioReader.isNight(UIColor.white, UIColor.black)
+        let navText = self.folioReader.preferences.navTextColor()
         let font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }

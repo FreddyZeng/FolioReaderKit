@@ -458,7 +458,7 @@ extension ReaderPreferences {
     /// Return the appropriate navigation bar text color based on night mode state.
     public func navTextColor() -> UIColor {
         guard let folioReader = self.folioReader else { return .black }
-        return folioReader.isNight(.white, .black)
+        return folioReader.readerConfig?.themeModeTextColor[folioReader.themeMode] ?? .black
     }
 }
 

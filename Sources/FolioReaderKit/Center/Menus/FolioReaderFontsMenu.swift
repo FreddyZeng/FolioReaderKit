@@ -281,7 +281,7 @@ class FolioReaderFontsMenu: FolioReaderMenu, UIPickerViewDataSource, UIPickerVie
         let fontFamilyInfo = fontFamilies[row]
         
         let pickerLabel = UILabel()
-        pickerLabel.textColor = folioReader.nightMode ? UIColor.lightText : UIColor.darkText
+        pickerLabel.textColor = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
         pickerLabel.text = fontFamilyInfo.localizedName ?? fontFamilyInfo.familyName
         pickerLabel.font = fontFamilyInfo.regularFont
         pickerLabel.textAlignment = .center
@@ -337,7 +337,7 @@ extension FolioReaderFontsMenu: UITableViewDataSource {
         
         let fontFamilyInfo = fontFamilies[indexPath.row]
         
-        cell.textColor = folioReader.nightMode ? .lightText : .darkText
+        cell.textColor = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
         cell.selectedTextColor = self.readerConfig.menuTextColorSelected
         
         cell.folioBackgroundColor = self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode]

@@ -40,10 +40,10 @@ class FolioReaderMenu: UIViewController, UIGestureRecognizerDelegate {
             }
             if let label = subview as? UILabel,
                label.textColor != .systemRed {
-                label.textColor = folioReader.isNight(UIColor.lightText, UIColor.darkText)
+                label.textColor = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
             }
             if let button = subview as? UIButton {
-                button.setTitleColor(folioReader.isNight(UIColor.lightText, self.folioReader.readerConfig?.tintColor), for: .normal)
+                button.setTitleColor(self.readerConfig.themeModeTextColor[self.folioReader.themeMode], for: .normal)
             }
         }
     }

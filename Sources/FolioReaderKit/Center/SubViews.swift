@@ -168,14 +168,14 @@ extension FolioReaderCenter {
         if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
 
-        // Navbar buttons
-        let shareIcon = UIImage(readerImageNamed: "icon-navbar-share")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let audioIcon = UIImage(readerImageNamed: "icon-navbar-tts")?.ignoreSystemTint(withConfiguration: self.readerConfig) //man-speech-icon
-        let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let logoIcon = UIImage(readerImageNamed: "icon-button-back")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let bookmarkIcon = UIImage(readerImageNamed: "icon-navbar-bookmark")?.ignoreSystemTint(withConfiguration: self.readerConfig)
+        let navText = folioReader.preferences.navTextColor()
+        let shareIcon = UIImage(readerImageNamed: "icon-navbar-share")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let audioIcon = UIImage(readerImageNamed: "icon-navbar-tts")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal) //man-speech-icon
+        let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let logoIcon = UIImage(readerImageNamed: "icon-button-back")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let bookmarkIcon = UIImage(readerImageNamed: "icon-navbar-bookmark")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
 
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
         let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))

@@ -38,7 +38,7 @@ class FolioReaderAddHighlightNote: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setCloseButton(withConfiguration: readerConfig)
+        setCloseButton(withConfiguration: readerConfig, folioReader: folioReader)
         prepareScrollView()
         configureTextView()
         configureLabel()
@@ -128,7 +128,7 @@ class FolioReaderAddHighlightNote: UIViewController {
         //let navBackground = folioReader.isNight(self.readerConfig.nightModeNavBackground, self.readerConfig.daysModeNavBackground)
         let navBackground = self.readerConfig.themeModeNavBackground[folioReader.themeMode]
         let tintColor = readerConfig.tintColor
-        let navText = folioReader.isNight(UIColor.white, UIColor.black)
+        let navText = folioReader.preferences.navTextColor()
         let font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
         

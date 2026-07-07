@@ -87,7 +87,7 @@ class FolioReaderNavigationPageVC: UIPageViewController {
         }
         self.setViewControllers([viewList[index]], direction: .forward, animated: false, completion: nil)
 
-        self.setCloseButton(withConfiguration: self.readerConfig)
+        self.setCloseButton(withConfiguration: self.readerConfig, folioReader: self.folioReader)
     }
 
     override func viewWillAppear(_ animated: Bool) {
