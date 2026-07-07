@@ -19,8 +19,8 @@ open class FolioReaderContainer: UIViewController {
     public var epubPath: String
     public var book: FRBook
     
-    public var centerNavigationController: FolioReaderNavigationController!
-    public var centerViewController: FolioReaderCenter!
+    public var centerNavigationController: FolioReaderNavigationController?
+    public var centerViewController: FolioReaderCenter?
     public var audioPlayer: FolioReaderAudioPlayer?
     
     public var readerConfig: FolioReaderConfig
@@ -213,7 +213,7 @@ open class FolioReaderContainer: UIViewController {
                     
                     self.resourceServer?.start()
 
-                    self.centerViewController.reloadData()
+                    self.centerViewController?.reloadData()
                     self.folioReader.isReaderReady = true
                 }
             } catch {
