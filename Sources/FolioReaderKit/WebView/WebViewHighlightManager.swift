@@ -16,7 +16,7 @@ class WebViewHighlightManager {
         self.webView = webView
     }
 
-    func highlight(_ sender: UIMenuController?) {
+    func highlight(_ sender: Any?) {
         guard let webView = webView else { return }
         webView.js("highlightStringCFI('\(FolioReaderHighlightStyle.classForStyle(webView.folioReader.currentHighlightStyle))', false)") { [weak self] highlightAndReturn in
             guard let self = self, let highlightAndReturn = highlightAndReturn else { return }
@@ -29,7 +29,7 @@ class WebViewHighlightManager {
         }
     }
     
-    func highlightWithNote(_ sender: UIMenuController?) {
+    func highlightWithNote(_ sender: Any?) {
         guard let webView = webView else { return }
         webView.js("highlightStringCFI('\(FolioReaderHighlightStyle.classForStyle(webView.folioReader.currentHighlightStyle))', true)") { [weak self] highlightAndReturn in
             guard let self = self, let highlightAndReturn = highlightAndReturn else { return }
@@ -214,7 +214,7 @@ class WebViewHighlightManager {
         }
     }
     
-    func updateHighlightNote(_ sender: UIMenuController?) {
+    func updateHighlightNote(_ sender: Any?) {
         guard let webView = webView else { return }
         webView.js("getHighlightId()") { [weak self] highlightId in
             guard let self = self, let webView = self.webView else { return }
@@ -232,27 +232,27 @@ class WebViewHighlightManager {
         }
     }
 
-    func setYellow(_ sender: UIMenuController?) {
+    func setYellow(_ sender: Any?) {
         changeHighlightStyle(sender, style: .yellow)
     }
 
-    func setGreen(_ sender: UIMenuController?) {
+    func setGreen(_ sender: Any?) {
         changeHighlightStyle(sender, style: .green)
     }
 
-    func setBlue(_ sender: UIMenuController?) {
+    func setBlue(_ sender: Any?) {
         changeHighlightStyle(sender, style: .blue)
     }
 
-    func setPink(_ sender: UIMenuController?) {
+    func setPink(_ sender: Any?) {
         changeHighlightStyle(sender, style: .pink)
     }
 
-    func setUnderline(_ sender: UIMenuController?) {
+    func setUnderline(_ sender: Any?) {
         changeHighlightStyle(sender, style: .underline)
     }
 
-    func changeHighlightStyle(_ sender: UIMenuController?, style: FolioReaderHighlightStyle) {
+    func changeHighlightStyle(_ sender: Any?, style: FolioReaderHighlightStyle) {
         guard let webView = webView else { return }
         webView.folioReader.currentHighlightStyle = style.rawValue
 

@@ -20,7 +20,7 @@ extension FolioReaderPage {
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if gestureRecognizer.view is FolioReaderWebView {
             if otherGestureRecognizer is UILongPressGestureRecognizer {
-                if UIMenuController.shared.isMenuVisible {
+                if webView?.isMenuVisible ?? false {
                     webView?.setMenuVisible(false)
                 }
                 return false

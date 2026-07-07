@@ -94,23 +94,23 @@ open class FolioReaderWebView: WKWebView {
 
     // MARK: - UIMenuController - Actions
 
-    @objc func share(_ sender: UIMenuController?) {
+    @objc func share(_ sender: Any?) {
         menuManager.share(sender)
     }
 
-    func colors(_ sender: UIMenuController?) {
+    func colors(_ sender: Any?) {
         menuManager.colors(sender)
     }
 
-    func remove(_ sender: UIMenuController?) {
+    func remove(_ sender: Any?) {
         menuManager.remove(sender)
     }
 
-    @objc func highlight(_ sender: UIMenuController?) {
+    @objc func highlight(_ sender: Any?) {
         highlightManager.highlight(sender)
     }
     
-    @objc func highlightWithNote(_ sender: UIMenuController?) {
+    @objc func highlightWithNote(_ sender: Any?) {
         highlightManager.highlightWithNote(sender)
     }
     
@@ -118,47 +118,47 @@ open class FolioReaderWebView: WKWebView {
         highlightManager.handleHighlightReturn(jsonData, withNote: withNote, original: original, completion: completion)
     }
     
-    @objc func updateHighlightNote(_ sender: UIMenuController?) {
+    @objc func updateHighlightNote(_ sender: Any?) {
         highlightManager.updateHighlightNote(sender)
     }
 
-    @objc func define(_ sender: UIMenuController?) {
+    @objc func define(_ sender: Any?) {
         menuManager.define(sender)
     }
 
-    @objc func lookup(_ sender: UIMenuController?) {
+    @objc func lookup(_ sender: Any?) {
         menuManager.lookup(sender)
     }
     
-    @objc func reference(_ sender: UIMenuController?) {
+    @objc func reference(_ sender: Any?) {
         menuManager.reference(sender)
     }
     
-    @objc func play(_ sender: UIMenuController?) {
+    @objc func play(_ sender: Any?) {
         menuManager.play(sender)
     }
     
-    func setYellow(_ sender: UIMenuController?) {
+    func setYellow(_ sender: Any?) {
         highlightManager.setYellow(sender)
     }
 
-    func setGreen(_ sender: UIMenuController?) {
+    func setGreen(_ sender: Any?) {
         highlightManager.setGreen(sender)
     }
 
-    func setBlue(_ sender: UIMenuController?) {
+    func setBlue(_ sender: Any?) {
         highlightManager.setBlue(sender)
     }
 
-    func setPink(_ sender: UIMenuController?) {
+    func setPink(_ sender: Any?) {
         highlightManager.setPink(sender)
     }
 
-    func setUnderline(_ sender: UIMenuController?) {
+    func setUnderline(_ sender: Any?) {
         highlightManager.setUnderline(sender)
     }
 
-    func changeHighlightStyle(_ sender: UIMenuController?, style: FolioReaderHighlightStyle) {
+    func changeHighlightStyle(_ sender: Any?, style: FolioReaderHighlightStyle) {
         highlightManager.changeHighlightStyle(sender, style: style)
     }
 
@@ -172,8 +172,27 @@ open class FolioReaderWebView: WKWebView {
         self.mDictView = mDictView
     }
 
+    var isMenuVisible: Bool {
+        if #available(iOS 16.0, *) {
+            return menuManager.isMenuVisible
+        } else {
+            return UIMenuController.shared.isMenuVisible
+        }
+    }
+
     open func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
         menuManager.setMenuVisible(menuVisible, animated: animated, andRect: rect)
+    }
+
+    open override func buildMenu(with builder: UIMenuBuilder) {
+        super.buildMenu(with: builder)
+
+        guard #available(iOS 16.0, *) else { return }
+        guard readerConfig.useReaderMenuController else { return }
+
+        let actions = menuManager.menuElementsForCurrentState()
+        let customMenu = UIMenu(title: "", options: .displayInline, children: actions)
+        builder.insertSibling(customMenu, afterMenu: .standardEdit)
     }
     
     // MARK: - Java Script Bridge

@@ -9,11 +9,27 @@
 import UIKit
 import WebKit
 
-class WebViewMenuManager {
+class WebViewMenuManager: NSObject {
+    private(set) var isMenuVisible: Bool = false
+    private var lastMenuRect = CGRect.zero
+    private var isReopeningMenu = false
     private weak var webView: FolioReaderWebView?
+
+    private var _editMenuInteraction: Any?
+    @available(iOS 16.0, *)
+    private var editMenuInteraction: UIEditMenuInteraction {
+        if _editMenuInteraction == nil {
+            _editMenuInteraction = UIEditMenuInteraction(delegate: self)
+        }
+        return _editMenuInteraction as! UIEditMenuInteraction
+    }
 
     init(webView: FolioReaderWebView) {
         self.webView = webView
+        super.init()
+        if #available(iOS 16.0, *) {
+            webView.addInteraction(editMenuInteraction)
+        }
     }
 
     func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
@@ -59,8 +75,15 @@ class WebViewMenuManager {
         return result
     }
 
-    func share(_ sender: UIMenuController?) {
-        guard let webView = webView, let sender = sender else { return }
+    func share(_ sender: Any?) {
+        guard let webView = webView else { return }
+
+        let presentationRect: CGRect
+        if let menuController = sender as? UIMenuController {
+            presentationRect = menuController.menuFrame
+        } else {
+            presentationRect = lastMenuRect
+        }
         
         guard let currentPage = webView.folioReader.readerCenter?.currentPage,
               let currentPageWebView = currentPage.webView
@@ -91,12 +114,12 @@ class WebViewMenuManager {
             if currentPageWebView.isSharingHighlight {
                 currentPageWebView.js("getHighlightContent()") { textToShare in
                     guard let textToShare = textToShare else { return }
-                    webView.folioReader.readerCenter?.shareHighlight(textToShare, rect: sender.menuFrame)
+                    webView.folioReader.readerCenter?.shareHighlight(textToShare, rect: presentationRect)
                 }
             } else {
                 currentPageWebView.js("getSelectedText()") { textToShare in
                     guard let textToShare = textToShare else { return }
-                    webView.folioReader.readerCenter?.shareHighlight(textToShare, rect: sender.menuFrame)
+                    webView.folioReader.readerCenter?.shareHighlight(textToShare, rect: presentationRect)
                 }
             }
             webView.setMenuVisible(false)
@@ -110,20 +133,20 @@ class WebViewMenuManager {
 
         if let alert = alertController.popoverPresentationController {
             alert.sourceView = webView.folioReader.readerCenter?.currentPage
-            alert.sourceRect = sender.menuFrame
+            alert.sourceRect = presentationRect
         }
 
         webView.folioReader.readerCenter?.present(alertController, animated: true, completion: nil)
     }
 
-    func colors(_ sender: UIMenuController?) {
+    func colors(_ sender: Any?) {
         guard let webView = webView else { return }
         webView.isColors = true
         webView.createMenu(onHighlight: false)
         webView.setMenuVisible(true)
     }
 
-    func remove(_ sender: UIMenuController?) {
+    func remove(_ sender: Any?) {
         guard let webView = webView else { return }
         webView.js("removeThisHighlight()") { removedId in
             guard let removedId = removedId else { return }
@@ -137,7 +160,7 @@ class WebViewMenuManager {
         webView.setMenuVisible(false)
     }
 
-    func define(_ sender: UIMenuController?) {
+    func define(_ sender: Any?) {
         guard let webView = webView else { return }
         guard let currentPage = webView.folioReader.readerCenter?.currentPage,
               let currentPageWebView = currentPage.webView
@@ -158,7 +181,7 @@ class WebViewMenuManager {
         }
     }
 
-    func lookup(_ sender: UIMenuController?) {
+    func lookup(_ sender: Any?) {
         guard let webView = webView else { return }
         guard let currentPage = webView.folioReader.readerCenter?.currentPage,
               let currentPageWebView = currentPage.webView
@@ -180,7 +203,7 @@ class WebViewMenuManager {
         }
     }
     
-    func reference(_ sender: UIMenuController?) {
+    func reference(_ sender: Any?) {
         guard let webView = webView else { return }
         guard let currentPage = webView.folioReader.readerCenter?.currentPage,
               let currentPageWebView = currentPage.webView
@@ -208,7 +231,7 @@ class WebViewMenuManager {
         }
     }
     
-    func play(_ sender: UIMenuController?) {
+    func play(_ sender: Any?) {
         guard let webView = webView else { return }
         webView.folioReader.readerAudioPlayer?.play()
         webView.clearTextSelection()
@@ -221,6 +244,140 @@ class WebViewMenuManager {
         }
 
         webView.isSharingHighlight = onHighlight
+
+        if #available(iOS 16.0, *) {
+            // Under iOS 16+, menus are built dynamically via buildMenu(with:) or UIEditMenuInteraction
+        } else {
+            let colors = UIImage(readerImageNamed: "colors-marker")
+            var share = UIImage(readerImageNamed: "share-marker")
+            let remove = UIImage(readerImageNamed: "no-marker")
+            let yellow = UIImage(readerImageNamed: "yellow-marker")
+            let green = UIImage(readerImageNamed: "green-marker")
+            let blue = UIImage(readerImageNamed: "blue-marker")
+            let pink = UIImage(readerImageNamed: "pink-marker")
+            let underline = UIImage(readerImageNamed: "underline-marker")
+            var mdictImage = UIImage(readerImageNamed: "icon-dictionary")
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                share = share?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
+                mdictImage = mdictImage?.withTintColor(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .black)
+            } else {
+                share = share?.withTintColor(.white)
+                mdictImage = mdictImage?.withTintColor(.white)
+            }
+
+            let menuController = UIMenuController.shared
+
+            let highlightItem = UIMenuItem(title: webView.readerConfig.localizedHighlightMenu, action: #selector(FolioReaderWebView.highlight(_:)))
+            let highlightNoteItem = UIMenuItem(title: webView.readerConfig.localizedHighlightNote, action: #selector(FolioReaderWebView.highlightWithNote(_:)))
+            let editNoteItem = UIMenuItem(title: webView.readerConfig.localizedHighlightNote, action: #selector(FolioReaderWebView.updateHighlightNote(_:)))
+            let playAudioItem = UIMenuItem(title: webView.readerConfig.localizedPlayMenu, action: #selector(FolioReaderWebView.play(_:)))
+            let defineItem = UIMenuItem(title: webView.readerConfig.localizedDefineMenu, action: #selector(FolioReaderWebView.define(_:)))
+            let referenceItem = UIMenuItem(title: "Ref.", action: #selector(FolioReaderWebView.reference(_:)))
+
+            let mDictItem = UIMenuItem(title: webView.readerConfig.localizedMDictMenu, image: mdictImage) { [weak webView] _ in
+                webView?.lookup(menuController)
+            }
+
+            let colorsItem = UIMenuItem(title: "C", image: colors) { [weak webView] _ in
+                webView?.colors(menuController)
+            }
+            let shareItem = UIMenuItem(title: "S", image: share) { [weak webView] _ in
+                webView?.share(menuController)
+            }
+            let removeItem = UIMenuItem(title: "R", image: remove) { [weak webView] _ in
+                webView?.remove(menuController)
+            }
+            let yellowItem = UIMenuItem(title: "Y", image: yellow) { [weak webView] _ in
+                webView?.setYellow(menuController)
+            }
+            let greenItem = UIMenuItem(title: "G", image: green) { [weak webView] _ in
+                webView?.setGreen(menuController)
+            }
+            let blueItem = UIMenuItem(title: "B", image: blue) { [weak webView] _ in
+                webView?.setBlue(menuController)
+            }
+            let pinkItem = UIMenuItem(title: "P", image: pink) { [weak webView] _ in
+                webView?.setPink(menuController)
+            }
+            let underlineItem = UIMenuItem(title: "U", image: underline) { [weak webView] _ in
+                webView?.setUnderline(menuController)
+            }
+            var menuItems: [UIMenuItem] = []
+
+            // menu on existing highlight
+            if onHighlight {
+                menuItems = [colorsItem, editNoteItem, removeItem]
+                if (webView.readerConfig.allowSharing == true) {
+                    menuItems.append(shareItem)
+                }
+            } else if webView.isColors {
+                // menu for selecting highlight color
+                menuItems = [yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+            } else {
+                // default menu
+                menuItems = [highlightItem, defineItem, referenceItem, highlightNoteItem]
+                if webView.readerConfig.enableMDictViewer {
+                    menuItems.append(mDictItem)
+                }
+
+                if webView.book.hasAudio || webView.readerConfig.enableTTS {
+                    menuItems.insert(playAudioItem, at: 0)
+                }
+
+                if (webView.readerConfig.allowSharing == true) {
+                    menuItems.append(shareItem)
+                }
+            }
+
+            menuController.menuItems = menuItems
+            menuController.update()
+
+            if let readerContainer = webView.folioReader.readerContainer {
+                UIMenuController.installTo(responder: readerContainer)
+            }
+        }
+    }
+
+    func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
+        guard let webView = webView else { return }
+        if let currentPage = webView.folioReader.readerCenter?.currentPage {
+            currentPage.menuIsVisible = menuVisible
+        }
+        if menuVisible {
+            webView.folioReader.readerCenter?.invalidatePendingBarReveal()
+        }
+
+        self.isMenuVisible = menuVisible
+
+        if menuVisible {
+            let targetRect = rect.equalTo(CGRect.zero) ? lastMenuRect : rect
+            if !targetRect.equalTo(CGRect.zero) {
+                lastMenuRect = targetRect
+                if #available(iOS 16.0, *) {
+                    isReopeningMenu = true
+                    let configuration = UIEditMenuConfiguration(identifier: nil, sourcePoint: targetRect.origin)
+                    editMenuInteraction.presentEditMenu(with: configuration)
+                    isReopeningMenu = false
+                } else {
+                    UIMenuController.shared.showMenu(from: webView, rect: targetRect)
+                }
+            }
+        } else {
+            if #available(iOS 16.0, *) {
+                editMenuInteraction.dismissMenu()
+            } else {
+                UIMenuController.shared.hideMenu()
+            }
+            if webView.isSharingHighlight || webView.isColors {
+                webView.isColors = false
+                webView.isSharingHighlight = false
+            }
+            webView.createMenu(onHighlight: false)
+        }
+    }
+
+    func menuElementsForCurrentState() -> [UIMenuElement] {
+        guard let webView = webView else { return [] }
 
         let colors = UIImage(readerImageNamed: "colors-marker")
         var share = UIImage(readerImageNamed: "share-marker")
@@ -239,111 +396,103 @@ class WebViewMenuManager {
             mdictImage = mdictImage?.withTintColor(.white)
         }
 
-        let menuController = UIMenuController.shared
+        let highlightAction = UIAction(title: webView.readerConfig.localizedHighlightMenu) { [weak self] _ in
+            self?.webView?.highlight(nil)
+        }
+        let highlightNoteAction = UIAction(title: webView.readerConfig.localizedHighlightNote) { [weak self] _ in
+            self?.webView?.highlightWithNote(nil)
+        }
+        let editNoteAction = UIAction(title: webView.readerConfig.localizedHighlightNote) { [weak self] _ in
+            self?.webView?.updateHighlightNote(nil)
+        }
+        let playAudioAction = UIAction(title: webView.readerConfig.localizedPlayMenu) { [weak self] _ in
+            self?.webView?.play(nil)
+        }
+        let defineAction = UIAction(title: webView.readerConfig.localizedDefineMenu) { [weak self] _ in
+            self?.webView?.define(nil)
+        }
+        let referenceAction = UIAction(title: "Ref.") { [weak self] _ in
+            self?.webView?.reference(nil)
+        }
+        let mDictAction = UIAction(title: webView.readerConfig.localizedMDictMenu, image: mdictImage) { [weak self] _ in
+            self?.webView?.lookup(nil)
+        }
+        let colorsAction = UIAction(title: "C", image: colors) { [weak self] _ in
+            self?.webView?.colors(nil)
+        }
+        let shareAction = UIAction(title: "S", image: share) { [weak self] _ in
+            self?.webView?.share(nil)
+        }
+        let removeAction = UIAction(title: "R", image: remove) { [weak self] _ in
+            self?.webView?.remove(nil)
+        }
+        let yellowAction = UIAction(title: "Y", image: yellow) { [weak self] _ in
+            self?.webView?.setYellow(nil)
+        }
+        let greenAction = UIAction(title: "G", image: green) { [weak self] _ in
+            self?.webView?.setGreen(nil)
+        }
+        let blueAction = UIAction(title: "B", image: blue) { [weak self] _ in
+            self?.webView?.setBlue(nil)
+        }
+        let pinkAction = UIAction(title: "P", image: pink) { [weak self] _ in
+            self?.webView?.setPink(nil)
+        }
+        let underlineAction = UIAction(title: "U", image: underline) { [weak self] _ in
+            self?.webView?.setUnderline(nil)
+        }
 
-        let highlightItem = UIMenuItem(title: webView.readerConfig.localizedHighlightMenu, action: #selector(FolioReaderWebView.highlight(_:)))
-        let highlightNoteItem = UIMenuItem(title: webView.readerConfig.localizedHighlightNote, action: #selector(FolioReaderWebView.highlightWithNote(_:)))
-        let editNoteItem = UIMenuItem(title: webView.readerConfig.localizedHighlightNote, action: #selector(FolioReaderWebView.updateHighlightNote(_:)))
-        let playAudioItem = UIMenuItem(title: webView.readerConfig.localizedPlayMenu, action: #selector(FolioReaderWebView.play(_:)))
-        let defineItem = UIMenuItem(title: webView.readerConfig.localizedDefineMenu, action: #selector(FolioReaderWebView.define(_:)))
-        let referenceItem = UIMenuItem(title: "Ref.", action: #selector(FolioReaderWebView.reference(_:)))
-        
-        let mDictItem = UIMenuItem(title: webView.readerConfig.localizedMDictMenu, image: mdictImage) { [weak webView] _ in
-            webView?.lookup(menuController)
-        }
-        
-        let colorsItem = UIMenuItem(title: "C", image: colors) { [weak webView] _ in
-            webView?.colors(menuController)
-        }
-        let shareItem = UIMenuItem(title: "S", image: share) { [weak webView] _ in
-            webView?.share(menuController)
-        }
-        let removeItem = UIMenuItem(title: "R", image: remove) { [weak webView] _ in
-            webView?.remove(menuController)
-        }
-        let yellowItem = UIMenuItem(title: "Y", image: yellow) { [weak webView] _ in
-            webView?.setYellow(menuController)
-        }
-        let greenItem = UIMenuItem(title: "G", image: green) { [weak webView] _ in
-            webView?.setGreen(menuController)
-        }
-        let blueItem = UIMenuItem(title: "B", image: blue) { [weak webView] _ in
-            webView?.setBlue(menuController)
-        }
-        let pinkItem = UIMenuItem(title: "P", image: pink) { [weak webView] _ in
-            webView?.setPink(menuController)
-        }
-        let underlineItem = UIMenuItem(title: "U", image: underline) { [weak webView] _ in
-            webView?.setUnderline(menuController)
-        }
+        var actions: [UIMenuElement] = []
 
-        var menuItems: [UIMenuItem] = []
-
-        // menu on existing highlight
-        if onHighlight {
-            menuItems = [colorsItem, editNoteItem, removeItem]
-            
-            if (webView.readerConfig.allowSharing == true) {
-                menuItems.append(shareItem)
+        if webView.isSharingHighlight {
+            actions = [colorsAction, editNoteAction, removeAction]
+            if webView.readerConfig.allowSharing {
+                actions.append(shareAction)
             }
-            
         } else if webView.isColors {
-            // menu for selecting highlight color
-            menuItems = [yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+            actions = [yellowAction, greenAction, blueAction, pinkAction, underlineAction]
         } else {
-            // default menu
-            menuItems = [highlightItem, defineItem, referenceItem, highlightNoteItem]
+            actions = [highlightAction, defineAction, referenceAction, highlightNoteAction]
             if webView.readerConfig.enableMDictViewer {
-                menuItems.append(mDictItem)
+                actions.append(mDictAction)
             }
-
             if webView.book.hasAudio || webView.readerConfig.enableTTS {
-                menuItems.insert(playAudioItem, at: 0)
+                actions.insert(playAudioAction, at: 0)
             }
-
-            if (webView.readerConfig.allowSharing == true) {
-                menuItems.append(shareItem)
+            if webView.readerConfig.allowSharing {
+                actions.append(shareAction)
             }
         }
-        
-        menuController.menuItems = menuItems
-        menuController.update()
-        
-        if let readerContainer = webView.folioReader.readerContainer {
-            UIMenuController.installTo(responder: readerContainer)
-        }
+        return actions
     }
-    
-    func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
-        guard let webView = webView else { return }
-        if let currentPage = webView.folioReader.readerCenter?.currentPage {
-            currentPage.menuIsVisible = menuVisible
-        }
-        if menuVisible {
-            webView.folioReader.readerCenter?.invalidatePendingBarReveal()
-        }
+}
 
-        if menuVisible == false {
-            UIMenuController.shared.hideMenu()
-        }
-        
-        if !menuVisible && webView.isSharingHighlight || !menuVisible && webView.isColors {
-            webView.isColors = false
-            webView.isSharingHighlight = false
-        }
-        
-        if menuVisible  {
-            if !rect.equalTo(CGRect.zero) {
-                UIMenuController.shared.showMenu(from: webView, rect: rect)
+@available(iOS 16.0, *)
+extension WebViewMenuManager: UIEditMenuInteractionDelegate {
+    func editMenuInteraction(_ interaction: UIEditMenuInteraction, menuFor configuration: UIEditMenuConfiguration, suggestedActions: [UIMenuElement]) -> UIMenu? {
+        let actions = menuElementsForCurrentState()
+        return UIMenu(title: "", children: actions)
+    }
+
+    func editMenuInteraction(_ interaction: UIEditMenuInteraction, targetRectFor configuration: UIEditMenuConfiguration, suggestedTargetRect: CGRect) -> CGRect {
+        return lastMenuRect
+    }
+
+    func editMenuInteraction(_ interaction: UIEditMenuInteraction, willDismissMenuFor configuration: UIEditMenuConfiguration, animator: UIEditMenuInteractionAnimating) {
+        let wasReopening = self.isReopeningMenu
+        animator.addCompletion { [weak self] in
+            guard let self = self, let webView = self.webView else { return }
+            if wasReopening {
+                return
             }
-        } else {
-            webView.createMenu(onHighlight: false)
-        }
-        
-        if menuVisible {
-            UIMenuController.shared.showMenu(from: webView, rect: rect)
-        } else {
-            UIMenuController.shared.hideMenu()
+            self.isMenuVisible = false
+            if let currentPage = webView.folioReader.readerCenter?.currentPage {
+                currentPage.menuIsVisible = false
+            }
+            if webView.isSharingHighlight || webView.isColors {
+                webView.isColors = false
+                webView.isSharingHighlight = false
+            }
         }
     }
 }

@@ -360,9 +360,15 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     override open func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         guard let webView = webView else { return false }
 
-        if UIMenuController.shared.menuItems?.count == 0 {
-            webView.isColors = false
-            webView.createMenu(onHighlight: false)
+        if #available(iOS 16.0, *) {
+            if !webView.isColors && !webView.isSharingHighlight {
+                webView.createMenu(onHighlight: false)
+            }
+        } else {
+            if UIMenuController.shared.menuItems?.count == 0 {
+                webView.isColors = false
+                webView.createMenu(onHighlight: false)
+            }
         }
 
         return super.canPerformAction(action, withSender: sender)
