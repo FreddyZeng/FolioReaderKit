@@ -174,10 +174,12 @@ extension FolioReader {
     /// - Parameters:
     ///   - parentViewController: View Controller that will present the reader container.
     ///   - epubPath: String representing the path on the disk of the ePub file. Must not be nil nor empty string.
-	///   - unzipPath: Path to unzip the compressed epub.
     ///   - config: FolioReader configuration.
-    ///   - shouldRemoveEpub: Boolean to remove the epub or not. Default true.
     ///   - animated: Pass true to animate the presentation; otherwise, pass false.
+    ///   - webServer: Local server for this reader instance. Use a distinct `ReadiumGCDWebServer` per concurrent reader.
+    ///
+    /// For concurrent readers, also use distinct `FolioReaderConfig.identifier` values and identifier-aware
+    /// persistence providers so settings, highlights, bookmarks, and positions do not overwrite each other.
     public func presentReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?, webServer: ReadiumGCDWebServer) {
         let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath, webServer: webServer)
         readerContainer.modalPresentationStyle = .fullScreen
@@ -187,6 +189,7 @@ extension FolioReader {
         addObservers()
     }
     
+    /// Prepares a reader container without presenting it. Use a distinct `ReadiumGCDWebServer` per concurrent reader.
     public func prepareReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?, webServer: ReadiumGCDWebServer) {
         let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath, webServer: webServer)
         self.readerContainer = readerContainer

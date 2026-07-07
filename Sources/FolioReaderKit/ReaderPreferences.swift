@@ -47,6 +47,10 @@ public class ReaderPreferences {
         preferenceProvider?.preference(setString: value, for: key.rawKey)
     }
 
+    func postPageModeRefresh() {
+        NotificationCenter.default.post(name: .folioReaderNeedRefreshPageMode, object: folioReader)
+    }
+
     // MARK: - Properties
 
     /// Check if current theme is Night mode
@@ -64,7 +68,7 @@ public class ReaderPreferences {
                     readerCenter.scrollScrubber?.reloadColors()
                     readerCenter.collectionView.backgroundColor = (value == true ? self.folioReader?.readerContainer?.readerConfig.nightModeBackground : UIColor.white)
                 }, completion: { (finished: Bool) in
-                    NotificationCenter.default.post(name: .folioReaderNeedRefreshPageMode, object: nil)
+                    self.postPageModeRefresh()
                 })
             }
         }
@@ -122,7 +126,7 @@ public class ReaderPreferences {
                     page.panDeadZoneRight?.backgroundColor = backgroundColor
                 }
             }, completion: { (finished: Bool) in
-                NotificationCenter.default.post(name: .folioReaderNeedRefreshPageMode, object: nil)
+                self.postPageModeRefresh()
             })
         }
     }
@@ -461,4 +465,3 @@ extension ReaderPreferences {
         return folioReader.readerConfig?.themeModeTextColor[folioReader.themeMode] ?? .black
     }
 }
-

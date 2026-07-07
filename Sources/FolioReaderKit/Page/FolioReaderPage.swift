@@ -132,13 +132,14 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         // self.readerContainer = FolioReaderContainer(withConfig: FolioReaderConfig(), folioReader: FolioReader(), epubPath: "")
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
-
-        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: .folioReaderNeedRefreshPageMode, object: nil)
     }
 
     public func setup(withReaderContainer readerContainer: FolioReaderContainer) {
         self.readerContainer = readerContainer
         guard let readerContainer = self.readerContainer else { return }
+
+        NotificationCenter.default.removeObserver(self, name: .folioReaderNeedRefreshPageMode, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: .folioReaderNeedRefreshPageMode, object: readerContainer.folioReader)
 
         self.pageNumber = -1     //guard against webView didFinish handler
         self.currentChapterName = nil

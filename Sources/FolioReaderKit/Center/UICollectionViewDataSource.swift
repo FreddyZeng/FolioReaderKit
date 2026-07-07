@@ -60,13 +60,12 @@ extension FolioReaderCenter: UICollectionViewDataSource {
               let opfResource = self.book.opfResource
         else { return cell }
         
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "http"
-        urlComponents.host = "localhost"
-        urlComponents.port = Int(readerContainer.webServer.port)
-        urlComponents.path = ["", fileName, opfResource.href.deletingLastPathComponent, resourceHref].joined(separator: "/")
-        
-        guard let url = urlComponents.url else { return cell }
+        guard let url = FolioReaderCenter.resourceURL(
+            fileName: fileName,
+            opfHref: opfResource.href,
+            resourceHref: resourceHref,
+            port: readerContainer.webServer.port
+        ) else { return cell }
         
         FolioLogger.log("webView.load url=\(url.absoluteString)")
         cell.webView?.load(URLRequest(url: url))
@@ -74,4 +73,15 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         return cell
     }
 
+}
+
+extension FolioReaderCenter {
+    static func resourceURL(fileName: String, opfHref: String, resourceHref: String, port: UInt) -> URL? {
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "http"
+        urlComponents.host = "localhost"
+        urlComponents.port = Int(port)
+        urlComponents.path = ["", fileName, opfHref.deletingLastPathComponent, resourceHref].joined(separator: "/")
+        return urlComponents.url
+    }
 }

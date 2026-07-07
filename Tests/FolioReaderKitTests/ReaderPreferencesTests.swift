@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import ReadiumGCDWebServer
 @testable import FolioReaderKit
 
 @MainActor
@@ -176,5 +177,78 @@ class ReaderPreferencesTests: XCTestCase {
         XCTAssertEqual(preferences.structuralTrackingTocLevel, .linear)
         preferences.structuralTrackingTocLevel = .level1
         XCTAssertEqual(preferences.structuralTrackingTocLevel, .level1)
+    }
+
+    func testPageModeRefreshNotificationIsScopedToReaderInstance() {
+        let otherReader = FolioReader()
+        var matchingNotifications = 0
+        var otherNotifications = 0
+
+        let matchingObserver = NotificationCenter.default.addObserver(
+            forName: .folioReaderNeedRefreshPageMode,
+            object: folioReader,
+            queue: nil
+        ) { _ in
+            matchingNotifications += 1
+        }
+        let otherObserver = NotificationCenter.default.addObserver(
+            forName: .folioReaderNeedRefreshPageMode,
+            object: otherReader,
+            queue: nil
+        ) { _ in
+            otherNotifications += 1
+        }
+        defer {
+            NotificationCenter.default.removeObserver(matchingObserver)
+            NotificationCenter.default.removeObserver(otherObserver)
+        }
+
+        preferences.postPageModeRefresh()
+
+        XCTAssertEqual(matchingNotifications, 1)
+        XCTAssertEqual(otherNotifications, 0)
+    }
+
+    func testIdentifierAwarePreferenceProviderIsolatesReaderInstances() {
+        let scopedDelegate = IdentifierScopedPreferenceDelegate()
+        let firstReader = FolioReader()
+        let secondReader = FolioReader()
+        firstReader.delegate = scopedDelegate
+        secondReader.delegate = scopedDelegate
+
+        _ = FolioReaderContainer(
+            withConfig: FolioReaderConfig(withIdentifier: "reader-one"),
+            folioReader: firstReader,
+            epubPath: "",
+            webServer: ReadiumGCDWebServer()
+        )
+        _ = FolioReaderContainer(
+            withConfig: FolioReaderConfig(withIdentifier: "reader-two"),
+            folioReader: secondReader,
+            epubPath: "",
+            webServer: ReadiumGCDWebServer()
+        )
+
+        firstReader.preferences.currentFont = "Arial"
+        secondReader.preferences.currentFont = "Georgia"
+
+        XCTAssertEqual(firstReader.preferences.currentFont, "Arial")
+        XCTAssertEqual(secondReader.preferences.currentFont, "Georgia")
+        XCTAssertNotEqual(firstReader.preferences.currentFont, secondReader.preferences.currentFont)
+    }
+}
+
+private class IdentifierScopedPreferenceDelegate: NSObject, FolioReaderDelegate {
+    private var providers = [String: MockPreferenceProvider]()
+
+    func folioReaderPreferenceProvider(_ folioReader: FolioReader) -> FolioReaderPreferenceProvider {
+        let identifier = folioReader.readerConfig?.identifier ?? "default"
+        if let provider = providers[identifier] {
+            return provider
+        }
+
+        let provider = MockPreferenceProvider()
+        providers[identifier] = provider
+        return provider
     }
 }

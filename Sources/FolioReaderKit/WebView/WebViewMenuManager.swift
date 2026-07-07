@@ -10,6 +10,8 @@ import UIKit
 import WebKit
 
 class WebViewMenuManager: NSObject {
+    private static weak var activeMenuOwner: WebViewMenuManager?
+
     private(set) var isMenuVisible: Bool = false
     private var lastMenuRect = CGRect.zero
     private var isReopeningMenu = false
@@ -352,6 +354,11 @@ class WebViewMenuManager: NSObject {
         self.isMenuVisible = menuVisible
 
         if menuVisible {
+            if WebViewMenuManager.activeMenuOwner !== self {
+                WebViewMenuManager.activeMenuOwner?.isMenuVisible = false
+            }
+            WebViewMenuManager.activeMenuOwner = self
+
             let targetRect = rect.equalTo(CGRect.zero) ? lastMenuRect : rect
             if !targetRect.equalTo(CGRect.zero) {
                 lastMenuRect = targetRect
@@ -365,16 +372,22 @@ class WebViewMenuManager: NSObject {
                 }
             }
         } else {
-            if #available(iOS 16.0, *) {
-                editMenuInteraction.dismissMenu()
-            } else {
-                UIMenuController.shared.hideMenu()
+            let ownsActiveMenu = WebViewMenuManager.activeMenuOwner === self
+            if ownsActiveMenu {
+                WebViewMenuManager.activeMenuOwner = nil
+                if #available(iOS 16.0, *) {
+                    editMenuInteraction.dismissMenu()
+                } else {
+                    UIMenuController.shared.hideMenu()
+                }
             }
             if webView.isSharingHighlight || webView.isColors {
                 webView.isColors = false
                 webView.isSharingHighlight = false
             }
-            webView.createMenu(onHighlight: false)
+            if ownsActiveMenu {
+                webView.createMenu(onHighlight: false)
+            }
         }
     }
 

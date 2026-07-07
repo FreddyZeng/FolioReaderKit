@@ -22,6 +22,8 @@ public protocol FolioReaderAudioPlayerDelegate: AnyObject {
 
 open class FolioReaderAudioPlayer: NSObject {
 
+    private static weak var activeRemoteCommandPlayer: FolioReaderAudioPlayer?
+
     open weak var delegate: FolioReaderAudioPlayerDelegate?
 
 
@@ -37,6 +39,11 @@ open class FolioReaderAudioPlayer: NSObject {
     var currentEndTime: Double?
     var playingTimer: Timer?
     var registeredCommands = false
+    private var previousTrackCommandTarget: Any?
+    private var nextTrackCommandTarget: Any?
+    private var pauseCommandTarget: Any?
+    private var playCommandTarget: Any?
+    private var togglePlayPauseCommandTarget: Any?
     var completionHandler: () -> Void = {}
     var utteranceRate: Float = 0
 
@@ -75,6 +82,8 @@ open class FolioReaderAudioPlayer: NSObject {
     }
 
     deinit {
+        unregisterRemoteCommands(disableCommands: true)
+        NotificationCenter.default.removeObserver(self)
         UIApplication.shared.endReceivingRemoteControlEvents()
     }
 
@@ -154,6 +163,11 @@ open class FolioReaderAudioPlayer: NSObject {
             }
         } else {
             stopSynthesizer(immediate: immediate, completion: nil)
+        }
+
+        if FolioReaderAudioPlayer.activeRemoteCommandPlayer === self {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            unregisterRemoteCommands(disableCommands: true)
         }
     }
 
@@ -516,39 +530,89 @@ open class FolioReaderAudioPlayer: NSObject {
      Register commands if needed, check if it's registered to avoid register twice.
      */
     func registerCommandsIfNeeded() {
+        if FolioReaderAudioPlayer.activeRemoteCommandPlayer !== self {
+            FolioReaderAudioPlayer.activeRemoteCommandPlayer?.unregisterRemoteCommands(disableCommands: false)
+            FolioReaderAudioPlayer.activeRemoteCommandPlayer = self
+            registeredCommands = false
+        }
 
         guard !registeredCommands else { return }
 
         let command = MPRemoteCommandCenter.shared()
         command.previousTrackCommand.isEnabled = true
-        command.previousTrackCommand.addTarget(handler: { (event) in
+        previousTrackCommandTarget = command.previousTrackCommand.addTarget(handler: { [weak self] _ in
+            guard let self = self else { return .commandFailed }
             self.playPrevChapter()
             return MPRemoteCommandHandlerStatus.success}
         )
 
         command.nextTrackCommand.isEnabled = true
-        command.nextTrackCommand.addTarget(handler: { (event) in
+        nextTrackCommandTarget = command.nextTrackCommand.addTarget(handler: { [weak self] _ in
+            guard let self = self else { return .commandFailed }
             self.playNextChapter()
             return MPRemoteCommandHandlerStatus.success}
         )
 
         command.pauseCommand.isEnabled = true
-        command.pauseCommand.addTarget(handler: { (event) in
+        pauseCommandTarget = command.pauseCommand.addTarget(handler: { [weak self] _ in
+            guard let self = self else { return .commandFailed }
             self.pause()
             return MPRemoteCommandHandlerStatus.success}
         )
 
         command.playCommand.isEnabled = true
-        command.playCommand.addTarget(handler: { (event) in
+        playCommandTarget = command.playCommand.addTarget(handler: { [weak self] _ in
+            guard let self = self else { return .commandFailed }
             self.play()
             return MPRemoteCommandHandlerStatus.success}
         )
         command.togglePlayPauseCommand.isEnabled = true
-        command.togglePlayPauseCommand.addTarget(handler: { (event) in
+        togglePlayPauseCommandTarget = command.togglePlayPauseCommand.addTarget(handler: { [weak self] _ in
+            guard let self = self else { return .commandFailed }
             self.togglePlay()
             return MPRemoteCommandHandlerStatus.success}
         )
         registeredCommands = true
+    }
+
+    private func unregisterRemoteCommands(disableCommands: Bool) {
+        let command = MPRemoteCommandCenter.shared()
+        let shouldDisableCommands = disableCommands && FolioReaderAudioPlayer.activeRemoteCommandPlayer === self
+
+        if let previousTrackCommandTarget = previousTrackCommandTarget {
+            command.previousTrackCommand.removeTarget(previousTrackCommandTarget)
+        }
+        if let nextTrackCommandTarget = nextTrackCommandTarget {
+            command.nextTrackCommand.removeTarget(nextTrackCommandTarget)
+        }
+        if let pauseCommandTarget = pauseCommandTarget {
+            command.pauseCommand.removeTarget(pauseCommandTarget)
+        }
+        if let playCommandTarget = playCommandTarget {
+            command.playCommand.removeTarget(playCommandTarget)
+        }
+        if let togglePlayPauseCommandTarget = togglePlayPauseCommandTarget {
+            command.togglePlayPauseCommand.removeTarget(togglePlayPauseCommandTarget)
+        }
+
+        previousTrackCommandTarget = nil
+        nextTrackCommandTarget = nil
+        pauseCommandTarget = nil
+        playCommandTarget = nil
+        togglePlayPauseCommandTarget = nil
+        registeredCommands = false
+
+        if FolioReaderAudioPlayer.activeRemoteCommandPlayer === self {
+            FolioReaderAudioPlayer.activeRemoteCommandPlayer = nil
+        }
+
+        if shouldDisableCommands {
+            command.previousTrackCommand.isEnabled = false
+            command.nextTrackCommand.isEnabled = false
+            command.pauseCommand.isEnabled = false
+            command.playCommand.isEnabled = false
+            command.togglePlayPauseCommand.isEnabled = false
+        }
     }
 }
 
