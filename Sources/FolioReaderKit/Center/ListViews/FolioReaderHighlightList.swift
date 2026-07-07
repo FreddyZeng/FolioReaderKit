@@ -199,7 +199,7 @@ class FolioReaderHighlightList: UITableViewController {
         let textColor = self.folioReader.isNight(self.readerConfig.menuTextColor, UIColor.black)
 
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
         text.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
 
         if (highlight.type == FolioReaderHighlightStyle.underline.rawValue) {
@@ -269,7 +269,7 @@ class FolioReaderHighlightList: UITableViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
 
         let s = text.boundingRect(with: CGSize(width: view.frame.width-40, height: CGFloat.greatestFiniteMagnitude),
                                   options: [NSStringDrawingOptions.usesLineFragmentOrigin, NSStringDrawingOptions.usesFontLeading],
@@ -369,8 +369,8 @@ class FolioReaderHighlightList: UITableViewController {
             alert.dismiss()
             
             self.folioReader.readerCenter?.currentPage?.relocateHighlights(highlight: highlight, completion: { newHighlight, error in
-                guard error == nil else {
-                    self.presentLocatingHighlightFailure("\(error!)", highlight: newHighlight ?? highlight, at: at)
+                if let err = error {
+                    self.presentLocatingHighlightFailure("\(err)", highlight: newHighlight ?? highlight, at: at)
                     return
                 }
                 

@@ -154,7 +154,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             webView?.scrollView.scrollsToTop = false
             webView?.backgroundColor = .clear
             webView?.configuration.userContentController.add(self.jsBridge, name: "FolioReaderPage")
-            self.contentView.addSubview(webView!)
+            if let webView = webView {
+                self.contentView.addSubview(webView)
+            }
             if readerConfig.debug.contains(.borderHighlight) {
                 webView?.layer.borderWidth = 10
                 webView?.layer.borderColor = UIColor.magenta.cgColor
@@ -174,7 +176,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneTop?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneTop!)
+            if let panDeadZoneTop = panDeadZoneTop {
+                self.contentView.addSubview(panDeadZoneTop)
+            }
         }
         
         if panDeadZoneBot == nil {
@@ -187,7 +191,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneBot?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneBot!)
+            if let panDeadZoneBot = panDeadZoneBot {
+                self.contentView.addSubview(panDeadZoneBot)
+            }
         }
         
         if panDeadZoneLeft == nil {
@@ -200,7 +206,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneLeft?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneLeft!)
+            if let panDeadZoneLeft = panDeadZoneLeft {
+                self.contentView.addSubview(panDeadZoneLeft)
+            }
         }
         
         if panDeadZoneRight == nil {
@@ -213,7 +221,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneRight?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneRight!)
+            if let panDeadZoneRight = panDeadZoneRight {
+                self.contentView.addSubview(panDeadZoneRight)
+            }
         }
         
         if colorView == nil {

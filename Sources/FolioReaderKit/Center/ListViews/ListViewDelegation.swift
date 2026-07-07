@@ -41,8 +41,8 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 
         // Move to #fragment
         if let reference = tempReference {
-            if let fragmentID = reference.fragmentID, let currentPage = currentPage , fragmentID != "" {
-                currentPage.handleAnchor(reference.fragmentID!, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
+            if let fragmentID = reference.fragmentID, let currentPage = currentPage, fragmentID != "" {
+                currentPage.handleAnchor(fragmentID, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
             }
             tempReference = nil
         }
@@ -139,8 +139,8 @@ extension FolioReaderCenter: FolioReaderResourceListDelegate {
 
         // Move to #fragment
         if let reference = tempReference {
-            if let fragmentID = reference.fragmentID, let currentPage = currentPage , fragmentID != "" {
-                currentPage.handleAnchor(reference.fragmentID!, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
+            if let fragmentID = reference.fragmentID, let currentPage = currentPage, fragmentID != "" {
+                currentPage.handleAnchor(fragmentID, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
             }
             tempReference = nil
         }
@@ -159,7 +159,7 @@ extension FolioReaderCenter: FolioReaderHistoryListDelegate {
         readerCenter.currentPage?.pushNavigateWebViewScrollPositions()
         readerCenter.currentWebViewScrollPositions.removeValue(forKey: endPosition.pageNumber - 1)
         
-        if history.endPosition!.cfi != "" {
+        if endPosition.cfi != "" {
             readerCenter.changePageWith(page: endPosition.pageNumber, andFragment: endPosition.cfi)
         } else {
             readerCenter.changePageWith(page: endPosition.pageNumber, animated: true) {

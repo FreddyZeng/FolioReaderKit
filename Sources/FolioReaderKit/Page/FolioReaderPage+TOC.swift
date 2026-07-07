@@ -64,9 +64,9 @@ extension FolioReaderPage {
 
         var tocRef = self.folioReader.readerCenter?.getChapterName(pageNumber: pageNumber)
         var bookTocIndex: Int? = nil
-        while( tocRef != nil ) {
-            bookTocIndex = self.book.bundleRootTableOfContents.firstIndex(of: tocRef!) ?? bookTocIndex
-            tocRef = tocRef?.parent
+        while let currentTocRef = tocRef {
+            bookTocIndex = self.book.bundleRootTableOfContents.firstIndex(of: currentTocRef) ?? bookTocIndex
+            tocRef = currentTocRef.parent
         }
         
         return bookTocIndex
@@ -170,9 +170,9 @@ extension FolioReaderPage {
         }
            
         var chapterTocReferences = [FRTocReference]()
-        while (firstChapterTocReference != nil) {
-            chapterTocReferences.append(firstChapterTocReference!)
-            firstChapterTocReference = firstChapterTocReference?.parent
+        while let currentRef = firstChapterTocReference {
+            chapterTocReferences.append(currentRef)
+            firstChapterTocReference = currentRef.parent
             if self.folioReader.structuralStyle != .atom, (firstChapterTocReference?.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue - 1 {
                 break
             }

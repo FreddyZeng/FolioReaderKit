@@ -100,7 +100,7 @@ extension FolioReaderPage {
             self.webView?.createMenu(onHighlight: false)
         })
         
-        let overlayColor = readerConfig.mediaOverlayColor!
+        let overlayColor = readerConfig.mediaOverlayColor ?? .yellow
         let colors = "\"\(overlayColor.hexString(false))\", \"\(overlayColor.highlightColor().hexString(false))\""
         webView.js("setMediaOverlayStyleColors(\(colors))")
     }
@@ -249,7 +249,7 @@ extension FolioReaderPage {
             print("Email")
             return true
         } else if url.absoluteString != "about:blank" && scheme.contains("http") && navigationAction.navigationType == .linkActivated {
-            let safariVC = SFSafariViewController(url: request.url!)
+            let safariVC = SFSafariViewController(url: url)
             safariVC.view.tintColor = self.readerConfig.tintColor
             self.folioReader.readerCenter?.present(safariVC, animated: true, completion: nil)
             return false

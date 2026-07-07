@@ -286,7 +286,7 @@ class FolioReaderBookmarkList: UITableViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
 
         let s = text.boundingRect(with: CGSize(width: view.frame.width-40, height: CGFloat.greatestFiniteMagnitude),
                                   options: [NSStringDrawingOptions.usesLineFragmentOrigin, NSStringDrawingOptions.usesFontLeading],
@@ -430,13 +430,17 @@ class FolioReaderBookmarkList: UITableViewController {
                 } catch {
                     await MainActor.run {
                         var message = "Unknown Error"
-                        switch error as! FolioReaderBookmarkError {
-                        case .emptyError(_):
-                            message = "Cannot generate location marker"
-                        case .duplicateError(let msg):
-                            message = "There exists a bookmark with the same location with title \(msg)"
-                        case .runtimeError(let msg):
-                            message = msg
+                        if let bookmarkError = error as? FolioReaderBookmarkError {
+                            switch bookmarkError {
+                            case .emptyError(_):
+                                message = "Cannot generate location marker"
+                            case .duplicateError(let msg):
+                                message = "There exists a bookmark with the same location with title \(msg)"
+                            case .runtimeError(let msg):
+                                message = msg
+                            }
+                        } else {
+                            message = error.localizedDescription
                         }
                         self.presentAddingBookmarkFailure(message)
                         completion?()

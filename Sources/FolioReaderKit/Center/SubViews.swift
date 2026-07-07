@@ -160,7 +160,7 @@ extension FolioReaderCenter {
         let navBackground = folioReader.preferences.navBackgroundColor(withConfiguration: readerConfig)
         let tintColor = readerConfig.tintColor
         let navText = folioReader.preferences.navTextColor()
-        let font = UIFont(name: "Avenir-Light", size: 17)!
+        let font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }
 

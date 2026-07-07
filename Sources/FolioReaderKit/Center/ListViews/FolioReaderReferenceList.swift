@@ -235,11 +235,11 @@ class FolioReaderReferenceList: UITableViewController {
         }
         var title = [tocItem.title]
         var parent = tocItem.parent
-        while (parent != nil) {
-            if !parent!.title.isEmpty {
-                title.append(parent!.title)
+        while let currentParent = parent {
+            if !currentParent.title.isEmpty {
+                title.append(currentParent.title)
             }
-            parent = parent?.parent
+            parent = currentParent.parent
         }
         return "  " + title.reversed().joined(separator: ", ")
     }
@@ -313,7 +313,7 @@ class FolioReaderReferenceList: UITableViewController {
         let titleAttributedString = NSMutableAttributedString(string: bookmark.title)
         
         let titleRange = NSRange(location: 0, length: nsTitle.length)
-        titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: titleRange)
+        titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: titleRange)
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
@@ -326,7 +326,7 @@ class FolioReaderReferenceList: UITableViewController {
             let firstRange = nsTitle.range(of: refText)
             if firstRange.length > 0 {
                 titleAttributedString.addAttribute(.kern, value: NSNumber(1.4), range: firstRange)
-                titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Black", size: 17)!, range: firstRange)
+                titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Black", size: 17) ?? .boldSystemFont(ofSize: 17), range: firstRange)
             }
         }
         
@@ -392,7 +392,7 @@ class FolioReaderReferenceList: UITableViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
 
         let s = text.boundingRect(with: CGSize(width: view.frame.width-40, height: CGFloat.greatestFiniteMagnitude),
                                   options: [NSStringDrawingOptions.usesLineFragmentOrigin, NSStringDrawingOptions.usesFontLeading],
@@ -536,13 +536,17 @@ class FolioReaderReferenceList: UITableViewController {
                 } catch {
                     await MainActor.run {
                         var message = "Unknown Error"
-                        switch error as! FolioReaderBookmarkError {
-                        case .emptyError(_):
-                            message = "Cannot generate location marker"
-                        case .duplicateError(let msg):
-                            message = "There exists a bookmark with the same location with title \(msg)"
-                        case .runtimeError(let msg):
-                            message = msg
+                        if let bookmarkError = error as? FolioReaderBookmarkError {
+                            switch bookmarkError {
+                            case .emptyError(_):
+                                message = "Cannot generate location marker"
+                            case .duplicateError(let msg):
+                                message = "There exists a bookmark with the same location with title \(msg)"
+                            case .runtimeError(let msg):
+                                message = msg
+                            }
+                        } else {
+                            message = error.localizedDescription
                         }
                         self.presentAddingBookmarkFailure(message)
                         completion?()

@@ -295,7 +295,7 @@ open class FolioReaderCenter: UIViewController {
         self.setCollectionViewProgressiveDirection()
 
         let bookId = self.book.name?.deletingPathExtension
-        let position = bookId != nil ? self.folioReader.delegate?.folioReaderReadPositionProvider?(self.folioReader).folioReaderReadPosition(self.folioReader, bookId: bookId!) : nil
+        let position = bookId.flatMap { self.folioReader.delegate?.folioReaderReadPositionProvider?(self.folioReader).folioReaderReadPosition(self.folioReader, bookId: $0) }
 
         if self.readerConfig.loadSavedPositionForCurrentBook,
            let position = position,

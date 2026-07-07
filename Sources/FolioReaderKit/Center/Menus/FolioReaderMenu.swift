@@ -14,7 +14,7 @@ class FolioReaderMenu: UIViewController, UIGestureRecognizerDelegate {
     var readerConfig: FolioReaderConfig
     var folioReader: FolioReader
     
-    let segmentFont = UIFont(name: "Avenir-Light", size: 17)!
+    let segmentFont = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
     let separaterTag = -9999
     
     init(folioReader: FolioReader, readerConfig: FolioReaderConfig) {

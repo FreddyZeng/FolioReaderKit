@@ -100,7 +100,7 @@ class FolioReaderNavigationPageVC: UIPageViewController {
         let navBackground = self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode]
         let tintColor = self.readerConfig.tintColor
         let navText = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
-        let font = UIFont(name: "Avenir-Light", size: 17)!
+        let font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
         
         segmentedControl?.selectedSegmentTintColor = tintColor

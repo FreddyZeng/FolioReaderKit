@@ -138,12 +138,12 @@ class WebViewHighlightManager {
                     boundingRect = try? JSONDecoder().decode(NodeBoundingClientRect.self, from: objectData)
                 }
                 
-                guard boundingRect != nil, boundingRect!.err.isEmpty else {
+                guard let rect = boundingRect, rect.err.isEmpty else {
                     errMsg = boundingRect?.err ?? errMsg
                     return
                 }
                 
-                let contentOffset = CGPoint(x: boundingRect!.left, y: boundingRect!.top)
+                let contentOffset = CGPoint(x: rect.left, y: rect.top)
             
                 let highlightChapterNames = webView.folioReader.readerCenter?.currentPage?.getChapterTocReferences(for: contentOffset, by: webView.frame.size).compactMap { $0.title } ?? ["TODO"]
                 highlight.tocFamilyTitles = highlightChapterNames.reversed()

@@ -18,10 +18,12 @@ class WebViewMenuManager: NSObject {
     private var _editMenuInteraction: Any?
     @available(iOS 16.0, *)
     private var editMenuInteraction: UIEditMenuInteraction {
-        if _editMenuInteraction == nil {
-            _editMenuInteraction = UIEditMenuInteraction(delegate: self)
+        if let existing = _editMenuInteraction as? UIEditMenuInteraction {
+            return existing
         }
-        return _editMenuInteraction as! UIEditMenuInteraction
+        let interaction = UIEditMenuInteraction(delegate: self)
+        _editMenuInteraction = interaction
+        return interaction
     }
 
     init(webView: FolioReaderWebView) {

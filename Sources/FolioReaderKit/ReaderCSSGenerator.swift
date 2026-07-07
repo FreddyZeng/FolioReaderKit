@@ -128,9 +128,10 @@ class ReaderCSSGenerator {
             
             var cssFontWeight = "normal"
             
-            if let ctFontTraits = CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute), CFGetTypeID(ctFontTraits) == CFDictionaryGetTypeID() {
+            if let ctFontTraits = CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute) as? NSDictionary {
+                let traitsDict = ctFontTraits as CFDictionary
                 if let ctFontSymbolicTrait = CFDictionaryGetValue(
-                    (ctFontTraits as! CFDictionary),
+                    traitsDict,
                     unsafeBitCast(kCTFontSymbolicTrait, to: UnsafeRawPointer.self))  {
                     
                     var symTraitVal = UInt32()
@@ -143,7 +144,7 @@ class ReaderCSSGenerator {
                 }
                 
                 if let weightRef = CFDictionaryGetValue(
-                    (ctFontTraits as! CFDictionary),
+                    traitsDict,
                     unsafeBitCast(kCTFontWeightTrait, to: UnsafeRawPointer.self)) {
                     
                     var weightValue = Float()

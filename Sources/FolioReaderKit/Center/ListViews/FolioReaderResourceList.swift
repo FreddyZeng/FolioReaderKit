@@ -119,7 +119,9 @@ class FolioReaderResourceList: UITableViewController {
             var tocTitles = tocList.map { $0.title }.prefix(3)
             if tocList.count > 3 {
                 tocTitles.append("...")
-                tocTitles.append(tocList.last!.title)
+                if let lastTitle = tocList.last?.title {
+                    tocTitles.append(lastTitle)
+                }
             }
             cell.indexToc.text = tocTitles.joined(separator: ", ")
         } else {

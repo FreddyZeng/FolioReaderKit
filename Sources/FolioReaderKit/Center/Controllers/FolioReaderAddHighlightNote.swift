@@ -129,7 +129,7 @@ class FolioReaderAddHighlightNote: UIViewController {
         let navBackground = self.readerConfig.themeModeNavBackground[folioReader.themeMode]
         let tintColor = readerConfig.tintColor
         let navText = folioReader.isNight(UIColor.white, UIColor.black)
-        let font = UIFont(name: "Avenir-Light", size: 17)!
+        let font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         setTranslucentNavigation(false, color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
         
         let titleAttrs = [NSAttributedString.Key.foregroundColor: readerConfig.tintColor]
@@ -146,8 +146,8 @@ class FolioReaderAddHighlightNote: UIViewController {
     @objc private func keyboardWillShow(notification: NSNotification) {
         //give room at the bottom of the scroll view, so it doesn't cover up anything the user needs to tap
         guard let userInfo = notification.userInfo else { return }
-        var keyboardFrame:CGRect = (userInfo[UIResponder.keyboardFrameBeginUserInfoKey] as! NSValue).cgRectValue
-        keyboardFrame = self.view.convert(keyboardFrame, from: nil)
+        guard let keyboardFrameValue = userInfo[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue else { return }
+        var keyboardFrame = self.view.convert(keyboardFrameValue.cgRectValue, from: nil)
         
         var contentInset = self.scrollView.contentInset
         contentInset.bottom = keyboardFrame.size.height
