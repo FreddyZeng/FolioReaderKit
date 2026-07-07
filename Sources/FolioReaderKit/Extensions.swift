@@ -55,10 +55,6 @@ extension ScrollDirection {
 
 // MARK: Helpers
 
-@available(*, deprecated, message: "Use DispatchQueue.main.asyncAfter(delay:execute:) instead")
-public func delay(_ delay: Double, closure: @escaping () -> Void) {
-    DispatchQueue.main.asyncAfter(delay: delay, execute: closure)
-}
 
 extension DispatchQueue {
     public func asyncAfter(delay: Double, execute work: @escaping () -> Void) {
