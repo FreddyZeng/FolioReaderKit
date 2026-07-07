@@ -7,6 +7,7 @@
 //
 
 import WebKit
+import FolioEPUBCore
 import UIKit
 
 public typealias JSCallback = (String?) ->()

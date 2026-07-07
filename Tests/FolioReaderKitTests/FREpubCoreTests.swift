@@ -1,4 +1,5 @@
 import XCTest
+@testable import FolioEPUBCore
 import AEXML
 import ReadiumZIPFoundation
 @testable import FolioReaderKit

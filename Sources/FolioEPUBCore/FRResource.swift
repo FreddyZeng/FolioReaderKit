@@ -9,17 +9,21 @@
 import Foundation
 
 open class FRResource: NSObject {
-    var id: String = ""
-    var properties: String?
-    var mediaType: MediaType?
-    var mediaOverlay: String?
+    public var id: String = ""
+    public var properties: String?
+    public var mediaType: MediaType?
+    public var mediaOverlay: String?
     
     public var href: String = ""
     public var fullHref: String = ""
     public var size: UInt64?
     public var spineIndices = [Int]()
 
-    func basePath() -> String? {
+    public override init() {
+        super.init()
+    }
+
+    public func basePath() -> String? {
         if href.isEmpty { return nil }
         var paths = fullHref.components(separatedBy: "/")
         paths.removeLast()
@@ -29,6 +33,6 @@ open class FRResource: NSObject {
 
 // MARK: Equatable
 
-func ==(lhs: FRResource, rhs: FRResource) -> Bool {
+public func ==(lhs: FRResource, rhs: FRResource) -> Bool {
     return lhs.id == rhs.id && lhs.href == rhs.href
 }

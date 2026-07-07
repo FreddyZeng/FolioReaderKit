@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FolioEPUBCore
 
 extension FolioReaderCenter: FolioReaderAudioPlayerDelegate {
     public func audioPlayer(_ player: FolioReaderAudioPlayer, executeJavaScript script: String, completion: ((Any?) -> Void)?) {

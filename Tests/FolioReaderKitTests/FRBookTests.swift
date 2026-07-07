@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import FolioEPUBCore
 @testable import FolioReaderKit
 
 class FRBookTests: XCTestCase {

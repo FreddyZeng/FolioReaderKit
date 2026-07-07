@@ -8,7 +8,7 @@ let package = Package(
         .macOS(.v11)
     ],
 	products: [
-		.library(name: "FolioReaderKit", targets: ["FolioReaderKit"])
+		.library(name: "FolioReaderKit", targets: ["FolioReaderKit", "FolioEPUBCore"])
 	],
 	dependencies: [
         .package(url: "https://github.com/cxa/MenuItemKit.git", from: "3.0.0"),
@@ -20,8 +20,17 @@ let package = Package(
     ],
 	targets: [
         .target(
+            name: "FolioEPUBCore",
+            dependencies: [
+                "AEXML",
+                .product(name: "ReadiumZIPFoundation", package: "ZIPFoundation"),
+            ],
+            path: "Sources/FolioEPUBCore"
+        ),
+        .target(
             name: "FolioReaderKit",
             dependencies: [
+                "FolioEPUBCore",
                 "AEXML",
                 "FontBlaster",
                 "MenuItemKit",
@@ -29,7 +38,7 @@ let package = Package(
                 .product(name: "ReadiumZIPFoundation", package: "ZIPFoundation"),
                 .product(name: "ReadiumGCDWebServer", package: "GCDWebServer"),
             ],
-            exclude: [],
+            path: "Sources/FolioReaderKit",
             resources: [
                 .process("Resources/Bridge.js"),
                 .process("Resources/Style.css"),
@@ -39,7 +48,7 @@ let package = Package(
         ),
 		.testTarget(
             name: "FolioReaderKitTests",
-            dependencies: ["FolioReaderKit"],
+            dependencies: ["FolioReaderKit", "FolioEPUBCore"],
             exclude: ["Info.plist"]
         )
 	]

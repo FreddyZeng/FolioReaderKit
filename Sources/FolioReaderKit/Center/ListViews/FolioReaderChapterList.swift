@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 
 /// Table Of Contents delegate
 @objc protocol FolioReaderChapterListDelegate: AnyObject {

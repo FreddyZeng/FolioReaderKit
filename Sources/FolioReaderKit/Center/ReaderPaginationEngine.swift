@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 
 open class ReaderPaginationEngine {
     private weak var center: FolioReaderCenter?

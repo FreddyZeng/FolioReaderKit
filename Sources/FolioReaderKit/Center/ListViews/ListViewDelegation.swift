@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import FolioEPUBCore
 
 extension FolioReaderCenter: FolioReaderChapterListDelegate {
     

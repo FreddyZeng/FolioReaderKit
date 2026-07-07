@@ -8,17 +8,19 @@
 import Foundation
 
 /// A thread-safe data accumulator for concurrent closures.
-final class DataAccumulator: @unchecked Sendable {
+public final class DataAccumulator: @unchecked Sendable {
     private let data = NSMutableData()
     private let lock = NSLock()
 
-    func append(_ other: Data) {
+    public init() {}
+
+    public func append(_ other: Data) {
         lock.lock()
         defer { lock.unlock() }
         data.append(other)
     }
 
-    var result: Data {
+    public var result: Data {
         lock.lock()
         defer { lock.unlock() }
         return data as Data

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import WebKit
 
 

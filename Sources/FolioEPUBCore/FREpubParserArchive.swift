@@ -16,7 +16,7 @@ open class FREpubParserArchive: NSObject {
     let book: FRBook
     let archive: Archive
     
-    init(book: FRBook, archive: Archive) {
+    public init(book: FRBook, archive: Archive) {
         self.book = book
         self.archive = archive
     }

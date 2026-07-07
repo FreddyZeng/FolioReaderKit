@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FolioEPUBCore
 import SwiftSoup
 import UIKit
 
