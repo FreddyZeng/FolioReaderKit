@@ -14,7 +14,7 @@ extension FolioReaderCenter {
      Present chapter list
      */
     @objc func presentChapterList(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
 
@@ -37,13 +37,13 @@ extension FolioReaderCenter {
             pageController.segmentedControlItems.insert(readerConfig.localizedTopicsTitle, at: 0)
         }
         
-        let nav = UINavigationController(rootViewController: pageController)
+        let nav = FolioReaderNavigationController(rootViewController: pageController)
         
         present(nav, animated: true, completion: nil)
     }
 
     @objc func presentBookmarkList(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
 
@@ -63,7 +63,7 @@ extension FolioReaderCenter {
             pageController.tabBarItem = UITabBarItem(title: refText, image: nil, tag: 101)
         }
         
-        let nav = UINavigationController(rootViewController: pageController)
+        let nav = FolioReaderNavigationController(rootViewController: pageController)
 
         present(nav, animated: true, completion: nil)
     }
@@ -72,7 +72,7 @@ extension FolioReaderCenter {
      Present fonts and settings menu
      */
     @objc func presentFontsMenu() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
         hideBars()
@@ -104,15 +104,16 @@ extension FolioReaderCenter {
         menuBarController.modalPresentationStyle = .custom
         menuBarController.selectedIndex = lastMenuSelectedIndex
         
-        animator = FolioModalTransitionAnimator(modalViewController: menuBarController)
-        animator.isDragable = false
-        animator.bounces = false
-        animator.behindViewAlpha = 1.0
-        animator.behindViewScale = 1.0
-        animator.transitionDuration = 0.6
-        animator.direction = .bottom
+        let newAnimator = FolioModalTransitionAnimator(modalViewController: menuBarController)
+        newAnimator.isDragable = false
+        newAnimator.bounces = false
+        newAnimator.behindViewAlpha = 1.0
+        newAnimator.behindViewScale = 1.0
+        newAnimator.transitionDuration = 0.6
+        newAnimator.direction = .bottom
 
-        menuBarController.transitioningDelegate = animator
+        animator = newAnimator
+        menuBarController.transitioningDelegate = newAnimator
         
         self.present(menuBarController, animated: true, completion: nil)
     }
@@ -121,7 +122,7 @@ extension FolioReaderCenter {
      Present audio player menu
      */
     @objc func presentPlayerMenu(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
         hideBars()
@@ -129,15 +130,16 @@ extension FolioReaderCenter {
         let menu = FolioReaderPlayerMenu(folioReader: folioReader, readerConfig: readerConfig)
         menu.modalPresentationStyle = .custom
 
-        animator = FolioModalTransitionAnimator(modalViewController: menu)
-        animator.isDragable = true
-        animator.bounces = false
-        //animator.behindViewAlpha = 0.4
-        animator.behindViewScale = 1
-        animator.transitionDuration = 0.6
-        animator.direction = .bottom
+        let newAnimator = FolioModalTransitionAnimator(modalViewController: menu)
+        newAnimator.isDragable = true
+        newAnimator.bounces = false
+        //newAnimator.behindViewAlpha = 0.4
+        newAnimator.behindViewScale = 1
+        newAnimator.transitionDuration = 0.6
+        newAnimator.direction = .bottom
 
-        menu.transitioningDelegate = animator
+        animator = newAnimator
+        menu.transitioningDelegate = newAnimator
         present(menu, animated: true, completion: nil)
     }
 
@@ -145,10 +147,10 @@ extension FolioReaderCenter {
      Present Quote Share
      */
     func presentQuoteShare(_ string: String) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let quoteShare = FolioReaderQuoteShare(initWithText: string, readerConfig: readerConfig, folioReader: folioReader, book: book)
-        let nav = UINavigationController(rootViewController: quoteShare)
+        let nav = FolioReaderNavigationController(rootViewController: quoteShare)
 
         if UIDevice.current.userInterfaceIdiom == .pad {
             nav.modalPresentationStyle = .formSheet
@@ -160,11 +162,11 @@ extension FolioReaderCenter {
      Present add highlight note
      */
     func presentAddHighlightNote(_ highlight: FolioReaderHighlight, edit: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let addHighlightView = FolioReaderAddHighlightNote(withHighlight: highlight, folioReader: folioReader, readerConfig: readerConfig)
         addHighlightView.isEditHighlight = edit
-        let nav = UINavigationController(rootViewController: addHighlightView)
+        let nav = FolioReaderNavigationController(rootViewController: addHighlightView)
         nav.modalPresentationStyle = .formSheet
         
         present(nav, animated: true, completion: nil)
@@ -177,7 +179,7 @@ extension FolioReaderCenter {
         let vc = UIViewController()
         vc.view = textView
         
-        let nav = UINavigationController(rootViewController: vc)
+        let nav = FolioReaderNavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .formSheet
         
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)

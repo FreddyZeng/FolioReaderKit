@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import FontBlaster
 import ReadiumZIPFoundation
 import ReadiumGCDWebServer
@@ -19,8 +20,8 @@ open class FolioReaderContainer: UIViewController {
     public var epubPath: String
     public var book: FRBook
     
-    public var centerNavigationController: UINavigationController!
-    public var centerViewController: FolioReaderCenter!
+    public var centerNavigationController: FolioReaderNavigationController?
+    public var centerViewController: FolioReaderCenter?
     public var audioPlayer: FolioReaderAudioPlayer?
     
     public var readerConfig: FolioReaderConfig
@@ -28,10 +29,8 @@ open class FolioReaderContainer: UIViewController {
 
     fileprivate var errorOnLoad = false
     
-    let dateFormatter = DateFormatter()
-    
     var webServer: ReadiumGCDWebServer
-    internal let kGCDWebServerPreferredPort = 46436
+    private var resourceServer: EpubResourceServer?
 
     // MARK: - Init
 
@@ -51,6 +50,8 @@ open class FolioReaderContainer: UIViewController {
         self.webServer = webServer
 
         super.init(nibName: nil, bundle: Bundle.frameworkBundle())
+
+        self.resourceServer = EpubResourceServer(webServer: webServer, container: self)
 
         // Configure the folio reader.
         self.folioReader.readerContainer = self
@@ -74,6 +75,8 @@ open class FolioReaderContainer: UIViewController {
 
         super.init(coder: aDecoder)
 
+        self.resourceServer = EpubResourceServer(webServer: self.webServer, container: self)
+
         // Configure the folio reader.
         self.folioReader.readerContainer = self
     }
@@ -96,6 +99,7 @@ open class FolioReaderContainer: UIViewController {
         self.folioReader = FolioReader()
         self.folioReader.readerContainer = self
         self.epubPath = path
+        self.resourceServer = EpubResourceServer(webServer: self.webServer, container: self)
     }
 
     // MARK: - View life cicle
@@ -120,7 +124,7 @@ open class FolioReaderContainer: UIViewController {
         self.readerConfig.shouldHideNavigationOnTap = ((hideBars == true) ? true : self.readerConfig.shouldHideNavigationOnTap)
 
         let rootViewController = FolioReaderCenter(withContainer: self)
-        let centerNavigationController = UINavigationController(rootViewController: rootViewController)
+        let centerNavigationController = FolioReaderNavigationController(rootViewController: rootViewController)
         
         if readerConfig.debug.contains(.borderHighlight) {
             rootViewController.view.layer.borderWidth = 6
@@ -128,7 +132,7 @@ open class FolioReaderContainer: UIViewController {
         }
         self.centerViewController = rootViewController
 
-        centerNavigationController.setNavigationBarHidden(self.readerConfig.shouldHideNavigationOnTap, animated: false)
+        centerNavigationController.setNavigationBarHidden(false, animated: false)
         self.view.addSubview(centerNavigationController.view)
         self.addChild(centerNavigationController)
         if readerConfig.debug.contains(.borderHighlight) {
@@ -143,7 +147,7 @@ open class FolioReaderContainer: UIViewController {
 
         if (self.readerConfig.hideBars == true) {
             self.readerConfig.shouldHideNavigationOnTap = false
-            self.navigationController?.navigationBar.isHidden = true
+            self.centerNavigationController?.setNavigationBarHidden(true, animated: false)
             self.centerViewController?.pageIndicatorHeight = 0
         }
 
@@ -174,9 +178,9 @@ open class FolioReaderContainer: UIViewController {
                     throw FolioReaderError.errorInContainer
                 }
                 
-                folioLogger("BEFORE readEpub")
+                FolioLogger.log("BEFORE readEpub")
                 let parsedBook = try await FREpubParserArchive(book: self.book, archive: archive).readEpub(epubPath: self.epubPath)
-                folioLogger("AFTER readEpub")
+                FolioLogger.log("AFTER readEpub")
 
                 self.book = parsedBook
                 
@@ -208,9 +212,9 @@ open class FolioReaderContainer: UIViewController {
                     
                     self.folioReader.delegate?.folioReader?(self.folioReader, didFinishedLoading: self.book)
                     
-                    self.initializeWebServer()
+                    self.resourceServer?.start()
 
-                    self.centerViewController.reloadData()
+                    self.centerViewController?.reloadData()
                     self.folioReader.isReaderReady = true
                 }
             } catch {
@@ -230,7 +234,7 @@ open class FolioReaderContainer: UIViewController {
     
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        stopWebServer()
+        resourceServer?.stop()
     }
 
     override open func viewDidAppear(_ animated: Bool) {
@@ -245,37 +249,41 @@ open class FolioReaderContainer: UIViewController {
     }
 
     func tempFixForHighlights() {
-        guard let highlightProvider = self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader),
-           let bookId = (self.book.name as NSString?)?.deletingPathExtension
-        else {
+        guard let bookId = (self.book.name as NSString?)?.deletingPathExtension else {
             return
         }
         
-        highlightProvider.folioReaderHighlight(self.folioReader, allByBookId: bookId, andPage: nil)
-            .filter {
-                $0.spineName == nil || $0.spineName.isEmpty || $0.spineName == "TODO" || $0.cfiStart?.hasPrefix("/2") == false || $0.cfiEnd?.hasPrefix("/2") == false
-            }.forEach { highlight in
-                if highlight.spineName == "TODO", highlight.page > 1 {
-                    highlight.page -= 1
+        let provider = self.folioReader.highlightProvider
+        let reader = self.folioReader
+        let book = self.book
+        Task {
+            let highlights = await provider?.highlights(bookId: bookId, page: nil, for: reader) ?? []
+            for highlight in highlights {
+                if highlight.spineName.isEmpty || highlight.spineName == "TODO" || highlight.cfiStart?.hasPrefix("/2") == false || highlight.cfiEnd?.hasPrefix("/2") == false {
+                    if highlight.spineName == "TODO", highlight.page > 1 {
+                        highlight.page -= 1
+                    }
+                    if let resHref = book.spine.spineReferences[safe: highlight.page - 1]?.resource.href,
+                       let opfResource = book.opfResource,
+                       let opfUrl = URL(string: opfResource.href),
+                       let resUrl = URL(string: resHref, relativeTo: opfUrl) {
+                        highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
+                        while highlight.spineName.hasPrefix("/") {
+                            highlight.spineName.removeFirst()
+                        }
+                        if let cfiStart = highlight.cfiStart, cfiStart.hasPrefix("/2") == false {
+                            highlight.cfiStart = "/2\(cfiStart)"
+                        }
+                        if let cfiEnd = highlight.cfiEnd, cfiEnd.hasPrefix("/2") == false {
+                            highlight.cfiEnd = "/2\(cfiEnd)"
+                        }
+                        highlight.date += 0.001
+                    }
+                    print("\(#function) fixHighlight \(highlight.page) \(highlight.spineName) \(highlight.cfiStart ?? "Nil") \(highlight.cfiEnd ?? "Nil") \(highlight.style) \(highlight.content.prefix(10))")
+                    _ = try? await provider?.addHighlight(highlight, for: reader)
                 }
-                if let resHref = self.book.spine.spineReferences[safe: highlight.page - 1]?.resource.href,
-                   let opfUrl = URL(string: self.book.opfResource.href),
-                   let resUrl = URL(string: resHref, relativeTo: opfUrl) {
-                    highlight.spineName = resUrl.absoluteString.replacingOccurrences(of: "//", with: "")
-                    while highlight.spineName.hasPrefix("/") {
-                        highlight.spineName.removeFirst()
-                    }
-                    if let cfiStart = highlight.cfiStart, cfiStart.hasPrefix("/2") == false {
-                        highlight.cfiStart = "/2\(cfiStart)"
-                    }
-                    if let cfiEnd = highlight.cfiEnd, cfiEnd.hasPrefix("/2") == false {
-                        highlight.cfiEnd = "/2\(cfiEnd)"
-                    }
-                    highlight.date += 0.001
-                }
-                print("\(#function) fixHighlight \(highlight.page) \(highlight.spineName ?? "Nil") \(highlight.cfiStart ?? "Nil") \(highlight.cfiEnd ?? "Nil") \(highlight.style ?? "Nil") \(highlight.content.prefix(10))")
-                highlightProvider.folioReaderHighlight(self.folioReader, added: highlight, completion: nil)
             }
+        }
     }
     
     /**
@@ -289,7 +297,7 @@ open class FolioReaderContainer: UIViewController {
     // MARK: - Status Bar
 
     override open var prefersStatusBarHidden: Bool {
-        return (self.readerConfig.shouldHideNavigationOnTap == false ? false : self.shouldHideStatusBar)
+        return false
     }
 
     override open var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
@@ -300,139 +308,14 @@ open class FolioReaderContainer: UIViewController {
         return self.folioReader.isNight(.lightContent, .default)
     }
 
-    func initializeWebServer() -> Void {
-        dateFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-        dateFormatter.locale = Locale(identifier: "en_US")
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
-        webServer.addDefaultHandler(forMethod: "GET", request: ReadiumGCDWebServerRequest.self, asyncProcessBlock: { [weak self] request, completion in
-            guard let self = self else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            guard let path = request.path.removingPercentEncoding else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            print("\(#function) GCDREQUEST path=\(path)")
-            
-            var pathSegs = path.split(separator: "/")
-            guard pathSegs.count > 1 else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            pathSegs.removeFirst()
-            let resourcePath = pathSegs.joined(separator: "/")
-            
-            Task {
-                do {
-                    guard let archiveURL = self.book.epubURL else {
-                        completion(ReadiumGCDWebServerErrorResponse())
-                        return
-                    }
-                    
-                    // The Archive class maintains the state of its underlying file descriptor for performance reasons and is therefore not re-entrant. #29
-                    // However, we use the cached entry to avoid O(N) lookup.
-                    guard let entry = self.book.archiveEntriesCache[resourcePath] else {
-                        completion(ReadiumGCDWebServerErrorResponse())
-                        return
-                    }
-                    
-                    let archive = try await Archive(url: archiveURL, accessMode: .read)
-                    
-                    var contentType = ReadiumGCDWebServerGetMimeTypeForExtension((resourcePath as NSString).pathExtension, nil)
-                    if contentType.contains("text/") {
-                        contentType += ";charset=utf-8"
-                    }
-                    
-                    let stream = AsyncStream<Data> { continuation in
-                        Task {
-                            do {
-                                _ = try await archive.extract(entry) { data in
-                                    continuation.yield(data)
-                                }
-                                continuation.finish()
-                            } catch {
-                                print("\(#function) zipfile-deflate-error \(resourcePath) error=\(error.localizedDescription)")
-                                continuation.finish()
-                            }
-                        }
-                    }
-                    
-                    let streamIterator = ReadiumStreamIterator(stream.makeAsyncIterator())
-                    
-                    let streamResponse = ReadiumGCDWebServerStreamedResponse(
-                        contentType: contentType,
-                        asyncStreamBlock: { streamCompletion in
-                            Task {
-                                let data = await streamIterator.next()
-                                streamCompletion(data ?? Data(), nil)
-                            }
-                        }
-                    )
-                    
-                    if let modificationDate = entry.fileAttributes[.modificationDate] as? Date {
-                        streamResponse.setValue(self.dateFormatter.string(from: modificationDate), forAdditionalHeader: "Last-Modified")
-                        streamResponse.cacheControlMaxAge = 60
-                    }
-                    
-                    completion(streamResponse)
-                } catch {
-                    print("\(#function) archive-error \(resourcePath) error=\(error.localizedDescription)")
-                    completion(ReadiumGCDWebServerErrorResponse())
-                }
-            }
-        })
-        
-        webServer.addHandler(forMethod: "GET", pathRegex: "^/_fonts/.+?(otf|ttf)$", request: ReadiumGCDWebServerRequest.self, asyncProcessBlock: { request, completion in
-            let fileName = (request.path as NSString).lastPathComponent
-            print("\(#function) GCDREQUEST FONT fileName=\(fileName) path=\(request.path)")
-
-            guard let documentDirectory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            let fontFileURL = documentDirectory.appendingPathComponent("Fonts",  isDirectory: true).appendingPathComponent(fileName, isDirectory: false)
-            guard FileManager.default.fileExists(atPath: fontFileURL.path) else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            guard let fileResponse = ReadiumGCDWebServerFileResponse(file: fontFileURL.path) else {
-                completion(ReadiumGCDWebServerErrorResponse())
-                return
-            }
-            
-            completion(fileResponse)
-        })
-        
-        try? webServer.start(options: [
-            ReadiumGCDWebServerOption_Port: kGCDWebServerPreferredPort,
-            ReadiumGCDWebServerOption_BindToLocalhost: true
-        ])
-        
-        // fallback
-        if webServer.isRunning == false {
-            try? webServer.start(options: [
-                ReadiumGCDWebServerOption_BindToLocalhost: true,
-            ])
-            
-            if webServer.isRunning == false {
-                try? webServer.start(options: [
-                    ReadiumGCDWebServerOption_BindToLocalhost: true
-                ])
-            }
-        }
+    override open var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return self.centerNavigationController?.supportedInterfaceOrientations ?? .all
     }
     
-    open func stopWebServer() {
-        if webServer.isRunning {
-            webServer.stop()
-        }
+    override open var shouldAutorotate: Bool {
+        return self.centerNavigationController?.shouldAutorotate ?? false
     }
+
 }
 
 extension FolioReaderContainer {
@@ -454,18 +337,5 @@ extension FolioReaderContainer {
         alertController.addAction(ignoreAction)
         
         self.present(alertController, animated: true, completion: nil)
-    }
-}
-
-private actor ReadiumStreamIterator {
-    private var iterator: AsyncStream<Data>.AsyncIterator
-    init(_ iterator: AsyncStream<Data>.AsyncIterator) {
-        self.iterator = iterator
-    }
-    func next() async -> Data? {
-        var it = iterator
-        let data = await it.next()
-        iterator = it
-        return data
     }
 }

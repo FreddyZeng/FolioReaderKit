@@ -1,5 +1,5 @@
 {
-  "originHash" : "27c92a313bac8ce1934cd96b615076a7a8c29b529efcf55672eb9c083b9e49d3",
+  "originHash" : "ab0ca8b89d8873267b3204d5a1a1516966d30528c687c43a703a0b4b15205e39",
   "pins" : [
     {
       "identity" : "aexml",
@@ -22,10 +22,10 @@
     {
       "identity" : "gcdwebserver",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SlaunchaMan/GCDWebServer.git",
+      "location" : "https://github.com/readium/GCDWebServer.git",
       "state" : {
-        "branch" : "swift-package-manager",
-        "revision" : "935e2736044e71e5341663c3cc9a335ba6867a2b"
+        "revision" : "584db89a4c3c3be27206cce6afde037b2b6e38d8",
+        "version" : "4.0.1"
       }
     },
     {
@@ -49,10 +49,10 @@
     {
       "identity" : "zipfoundation",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/weichsel/ZIPFoundation.git",
+      "location" : "https://github.com/readium/ZIPFoundation.git",
       "state" : {
-        "revision" : "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
-        "version" : "0.9.20"
+        "revision" : "adb49c8bfe060cc187370b12fa081012a6440b86",
+        "version" : "3.0.1"
       }
     }
   ],

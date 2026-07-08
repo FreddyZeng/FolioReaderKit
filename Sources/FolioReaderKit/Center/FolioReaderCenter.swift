@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import WebKit
 
 
@@ -29,19 +30,21 @@ open class FolioReaderCenter: UIViewController {
     open var collectionView: UICollectionView!
     
     let collectionViewLayout = FolioReaderCenterLayout()
-    var loadingView: UIActivityIndicatorView!
+    var loadingView: UIActivityIndicatorView?
     var totalPages: Int = 0
     var tempFragment: String?
     var tempOffset: CGPoint?
-    var animator: FolioModalTransitionAnimator!
+    var animator: FolioModalTransitionAnimator?
     var pageIndicatorView: FolioReaderPageIndicator?
     var pageIndicatorHeight: CGFloat = 20
     var recentlyScrolled = false
     var recentlyScrolledDelay = 2.0 // 2 second delay until we clear recentlyScrolled
-    var recentlyScrolledTimer: Timer!
+    var recentlyScrolledTimer: Timer?
     var scrollScrubber: ScrollScrubber?
     var activityIndicator = UIActivityIndicatorView()
     var isScrolling = false
+    var pendingBarRevealWorkItem: DispatchWorkItem?
+    var pendingBarRevealToken: UInt = 0
     var pageScrollDirection = ScrollDirection()
     let wkProcessorPool = WKProcessPool()
     
@@ -75,7 +78,7 @@ open class FolioReaderCenter: UIViewController {
     
     var lastMenuSelectedIndex = 0
 
-    var screenBounds: CGRect!
+    var screenBounds = CGRect.zero
     var pointNow = CGPoint.zero
     var tempReference: FRTocReference?
 //    var isFirstLoad = true
@@ -100,6 +103,10 @@ open class FolioReaderCenter: UIViewController {
     var readerConfig: FolioReaderConfig {
         guard let readerContainer = readerContainer else { return FolioReaderConfig() }
         return readerContainer.readerConfig
+    }
+
+    var barHostingNavigationController: UINavigationController? {
+        readerContainer?.centerNavigationController ?? navigationController
     }
 
     lazy var paginationEngine: ReaderPaginationEngine = {
@@ -137,7 +144,7 @@ open class FolioReaderCenter: UIViewController {
      Common Initialization
      */
     func initialization() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if (self.readerConfig.hideBars == true) {
             self.pageIndicatorHeight = 0
@@ -147,16 +154,19 @@ open class FolioReaderCenter: UIViewController {
 
         // Loading indicator
         let style: UIActivityIndicatorView.Style = folioReader.isNight(.white, .gray)
-        loadingView = UIActivityIndicatorView(style: style)
-        loadingView.hidesWhenStopped = true
-        loadingView.startAnimating()
-        self.view.addSubview(loadingView)
+        let indicator = UIActivityIndicatorView(style: style)
+        indicator.hidesWhenStopped = true
+        indicator.startAnimating()
+        self.view.addSubview(indicator)
+        loadingView = indicator
+
+        self.folioReader.readerAudioPlayer?.delegate = self
     }
 
     // MARK: - View life cicle
 
     override open func viewDidLoad() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         
         super.viewDidLoad()
 
@@ -226,7 +236,7 @@ open class FolioReaderCenter: UIViewController {
     }
 
     override open func viewWillAppear(_ animated: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         super.viewWillAppear(animated)
 
@@ -238,13 +248,13 @@ open class FolioReaderCenter: UIViewController {
     }
 
     override open func viewWillDisappear(_ animated: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         folioReader.saveReaderState()
     }
     
     override open func viewWillLayoutSubviews() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         super.viewWillLayoutSubviews()
         
@@ -252,12 +262,12 @@ open class FolioReaderCenter: UIViewController {
     }
     
     override open func viewDidLayoutSubviews() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         super.viewDidLayoutSubviews()
 
         screenBounds = self.getScreenBounds()
-        loadingView.center = view.center
+        loadingView?.center = view.center
 
         updateSubviewFrames()
     }
@@ -270,15 +280,15 @@ open class FolioReaderCenter: UIViewController {
      - parameter scrollEnabled: `Bool` which enables or disables the scrolling between `FolioReaderPage`s.
      */
     open func enableScrollBetweenChapters(scrollEnabled: Bool) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.collectionView.isScrollEnabled = scrollEnabled
     }
 
     func reloadData() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
-        self.loadingView.stopAnimating()
+        self.loadingView?.stopAnimating()
         self.totalPages = book.spine.spineReferences.count
 
         self.collectionView.reloadData()
@@ -286,7 +296,7 @@ open class FolioReaderCenter: UIViewController {
         self.setCollectionViewProgressiveDirection()
 
         let bookId = self.book.name?.deletingPathExtension
-        let position = bookId != nil ? self.folioReader.delegate?.folioReaderReadPositionProvider?(self.folioReader).folioReaderReadPosition(self.folioReader, bookId: bookId!) : nil
+        let position = bookId.flatMap { self.folioReader.delegate?.folioReaderReadPositionProvider?(self.folioReader).folioReaderReadPosition(self.folioReader, bookId: $0) }
 
         if self.readerConfig.loadSavedPositionForCurrentBook,
            let position = position,
@@ -297,117 +307,4 @@ open class FolioReaderCenter: UIViewController {
 
     
     
-    // MARK: - View Transition
-    override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        
-        if readerConfig.debug.contains(.viewTransition) {
-            print("BEGINTRANSROTATE fromBounds=\(collectionView.bounds) fromContentSize=\(collectionView.contentSize) fromItemSize=\(collectionViewLayout.itemSize) to=\(size) \(String(describing: coordinator.debugDescription))")
-        }
-        
-        guard folioReader.isReaderReady else { return }
-
-        if readerConfig.debug.contains(.viewTransition) {
-            self.collectionView.indexPathsForVisibleItems.forEach {
-                print("BEGIN2TRANSROTATE \($0.debugDescription)")
-            }
-        }
-        
-        //compute new screen bounds
-        if readerConfig.debug.contains(.viewTransition) {
-            self.collectionView.indexPathsForVisibleItems.forEach {
-                print("BEGIN2TRANSROTATE \($0.debugDescription)")
-            }
-        }
-        
-        var bounds = view.frame
-        bounds.size = size
-        bounds.size.height = bounds.size.height - view.safeAreaInsets.bottom
-        if readerConfig.debug.contains(.viewTransition) {
-            folioLogger("size=\(size) newBounds=\(bounds) screenBounds=\(String(describing: screenBounds)) collectionViewFrame=\(collectionView.frame)")
-        }
-        
-        guard let currentPage = self.currentPage else { return }
-        
-        let currentIndexPath = getCurrentIndexPath()
-        
-        if currentPage.layoutAdapting == nil {
-            currentPage.layoutAdapting = "Transitioning..."
-            currentPage.updatePageOffsetRate()
-        }
-        let pageOffsetRate = currentPage.pageOffsetRate
-        
-        folioLogger("TRANS1 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
-        
-        coordinator.animate { _ in
-            
-        } completion: { [self] _ in
-            self.changePageWith(indexPath: currentIndexPath, animated: false) {
-                guard let currentPage = self.currentPage else { return }
-                
-                self.setPageProgressiveDirection(currentPage)
-
-                // After rotation fix internal page offset
-                delay(currentPage.delaySec()) {    //wait for webView finish resizing
-                    folioLogger("TRANS2 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
-                    
-    //                currentPage.scrollPageToOffset(
-    //                    currentPage.byWritingMode(
-    //                        0.0,
-    //                        (currentPage.webView?.scrollView.contentSize.width ?? 0.0) - (currentPage.webView?.scrollView.frame.width ?? 0.0)
-    //                    ), animated: false
-    //                )
-                    
-                    currentPage.webView?.js(
-                    """
-                        document.body.style.minHeight = null;
-                        document.body.style.minWidth = null;
-                    """) { _ in
-                        currentPage.setNeedsLayout()
-                        
-                        delay(currentPage.delaySec() + 0.5) {   //need some time for webView finishing paging
-                            currentPage.updatePageInfo() {
-                                currentPage.updateStyleBackgroundPadding(delay: 0.2) {
-                                    currentPage.pageOffsetRate = pageOffsetRate
-                                    currentPage.scrollWebViewByPageOffsetRate(animated: false)
-                                    delay(0.2) {
-                                        folioLogger("TRANS3 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
-                                        currentPage.updatePageOffsetRate()
-                                        currentPage.layoutAdapting = nil
-                                        folioLogger("TRANS4 pageOffsetRate=\(currentPage.pageOffsetRate) contentSize=\(currentPage.webView?.scrollView.contentSize ?? .zero) contentOffset=\(currentPage.webView?.scrollView.contentOffset ?? .zero)")
-                                        currentPage.updatePageInfo()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        
-    }
-    
-    // MARK: NavigationBar Actions
-
-    @objc func closeReader(_ sender: UIBarButtonItem) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
-
-        dismiss()
-        folioReader.close()
-    }
-    
-    @objc func logoButtonAction(_ sender: UIBarButtonItem) {
-        print("\(#function) \(self.navigateWebViewScrollPositions)")
-        
-        guard let position = self.navigateWebViewScrollPositions.popLast() else { return }
-        self.navigationItem.rightBarButtonItems?.last?.isEnabled = !self.navigateWebViewScrollPositions.isEmpty
-        if position.0 == currentPageNumber {
-            self.currentPage?.setScrollViewContentOffset(position.1, animated: true)
-        } else {
-            self.changePageWith(page: position.0) {     //depends on `currentWebViewScrollPositions` to in page reposition
-                self.currentPage?.updatePages()
-            }
-        }
-    }
 }

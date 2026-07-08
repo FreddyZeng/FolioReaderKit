@@ -37,37 +37,60 @@ class FolioReaderHighlightList: UITableViewController {
         self.tableView.backgroundColor = self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode]
         self.tableView.separatorColor = self.folioReader.isNight(self.readerConfig.nightModeSeparatorColor, self.readerConfig.menuSeparatorColor)
         
+        loadData()
+    }
+
+    func loadData() {
         guard let readerCenter = self.folioReader.readerCenter,
               let book = self.folioReader.readerContainer?.book,
-              let bookId = (book.name as NSString?)?.deletingPathExtension,
-              let highlights = self.folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(self.folioReader, allByBookId: bookId, andPage: nil)
+              let bookId = (book.name as NSString?)?.deletingPathExtension
         else {
             return
         }
 
-        let currentPageNumber = readerCenter.currentPageNumber
-        let currentPagePosition = readerCenter.currentWebViewScrollPositions[currentPageNumber - 1]
-        let bookRootIndex = readerCenter.book.bundleRootTableOfContents.firstIndex(where: {
-            $0.resource?.spineIndices.contains((currentPagePosition?.structuralRootPageNumber ?? 0) - 1) == true
-        })
-        
-        sectionHighlights = highlights.filter({
-            guard self.folioReader.structuralStyle == .bundle,
-                  let bookRootIndex = bookRootIndex,
-                  let firstSpineIndex = book.bundleRootTableOfContents[bookRootIndex].resource?.spineIndices.first,
-                  let lastSpineIndex = book.bundleRootTableOfContents[safe: bookRootIndex + 1]?.resource?.spineIndices.first
-            else { return true }
+        let provider = self.folioReader.highlightProvider
+        let reader = self.folioReader
+        Task {
+            let highlights = await provider?.highlights(bookId: bookId, page: nil, for: reader) ?? []
             
-            return $0.page > firstSpineIndex && ($0.page-1) < lastSpineIndex
-        }).reduce(into: sectionHighlights) { partialResult, highlight in
-            if partialResult[highlight.page] != nil {
-                partialResult[highlight.page]?.append(highlight)
-                partialResult[highlight.page]?.sort(by: { $0.cfiStart < $1.cfiStart })
-            } else {
-                partialResult[highlight.page] = [highlight]
+            let currentPageNumber = readerCenter.currentPageNumber
+            let currentPagePosition = readerCenter.currentWebViewScrollPositions[currentPageNumber - 1]
+            let bookRootIndex = readerCenter.book.bundleRootTableOfContents.firstIndex(where: {
+                $0.resource?.spineIndices.contains((currentPagePosition?.structuralRootPageNumber ?? 0) - 1) == true
+            })
+            
+            var newSectionHighlights = [Int: [FolioReaderHighlight]]()
+            newSectionHighlights = highlights.filter({
+                guard self.folioReader.structuralStyle == .bundle,
+                      let bookRootIndex = bookRootIndex,
+                      let firstSpineIndex = book.bundleRootTableOfContents[bookRootIndex].resource?.spineIndices.first,
+                      let lastSpineIndex = book.bundleRootTableOfContents[safe: bookRootIndex + 1]?.resource?.spineIndices.first
+                else { return true }
+                
+                return $0.page > firstSpineIndex && ($0.page-1) < lastSpineIndex
+            }).reduce(into: newSectionHighlights) { partialResult, highlight in
+                if partialResult[highlight.page] != nil {
+                    partialResult[highlight.page]?.append(highlight)
+                    partialResult[highlight.page]?.sort(by: { ($0.cfiStart ?? "") < ($1.cfiStart ?? "") })
+                } else {
+                    partialResult[highlight.page] = [highlight]
+                }
+            }
+            
+            let newSections = newSectionHighlights.keys.sorted()
+            
+            await MainActor.run {
+                self.sectionHighlights = newSectionHighlights
+                self.sections = newSections
+                self.tableView.reloadData()
+                
+                // Jump to the current chapter
+                if let sectionPageNumber = self.sections.filter({ $0 <= currentPageNumber }).last,
+                   let section = self.sections.firstIndex(of: sectionPageNumber) {
+                    self.tableView.scrollToRow(at: IndexPath(row: 0, section: section), at: .top, animated: true)
+                }
             }
         }
-        sections = sectionHighlights.keys.sorted()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -99,17 +122,17 @@ class FolioReaderHighlightList: UITableViewController {
             return "  Book Item \(pageNumber)"
         }
         var titleFrags = [String]()
-        if let title = tocItem.title {
-            titleFrags.append(title)
+        if !tocItem.title.isEmpty {
+            titleFrags.append(tocItem.title)
         }
         var parent = tocItem.parent
         while let item = parent {
             if self.folioReader.structuralStyle == .bundle,
-               item.level < self.folioReader.structuralTrackingTocLevel.rawValue {
+               (item.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue {
                 break
             }
-            if let title = item.title {
-                titleFrags.append(title)
+            if !item.title.isEmpty {
+                titleFrags.append(item.title)
             }
             parent = item.parent
         }
@@ -130,36 +153,39 @@ class FolioReaderHighlightList: UITableViewController {
         let dateString = dateFormatter.string(from: highlight.date)
 
         // Date
-        var dateLabel: UILabel!
+        // Date
+        var dateLabel: UILabel?
         if cell.contentView.viewWithTag(456) == nil {
-            dateLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
-            dateLabel.tag = 456
-            dateLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            dateLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-            cell.contentView.addSubview(dateLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
+            label.tag = 456
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.font = UIFont(name: "Avenir-Medium", size: 12)
+            cell.contentView.addSubview(label)
+            dateLabel = label
         } else {
             dateLabel = cell.contentView.viewWithTag(456) as? UILabel
         }
 
-        dateLabel.text = dateString.uppercased()
-        dateLabel.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
-        dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
+        dateLabel?.text = dateString.uppercased()
+        dateLabel?.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
+        dateLabel?.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel?.frame.height ?? 16)
         
         if let _ = self.folioReader.readerCenter?.highlightErrors[highlight.highlightId] {
-            var errorLabel: UILabel!
+            var errorLabel: UILabel?
             if cell.contentView.viewWithTag(4567) == nil {
-                errorLabel = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
-                errorLabel.tag = 4567
-                errorLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-                errorLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-                cell.contentView.addSubview(errorLabel)
+                let label = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
+                label.tag = 4567
+                label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+                label.font = UIFont(name: "Avenir-Medium", size: 12)
+                cell.contentView.addSubview(label)
+                errorLabel = label
             } else {
                 errorLabel = cell.contentView.viewWithTag(4567) as? UILabel
             }
-            errorLabel.text = "Cannot Locate, Touch to Fix"
-            errorLabel.textColor = UIColor.systemRed
-            errorLabel.sizeToFit()
-            errorLabel.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel.frame.height)
+            errorLabel?.text = "Cannot Locate, Touch to Fix"
+            errorLabel?.textColor = UIColor.systemRed
+            errorLabel?.sizeToFit()
+            errorLabel?.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel?.frame.height ?? 16)
         } else {
             cell.contentView.viewWithTag(4567)?.removeFromSuperview()
         }
@@ -173,7 +199,7 @@ class FolioReaderHighlightList: UITableViewController {
         let textColor = self.folioReader.isNight(self.readerConfig.menuTextColor, UIColor.black)
 
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
         text.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
 
         if (highlight.type == FolioReaderHighlightStyle.underline.rawValue) {
@@ -185,40 +211,43 @@ class FolioReaderHighlightList: UITableViewController {
         }
 
         // Text
-        var highlightLabel: UILabel!
+        var highlightLabel: UILabel?
         if cell.contentView.viewWithTag(123) == nil {
-            highlightLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            highlightLabel.tag = 123
-            highlightLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            highlightLabel.numberOfLines = 0
-            highlightLabel.textColor = UIColor.black
-            cell.contentView.addSubview(highlightLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            label.tag = 123
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.numberOfLines = 0
+            label.textColor = UIColor.black
+            cell.contentView.addSubview(label)
+            highlightLabel = label
         } else {
             highlightLabel = cell.contentView.viewWithTag(123) as? UILabel
         }
 
-        highlightLabel.attributedText = text
-        highlightLabel.sizeToFit()
-        highlightLabel.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: highlightLabel.frame.height)
+        highlightLabel?.attributedText = text
+        highlightLabel?.sizeToFit()
+        let labelHeight = highlightLabel?.frame.height ?? 0
+        highlightLabel?.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: labelHeight)
         
         // Note text if it exists
         if let note = highlight.noteForHighlight {
-            var noteLabel: UILabel!
+            var noteLabel: UILabel?
             if cell.contentView.viewWithTag(789) == nil {
-                noteLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-                noteLabel.tag = 789
-                noteLabel.font = UIFont.systemFont(ofSize: 14)
-                noteLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-                noteLabel.numberOfLines = 3
-                noteLabel.textColor = UIColor.gray
-                cell.contentView.addSubview(noteLabel)
+                let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+                label.tag = 789
+                label.font = UIFont.systemFont(ofSize: 14)
+                label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+                label.numberOfLines = 3
+                label.textColor = UIColor.gray
+                cell.contentView.addSubview(label)
+                noteLabel = label
             } else {
                 noteLabel = cell.contentView.viewWithTag(789) as? UILabel
             }
             
-            noteLabel.text = note
-            noteLabel.sizeToFit()
-            noteLabel.frame = CGRect(x: 20, y: 46 + highlightLabel.frame.height + 10, width: view.frame.width-40, height: noteLabel.frame.height)
+            noteLabel?.text = note
+            noteLabel?.sizeToFit()
+            noteLabel?.frame = CGRect(x: 20, y: 46 + labelHeight + 10, width: view.frame.width-40, height: noteLabel?.frame.height ?? 0)
         } else {
             cell.contentView.viewWithTag(789)?.removeFromSuperview()
         }
@@ -240,7 +269,7 @@ class FolioReaderHighlightList: UITableViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
 
         let s = text.boundingRect(with: CGSize(width: view.frame.width-40, height: CGFloat.greatestFiniteMagnitude),
                                   options: [NSStringDrawingOptions.usesLineFragmentOrigin, NSStringDrawingOptions.usesFontLeading],
@@ -292,14 +321,25 @@ class FolioReaderHighlightList: UITableViewController {
                 FolioReaderHighlight.removeFromHTMLById(withinPage: page, highlightId: highlight.highlightId) // Remove from HTML
             }
 
-            folioReader.delegate?.folioReaderHighlightProvider?(self.folioReader).folioReaderHighlight(folioReader, removedId: highlight.highlightId)
-            
+            let provider = folioReader.highlightProvider
+            let reader = folioReader
+            let hlId = highlight.highlightId
+            Task {
+                await provider?.removeHighlight(id: hlId, for: reader)
+            }
+
             sectionHighlights[sections[indexPath.section]]?.remove(at: indexPath.row)
-            if sectionHighlights[sections[indexPath.section]]?.isEmpty == true {
+            let isOnlyRowInSection = (sectionHighlights[sections[indexPath.section]]?.isEmpty == true)
+            if isOnlyRowInSection {
                 sectionHighlights.removeValue(forKey: sections[indexPath.section])
                 sections.remove(at: indexPath.section)
             }
-            tableView.deleteRows(at: [indexPath], with: .fade)
+            switch folioReaderListDeleteAction(isOnlyRowInSection: isOnlyRowInSection, indexPath: indexPath) {
+            case .deleteRow(let indexPath):
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            case .deleteSection(let section):
+                tableView.deleteSections(IndexSet(integer: section), with: .fade)
+            }
         }
     }
     
@@ -329,8 +369,8 @@ class FolioReaderHighlightList: UITableViewController {
             alert.dismiss()
             
             self.folioReader.readerCenter?.currentPage?.relocateHighlights(highlight: highlight, completion: { newHighlight, error in
-                guard error == nil else {
-                    self.presentLocatingHighlightFailure("\(error!)", highlight: newHighlight ?? highlight, at: at)
+                if let err = error {
+                    self.presentLocatingHighlightFailure("\(err)", highlight: newHighlight ?? highlight, at: at)
                     return
                 }
                 

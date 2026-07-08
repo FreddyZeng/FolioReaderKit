@@ -94,3 +94,54 @@ public class FolioReaderNaiveBookmarkProvider: FolioReaderBookmarkProvider {
     }
     
 }
+
+public protocol FolioReaderBookmarkProviding {
+    func addBookmark(_ bookmark: FolioReaderBookmark, for folioReader: FolioReader) async throws
+    func removeBookmark(pos: String, for folioReader: FolioReader) async
+    func updateBookmark(pos: String, title: String, for folioReader: FolioReader) async
+    func bookmark(byPos pos: String, for folioReader: FolioReader) async -> FolioReaderBookmark?
+    func bookmarks(bookId: String, page: Int?, for folioReader: FolioReader) async -> [FolioReaderBookmark]
+    func allBookmarks(for folioReader: FolioReader) async -> [FolioReaderBookmark]
+}
+
+public struct FolioReaderBookmarkProviderWrapper: FolioReaderBookmarkProviding {
+    private let provider: FolioReaderBookmarkProvider
+
+    public init(_ provider: FolioReaderBookmarkProvider) {
+        self.provider = provider
+    }
+
+    public func addBookmark(_ bookmark: FolioReaderBookmark, for folioReader: FolioReader) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            self.provider.folioReaderBookmark(folioReader, added: bookmark) { error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
+    }
+
+    public func removeBookmark(pos: String, for folioReader: FolioReader) async {
+        self.provider.folioReaderBookmark(folioReader, removed: pos)
+    }
+
+    public func updateBookmark(pos: String, title: String, for folioReader: FolioReader) async {
+        self.provider.folioReaderBookmark(folioReader, updated: pos, title: title)
+    }
+
+    public func bookmark(byPos pos: String, for folioReader: FolioReader) async -> FolioReaderBookmark? {
+        self.provider.folioReaderBookmark(folioReader, getBy: pos)
+    }
+
+    public func bookmarks(bookId: String, page: Int?, for folioReader: FolioReader) async -> [FolioReaderBookmark] {
+        let pageNumber: NSNumber? = page != nil ? NSNumber(value: page!) : nil
+        return self.provider.folioReaderBookmark(folioReader, allByBookId: bookId, andPage: pageNumber)
+    }
+
+    public func allBookmarks(for folioReader: FolioReader) async -> [FolioReaderBookmark] {
+        self.provider.folioReaderBookmark(folioReader)
+    }
+}
+

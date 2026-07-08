@@ -10,9 +10,60 @@ import Foundation
 import UIKit
 
 extension FolioReaderCenter {
-    
+    func isScrollMotionActive() -> Bool {
+        if let collectionView = collectionView,
+           collectionView.isDragging || collectionView.isDecelerating {
+            return true
+        }
+
+        if let webScrollView = currentPage?.webView?.scrollView,
+           webScrollView.isDragging || webScrollView.isDecelerating {
+            return true
+        }
+
+        return isScrolling
+    }
+
+    func invalidatePendingBarReveal() {
+        pendingBarRevealToken &+= 1
+        pendingBarRevealWorkItem?.cancel()
+        pendingBarRevealWorkItem = nil
+    }
+
+    func requestBarReveal(after delay: TimeInterval = 0.4, forPageNumber pageNumber: Int? = nil) {
+        guard readerConfig.hideBars == false else { return }
+
+        invalidatePendingBarReveal()
+        let token = pendingBarRevealToken
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            guard self.canRevealBars(forToken: token, pageNumber: pageNumber) else { return }
+            self.showBars()
+        }
+
+        pendingBarRevealWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    func canRevealBars(forToken token: UInt, pageNumber: Int?) -> Bool {
+        guard readerConfig.hideBars == false else { return false }
+        guard token == pendingBarRevealToken else { return false }
+        guard barHostingNavigationController?.isNavigationBarHidden == true else { return false }
+        guard isScrollMotionActive() == false else { return false }
+
+        if let pageNumber = pageNumber, currentPage?.pageNumber != pageNumber {
+            return false
+        }
+
+        if currentPage?.menuIsVisible == true {
+            return false
+        }
+
+        return true
+    }
+
     func updateSubviewFrames() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var collectionViewFrame = self.frameForCollectionView(outerBounds: screenBounds)
         collectionViewFrame = collectionViewFrame.insetBy(dx: tempCollectionViewInset, dy: tempCollectionViewInset)
@@ -39,27 +90,37 @@ extension FolioReaderCenter {
     }
 
     func frameForPageIndicatorView(outerBounds: CGRect) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
+        let safeAreaBottom = view.safeAreaInsets.bottom
+        
         #if DEBUG
-        pageIndicatorHeight = 40
+        let extraDebugHeight: CGFloat = 30
+        #else
+        let extraDebugHeight: CGFloat = 0
         #endif
-        var bounds = CGRect(x: 0, y: outerBounds.size.height-pageIndicatorHeight, width: outerBounds.size.width, height: pageIndicatorHeight)
-        bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
-        return bounds
+
+        if safeAreaBottom > 0 {
+            pageIndicatorHeight = safeAreaBottom + extraDebugHeight
+        } else {
+            pageIndicatorHeight = 40 + extraDebugHeight
+        }
+        
+        let fullHeight = outerBounds.size.height + safeAreaBottom
+        return CGRect(x: 0, y: fullHeight - pageIndicatorHeight, width: outerBounds.size.width, height: pageIndicatorHeight)
     }
 
     func frameForScrollScrubber(outerBounds: CGRect) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let currentPage = currentPage else { return .zero }
         
         let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let topComponentTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : navBarHeight
+        let topComponentTotal = self.readerConfig.hideBars ? 0 : navBarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
         
-        let scrubberYforHorizontal: CGFloat = ((self.readerConfig.shouldHideNavigationOnTap == true || self.readerConfig.hideBars == true) ? 50 : 74)
-        let scrubberYforVertical: CGFloat = self.pageHeight// + ((self.readerConfig.shouldHideNavigationOnTap == true || self.readerConfig.hideBars == true) ? 50 : 74)
+        let scrubberYforHorizontal: CGFloat = (self.readerConfig.hideBars == true ? 50 : 74)
+        let scrubberYforVertical: CGFloat = self.pageHeight
         
         return currentPage.byWritingMode(
             CGRect(x: self.pageWidth + 10, y: scrubberYforHorizontal, width: 40, height: (self.pageHeight - 70 - topComponentTotal - bottomComponentTotal)),
@@ -68,7 +129,7 @@ extension FolioReaderCenter {
     }
 
     func frameForCollectionView(outerBounds: CGRect) -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var bounds = CGRect(x: 0, y: 0, width: outerBounds.size.width, height: outerBounds.size.height)
         bounds.size.height = bounds.size.height + view.safeAreaInsets.bottom
@@ -76,7 +137,7 @@ extension FolioReaderCenter {
     }
     
     func getScreenBounds() -> CGRect {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var bounds = view.frame
         
@@ -94,28 +155,27 @@ extension FolioReaderCenter {
     }
     
     func configureNavBar() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
-        //let navBackground = folioReader.isNight(self.readerConfig.nightModeNavBackground, self.readerConfig.daysModeNavBackground)
-        let navBackground = self.readerConfig.themeModeNavBackground[folioReader.themeMode]
+        let navBackground = folioReader.preferences.navBackgroundColor(withConfiguration: readerConfig)
         let tintColor = readerConfig.tintColor
-        let navText = folioReader.isNight(UIColor.white, UIColor.black)
-        let font = UIFont(name: "Avenir-Light", size: 17)!
+        let navText = folioReader.preferences.navTextColor()
+        let font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }
 
     func configureNavBarButtons() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
 
-        // Navbar buttons
-        let shareIcon = UIImage(readerImageNamed: "icon-navbar-share")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let audioIcon = UIImage(readerImageNamed: "icon-navbar-tts")?.ignoreSystemTint(withConfiguration: self.readerConfig) //man-speech-icon
-        let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let logoIcon = UIImage(readerImageNamed: "icon-button-back")?.ignoreSystemTint(withConfiguration: self.readerConfig)
-        let bookmarkIcon = UIImage(readerImageNamed: "icon-navbar-bookmark")?.ignoreSystemTint(withConfiguration: self.readerConfig)
+        let navText = folioReader.preferences.navTextColor()
+        let shareIcon = UIImage(readerImageNamed: "icon-navbar-share")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let audioIcon = UIImage(readerImageNamed: "icon-navbar-tts")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal) //man-speech-icon
+        let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let logoIcon = UIImage(readerImageNamed: "icon-button-back")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
+        let bookmarkIcon = UIImage(readerImageNamed: "icon-navbar-bookmark")?.imageTintColor(navText)?.withRenderingMode(.alwaysOriginal)
 
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
         let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
@@ -146,10 +206,31 @@ extension FolioReaderCenter {
         
     }
 
+    @objc func closeReader(_ sender: UIBarButtonItem) {
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
+
+        dismiss()
+        folioReader.close()
+    }
+    
+    @objc func logoButtonAction(_ sender: UIBarButtonItem) {
+        print("\(#function) \(self.navigateWebViewScrollPositions)")
+        
+        guard let position = self.navigateWebViewScrollPositions.popLast() else { return }
+        self.navigationItem.rightBarButtonItems?.last?.isEnabled = !self.navigateWebViewScrollPositions.isEmpty
+        if position.0 == currentPageNumber {
+            self.currentPage?.setScrollViewContentOffset(position.1, animated: true)
+        } else {
+            self.changePageWith(page: position.0) {     //depends on `currentWebViewScrollPositions` to in page reposition
+                self.currentPage?.updatePages()
+            }
+        }
+    }
+
     // MARK: Change page progressive direction
 
     private func transformViewForRTL(_ view: UIView?) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if folioReader.needsRTLChange {
             view?.transform = CGAffineTransform(scaleX: -1, y: 1)
@@ -159,43 +240,44 @@ extension FolioReaderCenter {
     }
 
     func setCollectionViewProgressiveDirection() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.transformViewForRTL(self.collectionView)
     }
 
     func setPageProgressiveDirection(_ page: FolioReaderPage) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         self.transformViewForRTL(page)
     }
     // MARK: Status bar and Navigation bar
 
     func hideBars() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
-        guard self.readerConfig.shouldHideNavigationOnTap == true else {
-            return
-        }
-
+        invalidatePendingBarReveal()
         self.updateBarsStatus(true)
     }
 
     func showBars() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
+        guard readerConfig.hideBars == false else { return }
 
+        invalidatePendingBarReveal()
         self.configureNavBar()
         self.updateBarsStatus(false)
     }
 
     func toggleBars() {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
+        guard let navigationController = barHostingNavigationController else { return }
 
-        guard self.readerConfig.shouldHideNavigationOnTap == true else {
+        if readerConfig.hideBars == true {
+            hideBars()
             return
         }
 
-        let shouldHide = !self.navigationController!.isNavigationBarHidden
+        let shouldHide = !navigationController.isNavigationBarHidden
         if shouldHide == false {
             self.configureNavBar()
         }
@@ -204,7 +286,7 @@ extension FolioReaderCenter {
     }
 
     private func updateBarsStatus(_ shouldHide: Bool, shouldShowIndicator: Bool = false) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let readerContainer = readerContainer else { return }
         readerContainer.shouldHideStatusBar = shouldHide
@@ -212,11 +294,8 @@ extension FolioReaderCenter {
         UIView.animate(withDuration: 0.25, animations: {
             readerContainer.setNeedsStatusBarAppearanceUpdate()
 
-            // Show minutes indicator
-            if (shouldShowIndicator == true) {
-                self.pageIndicatorView?.minutesLabel.alpha = shouldHide ? 0 : 1
-            }
+            self.pageIndicatorView?.alpha = shouldHide ? 0 : 1
         })
-        self.navigationController?.setNavigationBarHidden(shouldHide, animated: true)
+        barHostingNavigationController?.setNavigationBarHidden(shouldHide, animated: true)
     }
 }

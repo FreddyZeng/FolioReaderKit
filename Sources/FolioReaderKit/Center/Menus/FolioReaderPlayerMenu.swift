@@ -10,8 +10,8 @@ import UIKit
 
 class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureRecognizerDelegate {
 
-    var menuView: UIView!
-    var playPauseBtn: UIButton!
+    var menuView: UIView?
+    var playPauseBtn: UIButton?
     var styleOptionBtns = [UIButton]()
     var viewDidAppear = false
 
@@ -42,18 +42,18 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         view.addGestureRecognizer(tapGesture)
 
         // Menu view
-        menuView = UIView(frame: CGRect(x: 0, y: view.frame.height-165, width: view.frame.width, height: view.frame.height))
-        //menuView.backgroundColor = self.folioReader.isNight(self.readerConfig.nightModeNavBackground, self.readerConfig.daysModeNavBackground)
-        menuView.backgroundColor = self.readerConfig.themeModeNavBackground[self.folioReader.themeMode]
-        menuView.autoresizingMask = .flexibleWidth
-        menuView.layer.shadowColor = UIColor.black.cgColor
-        menuView.layer.shadowOffset = CGSize(width: 0, height: 0)
-        menuView.layer.shadowOpacity = 0.3
-        menuView.layer.shadowRadius = 6
-        menuView.layer.shadowPath = UIBezierPath(rect: menuView.bounds).cgPath
-        menuView.layer.rasterizationScale = UIScreen.main.scale
-        menuView.layer.shouldRasterize = true
-        view.addSubview(menuView)
+        let menu = UIView(frame: CGRect(x: 0, y: view.frame.height-165, width: view.frame.width, height: view.frame.height))
+        menu.backgroundColor = self.readerConfig.themeModeNavBackground[self.folioReader.themeMode]
+        menu.autoresizingMask = .flexibleWidth
+        menu.layer.shadowColor = UIColor.black.cgColor
+        menu.layer.shadowOffset = CGSize(width: 0, height: 0)
+        menu.layer.shadowOpacity = 0.3
+        menu.layer.shadowRadius = 6
+        menu.layer.shadowPath = UIBezierPath(rect: menu.bounds).cgPath
+        menu.layer.rasterizationScale = UIScreen.main.scale
+        menu.layer.shouldRasterize = true
+        view.addSubview(menu)
+        menuView = menu
 
         let normalColor = UIColor(white: 0.5, alpha: 0.7)
         let selectedColor = self.readerConfig.tintColor
@@ -82,7 +82,7 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         prevBtn.setImage(prevNormal, for: UIControl.State())
         prevBtn.setImage(prevSelected, for: .selected)
         prevBtn.addTarget(self, action: #selector(FolioReaderPlayerMenu.prevChapter(_:)), for: .touchUpInside)
-        menuView.addSubview(prevBtn)
+        menu.addSubview(prevBtn)
 
         // play / pause button
         let playPauseBtn = UIButton(frame: CGRect(x: Int(prevBtn.frame.origin.x) + padX + size, y: 0, width: size, height: size))
@@ -90,9 +90,12 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         playPauseBtn.setTitleColor(selectedColor, for: .selected)
         playPauseBtn.setImage(playSelected, for: UIControl.State())
         playPauseBtn.setImage(pauseSelected, for: .selected)
-        playPauseBtn.titleLabel!.font = UIFont(name: "Avenir", size: 22)!
+        if let titleLabel = playPauseBtn.titleLabel {
+            titleLabel.font = UIFont(name: "Avenir", size: 22) ?? .systemFont(ofSize: 22)
+        }
         playPauseBtn.addTarget(self, action: #selector(FolioReaderPlayerMenu.togglePlay(_:)), for: .touchUpInside)
-        menuView.addSubview(playPauseBtn)
+        menu.addSubview(playPauseBtn)
+        self.playPauseBtn = playPauseBtn
 
         if let audioPlayer = self.folioReader.readerAudioPlayer , audioPlayer.isPlaying() {
             playPauseBtn.isSelected = true
@@ -103,13 +106,13 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         nextBtn.setImage(nextNormal, for: UIControl.State())
         nextBtn.setImage(nextSelected, for: .selected)
         nextBtn.addTarget(self, action: #selector(FolioReaderPlayerMenu.nextChapter(_:)), for: .touchUpInside)
-        menuView.addSubview(nextBtn)
+        menu.addSubview(nextBtn)
 
 
         // Separator
         let line = UIView(frame: CGRect(x: 0, y: playPauseBtn.frame.height+playPauseBtn.frame.origin.y, width: view.frame.width, height: 1))
         line.backgroundColor = self.readerConfig.nightModeSeparatorColor
-        menuView.addSubview(line)
+        menu.addSubview(line)
 
         // audio playback rate adjust
         let playbackRate = SMSegmentView(frame: CGRect(x: 15, y: line.frame.height+line.frame.origin.y, width: view.frame.width-30, height: 55),
@@ -128,41 +131,47 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         playbackRate.addSegmentWithTitle("1x", onSelectionImage: nil, offSelectionImage: nil)
         playbackRate.addSegmentWithTitle("1½x", onSelectionImage: nil, offSelectionImage: nil)
         playbackRate.addSegmentWithTitle("2x", onSelectionImage: nil, offSelectionImage: nil)
-        playbackRate.segmentTitleFont = UIFont(name: "Avenir-Light", size: 17)!
+        playbackRate.segmentTitleFont = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
         playbackRate.selectSegmentAtIndex(Int(self.folioReader.currentAudioRate))
-        menuView.addSubview(playbackRate)
+        menu.addSubview(playbackRate)
 
 
         // Separator
         let line2 = UIView(frame: CGRect(x: 0, y: playbackRate.frame.height+playbackRate.frame.origin.y, width: view.frame.width, height: 1))
         line2.backgroundColor = self.readerConfig.nightModeSeparatorColor
-        menuView.addSubview(line2)
+        menu.addSubview(line2)
 
 
         // Media overlay highlight styles
         let style0 = UIButton(frame: CGRect(x: 0, y: line2.frame.height+line2.frame.origin.y, width: view.frame.width/3, height: 55))
-        style0.titleLabel!.textAlignment = .center
-        style0.titleLabel!.font = UIFont(name: "Avenir-Light", size: 17)
+        if let titleLabel = style0.titleLabel {
+            titleLabel.textAlignment = .center
+            titleLabel.font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
+        }
         //style0.setTitleColor(self.folioReader.isNight(self.readerConfig.nightModeMenuBackground, UIColor.white), for: UIControl.State())
         //style0.setTitleColor(self.folioReader.isNight(self.readerConfig.nightModeMenuBackground, UIColor.white), for: .selected)
         style0.setTitleColor(self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode], for: UIControl.State())
         style0.setTitleColor(self.readerConfig.themeModeMenuBackground[self.folioReader.themeMode], for: .selected)
         
         style0.setTitle(self.readerConfig.localizedPlayerMenuStyle, for: UIControl.State())
-        menuView.addSubview(style0);
+        menu.addSubview(style0);
         style0.titleLabel?.sizeToFit()
-        let style0Bgd = UIView(frame: style0.titleLabel!.frame)
+        let style0Bgd = UIView(frame: style0.titleLabel?.frame ?? .zero)
         style0Bgd.center = CGPoint(x: style0.frame.size.width  / 2, y: style0.frame.size.height / 2);
         style0Bgd.frame.size.width += 8
         style0Bgd.frame.origin.x -= 4
         style0Bgd.backgroundColor = normalColor;
         style0Bgd.layer.cornerRadius = 3.0;
         style0Bgd.isUserInteractionEnabled = false
-        style0.insertSubview(style0Bgd, belowSubview: style0.titleLabel!)
+        if let titleLabel = style0.titleLabel {
+            style0.insertSubview(style0Bgd, belowSubview: titleLabel)
+        }
 
         let style1 = UIButton(frame: CGRect(x: view.frame.width/3, y: line2.frame.height+line2.frame.origin.y, width: view.frame.width/3, height: 55))
-        style1.titleLabel!.textAlignment = .center
-        style1.titleLabel!.font = UIFont(name: "Avenir-Light", size: 17)
+        if let titleLabel = style1.titleLabel {
+            titleLabel.textAlignment = .center
+            titleLabel.font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
+        }
         style1.setTitleColor(normalColor, for: UIControl.State())
         style1.setAttributedTitle(NSAttributedString(string: "Style", attributes: [
             NSAttributedString.Key.foregroundColor: normalColor,
@@ -174,23 +183,25 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
             NSAttributedString.Key.underlineStyle: NSUnderlineStyle.patternDot.rawValue|NSUnderlineStyle.single.rawValue,
             NSAttributedString.Key.underlineColor: selectedColor
             ]), for: .selected)
-        menuView.addSubview(style1);
+        menu.addSubview(style1);
 
         let style2 = UIButton(frame: CGRect(x: view.frame.width/1.5, y: line2.frame.height+line2.frame.origin.y, width: view.frame.width/3, height: 55))
-        style2.titleLabel!.textAlignment = .center
-        style2.titleLabel!.font = UIFont(name: "Avenir-Light", size: 17)
+        if let titleLabel = style2.titleLabel {
+            titleLabel.textAlignment = .center
+            titleLabel.font = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
+        }
         style2.setTitleColor(normalColor, for: UIControl.State())
         style2.setTitleColor(selectedColor, for: .selected)
         style2.setTitle(self.readerConfig.localizedPlayerMenuStyle, for: UIControl.State())
-        menuView.addSubview(style2);
+        menu.addSubview(style2);
 
         // add line dividers between style buttons
         let style1line = UIView(frame: CGRect(x: style1.frame.origin.x, y: style1.frame.origin.y, width: 1, height: style1.frame.height))
         style1line.backgroundColor = self.readerConfig.nightModeSeparatorColor
-        menuView.addSubview(style1line)
+        menu.addSubview(style1line)
         let style2line = UIView(frame: CGRect(x: style2.frame.origin.x, y: style2.frame.origin.y, width: 1, height: style2.frame.height))
         style2line.backgroundColor = self.readerConfig.nightModeSeparatorColor
-        menuView.addSubview(style2line)
+        menu.addSubview(style2line)
 
         // select the current style
         style0.isSelected = (self.folioReader.currentMediaOverlayStyle == .default)
@@ -243,21 +254,21 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
         }
     }
 
-    @objc func prevChapter(_ sender: UIButton!) {
+    @objc func prevChapter(_ sender: UIButton) {
         self.folioReader.readerAudioPlayer?.playPrevChapter()
     }
 
-    @objc func nextChapter(_ sender: UIButton!) {
+    @objc func nextChapter(_ sender: UIButton) {
         self.folioReader.readerAudioPlayer?.playNextChapter()
     }
 
-    @objc func togglePlay(_ sender: UIButton!) {
+    @objc func togglePlay(_ sender: UIButton) {
         sender.isSelected = sender.isSelected != true
         self.folioReader.readerAudioPlayer?.togglePlay()
         closeView()
     }
 
-    @objc func changeStyle(_ sender: UIButton!) {
+    @objc func changeStyle(_ sender: UIButton) {
         self.folioReader.currentMediaOverlayStyle = MediaOverlayStyle(rawValue: sender.tag)!
 
         // select the proper style button

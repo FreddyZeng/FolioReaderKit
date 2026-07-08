@@ -6,33 +6,37 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
-struct Spine {
-    var linear: Bool
-    var resource: FRResource
-    var sizeUpTo: Int
+public struct Spine {
+    public var linear: Bool
+    public var resource: FRResource
+    public var sizeUpTo: Int
 
-    init(resource: FRResource, linear: Bool = true, sizeUpto: Int = 0) {
+    public init(resource: FRResource, linear: Bool = true, sizeUpto: Int = 0) {
         self.resource = resource
         self.linear = linear
         self.sizeUpTo = sizeUpto
     }
 }
 
-class FRSpine: NSObject {
-    var pageProgressionDirection: String?
-    var spineReferences = [Spine]()
-    var size = 0
+public class FRSpine: NSObject {
+    public var pageProgressionDirection: String?
+    public var spineReferences = [Spine]()
+    public var size = 0
 
-    var isRtl: Bool {
+    public override init() {
+        super.init()
+    }
+
+    public var isRtl: Bool {
         if let pageProgressionDirection = pageProgressionDirection , pageProgressionDirection == "rtl" {
             return true
         }
         return false
     }
 
-    func nextChapter(_ href: String) -> FRResource? {
+    public func nextChapter(_ href: String) -> FRResource? {
         var found = false;
 
         for item in spineReferences {

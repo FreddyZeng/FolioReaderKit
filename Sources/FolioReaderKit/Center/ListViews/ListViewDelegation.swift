@@ -7,11 +7,12 @@
 //
 
 import Foundation
+import FolioEPUBCore
 
 extension FolioReaderCenter: FolioReaderChapterListDelegate {
     
     func chapterList(_ chapterList: FolioReaderChapterList, didSelectRowAtIndexPath indexPath: IndexPath, withTocReference reference: FRTocReference) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         
         guard let readerCenter = self.folioReader.readerCenter else { return }
         
@@ -37,12 +38,12 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
         // MARK: should not need here
         //updateCurrentPage()   
         
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         // Move to #fragment
         if let reference = tempReference {
-            if let fragmentID = reference.fragmentID, let currentPage = currentPage , fragmentID != "" {
-                currentPage.handleAnchor(reference.fragmentID!, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
+            if let fragmentID = reference.fragmentID, let currentPage = currentPage, fragmentID != "" {
+                currentPage.handleAnchor(fragmentID, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
             }
             tempReference = nil
         }
@@ -51,7 +52,7 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
 
 extension FolioReaderCenter: FolioReaderBookListDelegate {
     func bookList(_ bookList: FolioReaderBookList, didSelectRowAtIndexPath indexPath: IndexPath, withTocReference reference: FRTocReference) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         
         func countTocChild(_ item: FRTocReference) -> [FRTocReference] {
             var tocItems = [FRTocReference]()
@@ -74,10 +75,10 @@ extension FolioReaderCenter: FolioReaderBookListDelegate {
             guard let href = self.book.spine.spineReferences[safe: $0.key]?.resource.href else { return false }
             return resourceSet.contains(href)
         }).max (by: { $0.key < $1.key }) {
-            folioLogger("maxPosition=\(position)")
+            FolioLogger.log("maxPosition=\(position)")
             indexPath = IndexPath(row: position.key, section: 0)
         } else {
-            folioLogger("maxPosition=noPosition")
+            FolioLogger.log("maxPosition=noPosition")
             let item = self.book.findPageByResource(reference)
             if item < totalPages {
                 indexPath = IndexPath(row: item, section: 0)
@@ -99,7 +100,7 @@ extension FolioReaderCenter: FolioReaderBookListDelegate {
     }
     
     func bookList(didDismissedBookList bookList: FolioReaderBookList) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
 //        // Move to #fragment
 //        if let reference = tempReference {
@@ -114,7 +115,7 @@ extension FolioReaderCenter: FolioReaderBookListDelegate {
 extension FolioReaderCenter: FolioReaderResourceListDelegate {
     
     func resourceList(_ resourceList: FolioReaderResourceList, didSelectRowAtIndexPath indexPath: IndexPath) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         if indexPath.row < totalPages {
             self.currentPage?.pushNavigateWebViewScrollPositions()
@@ -135,12 +136,12 @@ extension FolioReaderCenter: FolioReaderResourceListDelegate {
         // MARK: should not need here
         //updateCurrentPage()
         
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         // Move to #fragment
         if let reference = tempReference {
-            if let fragmentID = reference.fragmentID, let currentPage = currentPage , fragmentID != "" {
-                currentPage.handleAnchor(reference.fragmentID!, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
+            if let fragmentID = reference.fragmentID, let currentPage = currentPage, fragmentID != "" {
+                currentPage.handleAnchor(fragmentID, offsetInWindow: self.navigationController?.toolbar.frame.height ?? 0, avoidBeginningAnchors: false, animated: true)
             }
             tempReference = nil
         }
@@ -159,7 +160,7 @@ extension FolioReaderCenter: FolioReaderHistoryListDelegate {
         readerCenter.currentPage?.pushNavigateWebViewScrollPositions()
         readerCenter.currentWebViewScrollPositions.removeValue(forKey: endPosition.pageNumber - 1)
         
-        if history.endPosition!.cfi != "" {
+        if endPosition.cfi != "" {
             readerCenter.changePageWith(page: endPosition.pageNumber, andFragment: endPosition.cfi)
         } else {
             readerCenter.changePageWith(page: endPosition.pageNumber, animated: true) {

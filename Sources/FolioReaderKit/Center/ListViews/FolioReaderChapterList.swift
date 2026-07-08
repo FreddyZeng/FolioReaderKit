@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 
 /// Table Of Contents delegate
 @objc protocol FolioReaderChapterListDelegate: AnyObject {
@@ -63,7 +64,7 @@ class FolioReaderChapterList: UITableViewController {
             let tocLevel = self.folioReader.structuralTrackingTocLevel.rawValue
             self.tocItems = self.book.flatTableOfContents.filter {
                 var toc: FRTocReference? = $0
-                if toc?.level < tocLevel {
+                if (toc?.level ?? 0) < tocLevel {
                     return false
                 }
                 while( toc != nil && (toc?.level ?? 0) >= (tocLevel-1) ) {

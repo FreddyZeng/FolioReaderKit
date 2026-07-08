@@ -7,27 +7,31 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import ReadiumZIPFoundation
 
 open class FRBook: NSObject {
-    var metadata = FRMetadata()
-    var spine = FRSpine()
-    var smils = FRSmils()
-    var version: Double?
+    public var metadata = FRMetadata()
+    public var spine = FRSpine()
+    public var smils = FRSmils()
+    public var version: Double?
     
-    public var opfResource: FRResource!
+    public var opfResource: FRResource?
     public var tocResource: FRResource?
     public var uniqueIdentifier: String?
     public var coverImage: FRResource?
     public var name: String?
     public var resources = FRResources()
-    public var tableOfContents: [FRTocReference]!
-    public var flatTableOfContents: [FRTocReference]!
-    public var resourceTocMap: [FRResource: [FRTocReference]]!
+    public var tableOfContents = [FRTocReference]()
+    public var flatTableOfContents = [FRTocReference]()
+    public var resourceTocMap = [FRResource: [FRTocReference]]()
 
     public var epubURL: URL?
     public var archiveEntriesCache = [String: Entry]()
+    
+    public override init() {
+        super.init()
+    }
     
     public func getThreadEpubArchive() async -> Archive? {
         guard let archiveURL = self.epubURL,
@@ -36,15 +40,15 @@ open class FRBook: NSObject {
         return epubArchive
     }
     
-    var hasAudio: Bool {
+    public var hasAudio: Bool {
         return smils.smils.count > 0
     }
 
-    var title: String? {
+    public var title: String? {
         return metadata.titles.first
     }
 
-    var authorName: String? {
+    public var authorName: String? {
         return metadata.creators.first?.name
     }
 
@@ -58,32 +62,23 @@ open class FRBook: NSObject {
         }
             
         return spine.spineReferences.count
-        
-//        var count = 0
-//        for item in spine.spineReferences {
-//            if let resource = reference.resource, item.resource == resource {
-//                return count
-//            }
-//            count += 1
-//        }
-//        return count
     }
 
     // MARK: - Media Overlay Metadata
     // http://www.idpf.org/epub/301/spec/epub-mediaoverlays.html#sec-package-metadata
 
-    var duration: String? {
+    public var duration: String? {
         return metadata.find(byProperty: "media:duration")?.value
     }
 
-    var activeClass: String {
+    public var activeClass: String {
         guard let className = metadata.find(byProperty: "media:active-class")?.value else {
             return "epub-media-overlay-active"
         }
         return className
     }
 
-    var playbackActiveClass: String {
+    public var playbackActiveClass: String {
         guard let className = metadata.find(byProperty: "media:playback-active-class")?.value else {
             return "epub-media-overlay-playing"
         }
@@ -95,7 +90,7 @@ open class FRBook: NSObject {
     /**
      Get Smil File from a resource (if it has a media-overlay)
      */
-    func smilFileForResource(_ resource: FRResource?) -> FRSmilFile? {
+    public func smilFileForResource(_ resource: FRResource?) -> FRSmilFile? {
         guard let resource = resource, let mediaOverlay = resource.mediaOverlay else { return nil }
 
         // lookup the smile resource to get info about the file
@@ -105,22 +100,22 @@ open class FRBook: NSObject {
         return smils.findByHref(smilResource.href)
     }
 
-    func smilFile(forHref href: String) -> FRSmilFile? {
+    public func smilFile(forHref href: String) -> FRSmilFile? {
         return smilFileForResource(resources.findByHref(href))
     }
 
-    func smilFile(forId ID: String) -> FRSmilFile? {
+    public func smilFile(forId ID: String) -> FRSmilFile? {
         return smilFileForResource(resources.findById(ID))
     }
     
     // @NOTE: should "#" be automatically prefixed with the ID?
-    func duration(for ID: String) -> String? {
+    public func duration(for ID: String) -> String? {
         return metadata.find(byProperty: "media:duration", refinedBy: ID)?.value
     }
     
     // MARK: - for Bundle Book
-    public var bundleRootTableOfContents: [FRTocReference]!
-    public var bundleBookSizes: [Int]!
+    public var bundleRootTableOfContents = [FRTocReference]()
+    public var bundleBookSizes = [Int]()
 
     public func updateBundleInfo(rootTocLevel: Int) {
         self.bundleRootTableOfContents = self.flatTableOfContents.filter {

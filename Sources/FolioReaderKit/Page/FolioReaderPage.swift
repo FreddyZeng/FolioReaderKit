@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import SafariServices
 import MenuItemKit
 import OSLog
@@ -23,7 +24,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     }()
 
     /// The index of the current page. Note: The index start at 1!
-    open var pageNumber: Int! {
+    open var pageNumber: Int = -1 {
         didSet {
             self.pageChapterTocReferences = self.folioReader.readerCenter?.getChapterNames(pageNumber: self.pageNumber)
         }
@@ -34,13 +35,13 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     open var panDeadZoneLeft: UIView?
     open var panDeadZoneRight: UIView?
     
-    var activityView: FolioReaderPageActivity!
+    var activityView: FolioReaderPageActivity?
     
     open var writingMode = "horizontal-tb"
     
     open var pageOffsetRate: CGFloat = 0 {
         didSet {
-            folioLogger("SET pageOffsetRate=\(pageOffsetRate) pageNumber=\(pageNumber!) currentPage=\(currentPage) totalPages=\(totalPages ?? -1)")
+            FolioLogger.log("SET pageOffsetRate=\(pageOffsetRate) pageNumber=\(pageNumber) currentPage=\(currentPage) totalPages=\(totalPages ?? -1)")
         }
     }
 
@@ -61,12 +62,32 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     var pageChapterTocReferences: [FRTocReference]?
     var idOffsets: [String: Int]?
     
-    var colorView: UIView!
-    var shouldShowBar = true
+    var colorView: UIView?
+    var tapStartLocation: CGPoint?
+    var tapStartPageNumber: Int?
+    var tapStartedWhileScrolling = false
     var menuIsVisible = false
     var firstLoadReloaded = false
     
+    static var cachedStatusBarHeight: CGFloat = 0
     var statusbarHeight: CGFloat {
+        // 1. Fast path: Use window insets (available 99% of the time during layout)
+        if let safeTop = self.window?.safeAreaInsets.top, safeTop > 0 {
+            FolioReaderPage.cachedStatusBarHeight = safeTop
+            return safeTop
+        }
+        
+        // 2. Medium path: Use own insets
+        if self.safeAreaInsets.top > 0 {
+            FolioReaderPage.cachedStatusBarHeight = self.safeAreaInsets.top
+            return self.safeAreaInsets.top
+        }
+        
+        // 3. Fallback to cache or simple status bar frame (only for very early layout)
+        if FolioReaderPage.cachedStatusBarHeight > 0 {
+            return FolioReaderPage.cachedStatusBarHeight
+        }
+        
         return self.window?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
     }
     
@@ -74,17 +95,17 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         didSet {
             if let layoutAdapting = layoutAdapting {
                 if pageNumber != 1 {
-                    if activityView.adView == nil {
-                        activityView.adView = self.folioReader.delegate?.folioReaderAdView?(self.folioReader)
+                    if activityView?.adView == nil {
+                        activityView?.adView = self.folioReader.delegate?.folioReaderAdView?(self.folioReader)
                     }
                     
-                    activityView.activate(layoutAdapting, activityView.adView != nil)
+                    activityView?.activate(layoutAdapting, activityView?.adView != nil)
                     
                 } else {
-                    activityView.activate(layoutAdapting, false)
+                    activityView?.activate(layoutAdapting, false)
                 }
             } else {
-                activityView.deactivate()
+                activityView?.deactivate()
             }
             
         }
@@ -111,13 +132,14 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         // self.readerContainer = FolioReaderContainer(withConfig: FolioReaderConfig(), folioReader: FolioReader(), epubPath: "")
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
-
-        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: NSNotification.Name(rawValue: "needRefreshPageMode"), object: nil)
     }
 
     public func setup(withReaderContainer readerContainer: FolioReaderContainer) {
         self.readerContainer = readerContainer
         guard let readerContainer = self.readerContainer else { return }
+
+        NotificationCenter.default.removeObserver(self, name: .folioReaderNeedRefreshPageMode, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: .folioReaderNeedRefreshPageMode, object: readerContainer.folioReader)
 
         self.pageNumber = -1     //guard against webView didFinish handler
         self.currentChapterName = nil
@@ -134,7 +156,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             webView?.scrollView.scrollsToTop = false
             webView?.backgroundColor = .clear
             webView?.configuration.userContentController.add(self.jsBridge, name: "FolioReaderPage")
-            self.contentView.addSubview(webView!)
+            if let webView = webView {
+                self.contentView.addSubview(webView)
+            }
             if readerConfig.debug.contains(.borderHighlight) {
                 webView?.layer.borderWidth = 10
                 webView?.layer.borderColor = UIColor.magenta.cgColor
@@ -154,7 +178,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneTop?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneTop!)
+            if let panDeadZoneTop = panDeadZoneTop {
+                self.contentView.addSubview(panDeadZoneTop)
+            }
         }
         
         if panDeadZoneBot == nil {
@@ -167,7 +193,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneBot?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneBot!)
+            if let panDeadZoneBot = panDeadZoneBot {
+                self.contentView.addSubview(panDeadZoneBot)
+            }
         }
         
         if panDeadZoneLeft == nil {
@@ -180,7 +208,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneLeft?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneLeft!)
+            if let panDeadZoneLeft = panDeadZoneLeft {
+                self.contentView.addSubview(panDeadZoneLeft)
+            }
         }
         
         if panDeadZoneRight == nil {
@@ -193,34 +223,41 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             panGeature.delegate = self
             panDeadZoneRight?.addGestureRecognizer(panGeature)
             
-            self.contentView.addSubview(panDeadZoneRight!)
+            if let panDeadZoneRight = panDeadZoneRight {
+                self.contentView.addSubview(panDeadZoneRight)
+            }
         }
         
         if colorView == nil {
-            colorView = UIView()
-            colorView.backgroundColor = self.readerConfig.nightModeBackground
-            webView?.scrollView.addSubview(colorView)
+            let view = UIView()
+            view.backgroundColor = self.readerConfig.nightModeBackground
+            webView?.scrollView.addSubview(view)
+            colorView = view
         }
         
         // Remove all gestures before adding new one
         webView?.gestureRecognizers?.forEach({ gesture in
-            webView?.removeGestureRecognizer(gesture)
+            if gesture is UITapGestureRecognizer {
+                webView?.removeGestureRecognizer(gesture)
+            }
         })
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(_:)))
         tapGestureRecognizer.numberOfTapsRequired = 1
+        tapGestureRecognizer.cancelsTouchesInView = false
         tapGestureRecognizer.delegate = self
         webView?.addGestureRecognizer(tapGestureRecognizer)
         
         if activityView == nil {
-            activityView = FolioReaderPageActivity(folioReader: readerContainer.folioReader)
-            activityView.translatesAutoresizingMaskIntoConstraints = false
-            self.contentView.addSubview(activityView)
+            let view = FolioReaderPageActivity(folioReader: readerContainer.folioReader)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            self.contentView.addSubview(view)
             NSLayoutConstraint.activate([
-                activityView.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
-                activityView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
-                activityView.widthAnchor.constraint(equalTo: self.contentView.widthAnchor),
-                activityView.heightAnchor.constraint(equalTo: self.contentView.heightAnchor)
+                view.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
+                view.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+                view.widthAnchor.constraint(equalTo: self.contentView.widthAnchor),
+                view.heightAnchor.constraint(equalTo: self.contentView.heightAnchor)
             ])
+            activityView = view
         }
     }
 
@@ -258,12 +295,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     }
 
     func webViewFrame() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-        
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let topComponentTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : navBarHeight
+        let topComponentTotal = self.statusbarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
         let paddingTop: CGFloat = floor(CGFloat(self.folioReader.currentMarginTop) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
         let paddingBottom: CGFloat = floor(CGFloat(self.folioReader.currentMarginBottom) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
@@ -299,14 +331,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     }
     
     func anchorBoundsFrame() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-        
         // bounds.height does not include statusbarHeight
         let statusbarHeight = self.statusbarHeight
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let topComponentTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : navBarHeight
+        let topComponentTotal = self.statusbarHeight
         let bottomComponentTotal = self.readerConfig.hidePageIndicator ? 0 : self.folioReader.readerCenter?.pageIndicatorHeight ?? CGFloat(0)
         let paddingTop: CGFloat = floor(CGFloat(self.folioReader.currentMarginTop) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
         let paddingBottom: CGFloat = floor(CGFloat(self.folioReader.currentMarginBottom) / 200 * (self.folioReader.readerCenter?.pageHeight ?? CGFloat(0)))
@@ -336,62 +363,7 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
         )
     }
     
-    func webViewFrameVanilla() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-        
-        let statusbarHeight = self.statusbarHeight
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let navTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : statusbarHeight + navBarHeight
-        let paddingTop: CGFloat = 20
-        let paddingBottom: CGFloat = 30
-        
-        return CGRect(
-            x: bounds.origin.x,
-            y: self.readerConfig.isDirection(bounds.origin.y + navTotal, bounds.origin.y + navTotal + paddingTop, bounds.origin.y + navTotal),
-            width: bounds.width,
-            height: self.readerConfig.isDirection(bounds.height - navTotal, bounds.height - navTotal - paddingTop - paddingBottom, bounds.height - navTotal)
-        )
-    }
-    
-    func webViewFramePeter() -> CGRect {
-        guard (self.readerConfig.hideBars == false) else {
-            return bounds
-        }
-
-        let statusbarHeight = self.statusbarHeight
-        let navBarHeight = self.folioReader.readerCenter?.navigationController?.navigationBar.frame.size.height ?? CGFloat(0)
-        let navTotal = self.readerConfig.shouldHideNavigationOnTap ? 0 : statusbarHeight + navBarHeight
-        let paddingTop: CGFloat = -40
-        let paddingBottom: CGFloat = 50
-
-        print("boundsFrame \(bounds)")
-        let statusBarFrame = self.window?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
-        print("statusBarFrame \(statusBarFrame)")
-        print("navigationBarFrame \(String(describing: self.folioReader.readerCenter?.navigationController?.navigationBar.frame))")
-        
-        let x = bounds.origin.x
-        var y = self.readerConfig.isDirection(bounds.origin.y + navTotal, bounds.origin.y + navTotal + paddingTop, bounds.origin.y + navTotal)
-        y = navBarHeight
-        let width = bounds.width
-        var height = self.readerConfig.isDirection(bounds.height - navTotal, bounds.height - navTotal - paddingTop - paddingBottom, bounds.height - navTotal)
-        height = bounds.height - navBarHeight - statusbarHeight
-        
-        var frame = CGRect(x:x, y:y, width: width, height: height)
-        frame = frame.insetBy(
-            dx: CGFloat((self.folioReader.currentMarginLeft + self.folioReader.currentMarginRight) / 2),
-            dy: CGFloat((self.folioReader.currentMarginTop + self.folioReader.currentMarginBottom) / 2))
-        frame = frame.offsetBy(
-            dx: CGFloat((self.folioReader.currentMarginLeft - self.folioReader.currentMarginRight) / 2),
-            dy: CGFloat((self.folioReader.currentMarginTop - self.folioReader.currentMarginBottom) / 2))
-        
-        print("Frame \(frame)")
-        
-        return frame
-    }
-
-    func loadHTMLString(_ htmlContent: String!, baseURL: URL!) {
+    func loadHTMLString(_ htmlContent: String, baseURL: URL?) {
         // Load the html into the webview
         webView?.alpha = 0
         webView?.loadHTMLString(htmlContent, baseURL: baseURL)
@@ -402,9 +374,15 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
     override open func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         guard let webView = webView else { return false }
 
-        if UIMenuController.shared.menuItems?.count == 0 {
-            webView.isColors = false
-            webView.createMenu(onHighlight: false)
+        if #available(iOS 16.0, *) {
+            if !webView.isColors && !webView.isSharingHighlight {
+                webView.createMenu(onHighlight: false)
+            }
+        } else {
+            if UIMenuController.shared.menuItems?.count == 0 {
+                webView.isColors = false
+                webView.createMenu(onHighlight: false)
+            }
         }
 
         return super.canPerformAction(action, withSender: sender)
@@ -421,9 +399,9 @@ open class FolioReaderPage: UICollectionViewCell, WKNavigationDelegate, UIGestur
             // let frameHeight = webView.frame.height
             // let lastPageHeight = frameHeight * CGFloat(webView.pageCount) - CGFloat(Double(contentHeight!)!)
             // colorView.frame = CGRect(x: webView.frame.width * CGFloat(webView.pageCount-1), y: webView.frame.height - lastPageHeight, width: webView.frame.width, height: lastPageHeight)
-            colorView.frame = CGRect.zero
+            colorView?.frame = CGRect.zero
         } else {
-            colorView.frame = CGRect.zero
+            colorView?.frame = CGRect.zero
         }
     }
 }

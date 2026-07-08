@@ -77,7 +77,8 @@ class ViewController: UIViewController {
 
         Task {
             do {
-                let image = try await FREpubParserArchive.parseCoverImage(bookPath)
+                let data = try await FREpubParserArchive.parseCoverImage(bookPath)
+                guard let image = UIImage(data: data) else { return }
                 await MainActor.run {
                     button?.setBackgroundImage(image, for: .normal)
                 }
@@ -272,7 +273,7 @@ class FolioReaderUserDefaultsPreferenceProvider: FolioReaderDummyPreferenceProvi
         self.defaults.set(value, forKey: kCurrentAnnotationMenuIndex)
     }
 
-    override func preference(currentNavigationMenuBookListSyle defaults: Int) -> Int {
+    override func preference(currentNavigationMenuBookListStyle defaults: Int) -> Int {
         return self.defaults.integer(forKey: kCurrentNavigationMenuBookListStyle)
     }
     override func preference(setCurrentNavigationMenuBookListStyle value: Int) {

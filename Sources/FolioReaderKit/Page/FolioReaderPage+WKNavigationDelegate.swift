@@ -23,10 +23,10 @@ extension FolioReaderPage {
     }
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        guard let webView = webView as? FolioReaderWebView,
-              let pageNumber = self.pageNumber else {
+        guard let webView = webView as? FolioReaderWebView else {
             return
         }
+        let pageNumber = self.pageNumber
         
         print("\(#function) bridgeFinished pageNumber=\(String(describing: pageNumber))")
         var preprocessor = ""
@@ -41,35 +41,35 @@ extension FolioReaderPage {
         
         self.layoutAdapting = "Preparing Document Structure..."
         self.webView?.js(preprocessor) {_ in
-            guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch \(pageNumber) vs \(self.pageNumber!)"); return }
+            guard self.pageNumber == pageNumber else { FolioLogger.log("bridgeFinished pageNumberMisMatch \(pageNumber) vs \(self.pageNumber)"); return }
 
-            folioLogger("bridgeFinished pageNumber=\(String(describing: self.pageNumber)) size=\(String(describing: self.book.spine.spineReferences[self.pageNumber-1].resource.size))")
+            FolioLogger.log("bridgeFinished pageNumber=\(String(describing: self.pageNumber)) size=\(String(describing: self.book.spine.spineReferences[self.pageNumber-1].resource.size))")
             
             self.updateOverflowStyle(delay: 0.2) {
-                guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch updateOverflowStyle \(pageNumber) vs \(self.pageNumber!)"); return }
-                folioLogger("bridgeFinished updateOverflowStyle pageNumber=\(pageNumber)")
+                guard self.pageNumber == pageNumber else { FolioLogger.log("bridgeFinished pageNumberMisMatch updateOverflowStyle \(pageNumber) vs \(self.pageNumber)"); return }
+                FolioLogger.log("bridgeFinished updateOverflowStyle pageNumber=\(pageNumber)")
 
                 if self.writingMode == "vertical-rl" {
                     self.setNeedsLayout()       //resize webViewFrame
                 }
                 
                 self.updateRuntimStyle(delay: 0.2) {
-                    guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch updateRuntimStyle \(pageNumber) vs \(self.pageNumber!)"); return }
+                    guard self.pageNumber == pageNumber else { FolioLogger.log("bridgeFinished pageNumberMisMatch updateRuntimStyle \(pageNumber) vs \(self.pageNumber)"); return }
 
-                    folioLogger("bridgeFinished updateRuntimStyle pageNumber=\(pageNumber)")
+                    FolioLogger.log("bridgeFinished updateRuntimStyle pageNumber=\(pageNumber)")
                     
                     self.injectHighlights() {
-                        guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch injectHighlights \(pageNumber) vs \(self.pageNumber!)"); return }
-                        folioLogger("bridgeFinished injectHighlights pageNumber=\(pageNumber)")
+                        guard self.pageNumber == pageNumber else { FolioLogger.log("bridgeFinished pageNumberMisMatch injectHighlights \(pageNumber) vs \(self.pageNumber)"); return }
+                        FolioLogger.log("bridgeFinished injectHighlights pageNumber=\(pageNumber)")
 
                         self.updatePageInfo() {
-                            guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch updatePageInfo \(pageNumber) vs \(self.pageNumber!)"); return }
-                            folioLogger("bridgeFinished updatePageInfo pageNumber=\(pageNumber)")
+                            guard self.pageNumber == pageNumber else { FolioLogger.log("bridgeFinished pageNumberMisMatch updatePageInfo \(pageNumber) vs \(self.pageNumber)"); return }
+                            FolioLogger.log("bridgeFinished updatePageInfo pageNumber=\(pageNumber)")
 
                             self.updateStyleBackgroundPadding(delay: 0.2, tryShrinking: false) {
-                                folioLogger("bridgeFinished updateStyleBackgroundPadding pageNumber=\(pageNumber)")
+                                FolioLogger.log("bridgeFinished updateStyleBackgroundPadding pageNumber=\(pageNumber)")
                                 
-                                guard self.pageNumber == pageNumber else { folioLogger("bridgeFinished pageNumberMisMatch beforeShow \(pageNumber) vs \(self.pageNumber!)"); return }
+                                guard self.pageNumber == pageNumber else { FolioLogger.log("bridgeFinished pageNumberMisMatch beforeShow \(pageNumber) vs \(self.pageNumber)"); return }
                                 
                                 self.layoutAdapting = nil
                                 webView.isHidden = false
@@ -100,7 +100,7 @@ extension FolioReaderPage {
             self.webView?.createMenu(onHighlight: false)
         })
         
-        let overlayColor = readerConfig.mediaOverlayColor!
+        let overlayColor = readerConfig.mediaOverlayColor ?? .yellow
         let colors = "\"\(overlayColor.hexString(false))\", \"\(overlayColor.highlightColor().hexString(false))\""
         webView.js("setMediaOverlayStyleColors(\(colors))")
     }
@@ -123,7 +123,7 @@ extension FolioReaderPage {
         guard let url = request.url else { return false }
 
         if scheme == "highlight" || scheme == "highlight-with-note" {
-            shouldShowBar = false
+            folioReader.readerCenter?.invalidatePendingBarReveal()
 
             guard let decoded = url.absoluteString.removingPercentEncoding else { return false }
             let index = decoded.index(decoded.startIndex, offsetBy: 12)
@@ -175,7 +175,7 @@ extension FolioReaderPage {
             
             // Handle internal url
             if !url.pathExtension.isEmpty {
-                let pathComponent = (self.book.opfResource.href as NSString?)?.deletingLastPathComponent
+                let pathComponent = (self.book.opfResource?.href as NSString?)?.deletingLastPathComponent
                 guard let base = ((pathComponent == nil || pathComponent?.isEmpty == true) ? self.book.name : pathComponent)?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
                     return true
                 }
@@ -206,7 +206,7 @@ extension FolioReaderPage {
                         self.webView?.js("getClickAnchorOffset('\(anchorFromURL)')") { offset in
                             print("getClickAnchorOffset offset=\(offset ?? "0")")
                             self.folioReader.readerCenter?.changePageWith(href: href, animated: true) {
-                                delay(0.2) {
+                                DispatchQueue.main.asyncAfter(delay: 0.2) {
                                     guard self.folioReader.readerCenter?.currentPageNumber == hrefPage else { return }
                                     self.folioReader.readerCenter?.currentPage?.waitForLayoutFinish {
                                         self.folioReader.readerCenter?.currentPage?.handleAnchor(anchorFromURL, offsetInWindow: CGFloat(truncating: NumberFormatter().number(from: offset ?? "0") ?? 0), avoidBeginningAnchors: false, animated: true)
@@ -216,7 +216,7 @@ extension FolioReaderPage {
                         }
                     } else if navigationAction.navigationType != .other {
                         self.folioReader.readerCenter?.changePageWith(href: href, animated: true) {
-                            delay(0.2) {
+                            DispatchQueue.main.asyncAfter(delay: 0.2) {
                                 guard self.folioReader.readerCenter?.currentPageNumber == hrefPage else { return }
                                 guard let currentPage = self.folioReader.readerCenter?.currentPage else { return }
                                 currentPage.waitForLayoutFinish {
@@ -249,7 +249,7 @@ extension FolioReaderPage {
             print("Email")
             return true
         } else if url.absoluteString != "about:blank" && scheme.contains("http") && navigationAction.navigationType == .linkActivated {
-            let safariVC = SFSafariViewController(url: request.url!)
+            let safariVC = SFSafariViewController(url: url)
             safariVC.view.tintColor = self.readerConfig.tintColor
             self.folioReader.readerCenter?.present(safariVC, animated: true, completion: nil)
             return false

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 
 /// Table Of Contents delegate
 @objc protocol FolioReaderHistoryListDelegate: AnyObject {
@@ -84,10 +85,12 @@ class FolioReaderHistoryList: UITableViewController {
         
         let history = historyList[indexPath.row]
         
-        cell.indexToc.text = history.endPosition!.chapterName
-        cell.setSpineDate(history.startDatetime)
-        cell.setLabelDate(history.endPosition!.epoch)
-        cell.setPercentValue(history.endPosition!.chapterProgress / 100.0)
+        if let endPosition = history.endPosition {
+            cell.indexToc.text = endPosition.chapterName
+            cell.setSpineDate(history.startDatetime)
+            cell.setLabelDate(endPosition.epoch)
+            cell.setPercentValue(endPosition.chapterProgress / 100.0)
+        }
         
         cell.layoutMargins = UIEdgeInsets.zero
         cell.preservesSuperviewLayoutMargins = false

@@ -1,4 +1,7 @@
 import XCTest
+@testable import FolioEPUBCore
+import AEXML
+import ReadiumZIPFoundation
 @testable import FolioReaderKit
 
 class FREpubCoreTests: XCTestCase {
@@ -59,5 +62,40 @@ class FREpubCoreTests: XCTestCase {
         XCTAssertEqual(book.flatTableOfContents[3].title, "Chapter 2.2")
         XCTAssertEqual(book.flatTableOfContents[4].title, "Chapter 2.2.1")
         XCTAssertEqual(book.flatTableOfContents[5].title, "Chapter 3")
+    }
+
+    func testFindNavTag() async {
+        let tempDir = FileManager.default.temporaryDirectory
+        let archiveURL = tempDir.appendingPathComponent("temp_archive.zip")
+        try? FileManager.default.removeItem(at: archiveURL)
+        
+        guard let archive = try? await Archive(url: archiveURL, accessMode: .create) else {
+            XCTFail("Failed to create temporary archive")
+            return
+        }
+        
+        let parser = FREpubParserArchive(book: FRBook(), archive: archive)
+        
+        // Build nested XML:
+        // <body>
+        //   <div>
+        //     <section>
+        //       <nav id="toc">Nested TOC</nav>
+        //     </section>
+        //   </div>
+        // </body>
+        let document = AEXMLDocument()
+        let body = document.addChild(name: "body")
+        let div = body.addChild(name: "div")
+        let section = div.addChild(name: "section")
+        let nav = section.addChild(name: "nav")
+        nav.value = "Nested TOC"
+        
+        let foundNav = parser.findNavTag(body)
+        XCTAssertNotNil(foundNav)
+        XCTAssertEqual(foundNav?.value, "Nested TOC")
+        
+        // Cleanup
+        try? FileManager.default.removeItem(at: archiveURL)
     }
 }

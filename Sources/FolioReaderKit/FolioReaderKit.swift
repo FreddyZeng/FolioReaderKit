@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import FolioEPUBCore
 import UIKit
 import ReadiumGCDWebServer
 
@@ -18,36 +19,6 @@ internal let kHighlightRange = 30
 internal let kReuseCellIdentifier = "com.folioreader.Cell.ReuseIdentifier"
 internal let kReusePrologueCellIdentifier = "com.folioreader.Cell.Prologue.ReuseIdentifier"
 internal let kReuseHeaderFooterIdentifier = "com.folioreader.HeaderFooter.ReuseIdentifier"
-
-public enum FolioReaderError: Error, LocalizedError {
-    case bookNotAvailable
-    case errorInContainer
-    case errorInOpf
-    case authorNameNotAvailable
-    case coverNotAvailable
-    case invalidImage(path: String)
-    case titleNotAvailable
-    case fullPathEmpty
-
-    public var errorDescription: String? {
-        switch self {
-        case .bookNotAvailable:
-            return "Book not found"
-        case .errorInContainer, .errorInOpf:
-            return "Invalid book format"
-        case .authorNameNotAvailable:
-            return "Author name not available"
-        case .coverNotAvailable:
-            return "Cover image not available"
-        case let .invalidImage(path):
-            return "Invalid image at path: " + path
-        case .titleNotAvailable:
-            return "Book title not available"
-        case .fullPathEmpty:
-            return "Book corrupted"
-        }
-    }
-}
 
 /// Defines the media overlay and TTS selection
 ///
@@ -137,7 +108,17 @@ public enum NavigationMenuBookListStyle: Int, CaseIterable {
 /// Main Library class with some useful constants and methods
 public class FolioReader: NSObject {
 
+    public static let FontSizes = ["15.5px", "17px", "18.5px", "20px", "22px", "24px", "26px", "28px", "30.5px", "33px", "35.5px"]
+    public static let DefaultFontSize = FolioReader.FontSizes[3]
+    public static let DefaultFontWeight = "500"
+    public static let DefaultLetterSpacing = 2
+    public static let DefaultLineHeight = 3
+    public static let DefaultTextIndent = 2
+
     public override init() { }
+
+    public lazy var preferences = ReaderPreferences(folioReader: self)
+    lazy var cssGenerator = ReaderCSSGenerator(folioReader: self)
 
     deinit {
         removeObservers()
@@ -163,7 +144,7 @@ public class FolioReader: NSObject {
 
     /// Check if layout needs to change to fit Right To Left
     var needsRTLChange: Bool {
-        return (self.readerContainer?.book.spine.isRtl == true && (true || self.readerContainer?.readerConfig.scrollDirection == .horitonzalWithPagedContent))
+        return (self.readerContainer?.book.spine.isRtl == true && (true || self.readerContainer?.readerConfig.scrollDirection == .horizontalWithPagedContent))
     }
 
     open func isNight<T>(_ f: T, _ l: T) -> T {
@@ -193,10 +174,12 @@ extension FolioReader {
     /// - Parameters:
     ///   - parentViewController: View Controller that will present the reader container.
     ///   - epubPath: String representing the path on the disk of the ePub file. Must not be nil nor empty string.
-	///   - unzipPath: Path to unzip the compressed epub.
     ///   - config: FolioReader configuration.
-    ///   - shouldRemoveEpub: Boolean to remove the epub or not. Default true.
     ///   - animated: Pass true to animate the presentation; otherwise, pass false.
+    ///   - webServer: Local server for this reader instance. Use a distinct `ReadiumGCDWebServer` per concurrent reader.
+    ///
+    /// For concurrent readers, also use distinct `FolioReaderConfig.identifier` values and identifier-aware
+    /// persistence providers so settings, highlights, bookmarks, and positions do not overwrite each other.
     public func presentReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?, webServer: ReadiumGCDWebServer) {
         let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath, webServer: webServer)
         readerContainer.modalPresentationStyle = .fullScreen
@@ -206,6 +189,7 @@ extension FolioReader {
         addObservers()
     }
     
+    /// Prepares a reader container without presenting it. Use a distinct `ReadiumGCDWebServer` per concurrent reader.
     public func prepareReader(parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, animated: Bool = true, folioReaderCenterDelegate: FolioReaderCenterDelegate?, webServer: ReadiumGCDWebServer) {
         let readerContainer = FolioReaderContainer(withConfig: config, folioReader: self, epubPath: epubPath, webServer: webServer)
         self.readerContainer = readerContainer
@@ -218,426 +202,196 @@ extension FolioReader {
 
 extension FolioReader {
 
-    /// Check if current theme is Night mode
+    @available(*, deprecated, message: "Use preferences instead")
     public var nightMode: Bool {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "nightMode", default: false) ?? false
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "nightMode")
-
-            if let readerCenter = self.readerCenter {
-                UIView.animate(withDuration: 0.6, animations: {
-                    // _ = readerCenter.currentPage?.webView?.js("nightMode(\(self.nightMode))")
-                    readerCenter.pageIndicatorView?.reloadColors()
-                    readerCenter.configureNavBar()
-                    readerCenter.scrollScrubber?.reloadColors()
-                    readerCenter.collectionView.backgroundColor = (self.nightMode == true ? self.readerContainer?.readerConfig.nightModeBackground : UIColor.white)
-                }, completion: { (finished: Bool) in
-                    NotificationCenter.default.post(name: Notification.Name(rawValue: "needRefreshPageMode"), object: nil)
-                })
-            }
-        }
+        get { return preferences.nightMode }
+        set { preferences.nightMode = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var themeMode: Int {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "themeMode", default: 1) ?? 1
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "themeMode")
-            
-            guard let readerCenter = self.readerCenter,
-                  let backgroundColor = self.readerConfig?.themeModeBackground[self.themeMode] else { return }
-            
-            UIView.transition(
-                with: readerCenter.menuBarController.tabBar,
-                duration: 0.6,
-                options: .beginFromCurrentState.union(.transitionCrossDissolve),
-                animations: { () -> Void in
-                    readerCenter.menuBarController.tabBar.barTintColor = backgroundColor
-                },
-                completion: nil
-            )
-            
-            readerCenter.menuTabs.forEach { menu in
-                UIView.transition(
-                    with: menu.view,
-                    duration: 0.6,
-                    options: .beginFromCurrentState.union(.transitionCrossDissolve),
-                    animations: { () -> Void in
-                        menu.reloadColors()
-                    },
-                    completion: nil
-                )
-            }
-            
-            UIView.animate(withDuration: 0.6, animations: {
-                _ = readerCenter.currentPage?.webView?.js("themeMode(\(self.themeMode))")
-                readerCenter.pageIndicatorView?.reloadColors()
-                readerCenter.configureNavBar()
-                readerCenter.scrollScrubber?.reloadColors()
-                readerCenter.navigationItem.titleView?.subviews.forEach {
-                    if let label = $0 as? UILabel {
-                        label.textColor = self.readerConfig?.themeModeTextColor[self.themeMode]
-                    }
-                }
-                
-                readerCenter.collectionView.backgroundColor = backgroundColor
-                
-                if let page = readerCenter.currentPage {
-                    page.panDeadZoneTop?.backgroundColor = backgroundColor
-                    page.panDeadZoneBot?.backgroundColor = backgroundColor
-                    page.panDeadZoneLeft?.backgroundColor = backgroundColor
-                    page.panDeadZoneRight?.backgroundColor = backgroundColor
-                }
-            }, completion: { (finished: Bool) in
-                NotificationCenter.default.post(name: Notification.Name(rawValue: "needRefreshPageMode"), object: nil)
-            })
-        }
+        get { return preferences.themeMode }
+        set { preferences.themeMode = newValue }
     }
 
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentFont: String {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(stringFor: "currentFont", default: "Georgia") ?? "Georgia"
-        }
-        set (fontFamilyName) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setString: fontFamilyName, for: "currentFont")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
-        }
+        get { return preferences.currentFont }
+        set { preferences.currentFont = newValue }
     }
 
-    static let FontSizes = ["15.5px", "17px", "18.5px", "20px", "22px", "24px", "26px", "28px", "30.5px", "33px", "35.5px"]
-    public static let DefaultFontSize = FolioReader.FontSizes[3]
-    
-    /// Check current font size. Default .m
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentFontSize: String {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(stringFor: "currentFontSize", default: FolioReader.DefaultFontSize) ?? FolioReader.DefaultFontSize
-        }
-        set (fontSize) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setString: fontSize, for: "currentFontSize")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
-        }
+        get { return preferences.currentFontSize }
+        set { preferences.currentFontSize = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentFontSizeOnly: Int {
-        return Int(Double(currentFontSize.replacingOccurrences(of: "px", with: "")) ?? 20)
+        return preferences.currentFontSizeOnly
     }
 
-    public static let DefaultFontWeight = "500"
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentFontWeight: String {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(stringFor: "currentFontWeight", default: "500") ?? "500"
-        }
-        set (fontWeight) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setString: fontWeight, for: "currentFontWeight")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
-        }
+        get { return preferences.currentFontWeight }
+        set { preferences.currentFontWeight = newValue }
     }
     
-    /// Check current audio rate, the speed of speech voice. Default 0
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentAudioRate: Int {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentAudioRate", default: 1) ?? 1
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentAudioRate")
-        }
+        get { return preferences.currentAudioRate }
+        set { preferences.currentAudioRate = newValue }
     }
 
-    /// Check the current highlight style.Default 0
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentHighlightStyle: Int {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self)
-                .preference(intFor: "currentHighlightStyle", default: FolioReaderHighlightStyle.yellow.rawValue)
-                ?? FolioReaderHighlightStyle.yellow.rawValue
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentHighlightStyle")
-        }
+        get { return preferences.currentHighlightStyle }
+        set { preferences.currentHighlightStyle = newValue }
     }
 
-    /// Check the current Media Overlay or TTS style
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentMediaOverlayStyle: MediaOverlayStyle {
-        get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMediaOverlayStyle", default: MediaOverlayStyle.default.rawValue),
-                let style = MediaOverlayStyle(rawValue: rawValue) else {
-                return MediaOverlayStyle.default
-            }
-            return style
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "currentMediaOverlayStyle")
-        }
+        get { return preferences.currentMediaOverlayStyle }
+        set { preferences.currentMediaOverlayStyle = newValue }
     }
 
+    @available(*, deprecated, message: "Use preferences instead")
     public var defaultScrollDirection: FolioReaderScrollDirection {
-        self.readerContainer?.book.spine.isRtl == true ? .horitonzalWithPagedContent : .horizontalWithScrollContent
+        return preferences.defaultScrollDirection
     }
-    /// Check the current scroll direction. Default .defaultVertical
+
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentScrollDirection: Int {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self)
-                .preference(intFor: "currentScrollDirection", default: defaultScrollDirection.rawValue)
-                ?? defaultScrollDirection.rawValue
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentScrollDirection")
-
-            let direction = FolioReaderScrollDirection(rawValue: currentScrollDirection) ?? defaultScrollDirection
-            readerCenter?.currentPage?.setScrollDirection(direction)
-        }
+        get { return preferences.currentScrollDirection }
+        set { preferences.currentScrollDirection = newValue }
     }
 
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentNavigationMenuIndex: Int {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentNavigationMenuIndex", default: 0) ?? 0
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentNavigationMenuIndex")
-        }
+        get { return preferences.currentNavigationMenuIndex }
+        set { preferences.currentNavigationMenuIndex = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentAnnotationMenuIndex: Int {
-        get {
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentAnnotationMenuIndex", default: 0) ?? 0
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentAnnotationMenuIndex")
-        }
+        get { return preferences.currentAnnotationMenuIndex }
+        set { preferences.currentAnnotationMenuIndex = newValue }
     }
     
-    /**
-     0: Grid
-     1: List
-     */
-    public var currentNavigationMenuBookListSyle: NavigationMenuBookListStyle {
-        get {
-            guard self.structuralStyle == .bundle else {
-                return .List
-            }
-            let defaults: NavigationMenuBookListStyle = self.structuralTrackingTocLevel == .level1 ? .Grid : .List
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentNavigationMenuBookListSyle", default: defaults.rawValue),
-                  let style = NavigationMenuBookListStyle(rawValue: rawValue)
-            else { return defaults }
-            return style
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "currentNavigationMenuBookListSyle")
-        }
+    @available(*, deprecated, message: "Use preferences instead")
+    public var currentNavigationMenuBookListStyle: NavigationMenuBookListStyle {
+        get { return preferences.currentNavigationMenuBookListStyle }
+        set { preferences.currentNavigationMenuBookListStyle = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentVMarginLinked: Bool {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "currentVMarginLinked", default: true) ?? true
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "currentVMarginLinked")
-        }
+        get { return preferences.currentVMarginLinked }
+        set { preferences.currentVMarginLinked = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var defaultMarginTop: Int {
-        (self.readerCenter?.traitCollection ?? UIScreen.main.traitCollection).verticalSizeClass == .regular ? 10 : 5    //5% for regular size, otherwise 2.5%
+        return preferences.defaultMarginTop
     }
+
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentMarginTop: Int {
-        get {
-            let defaults = self.defaultMarginTop
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginTop", default: defaults) ?? defaults
-        }
-        set (value) {
-            let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginTop")
-            guard currentVMarginLinked == false else { return }
-            readerCenter?.currentPage?.byWritingMode(
-                horizontal: { self.readerCenter?.currentPage?.updateViewerLayout(delay: 0.2) },
-                vertical: { self.readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4) }
-            )
-        }
+        get { return preferences.currentMarginTop }
+        set { preferences.currentMarginTop = newValue }
     }
 
+    @available(*, deprecated, message: "Use preferences instead")
     public var defaultMarginBottom: Int {
-        (self.readerCenter?.traitCollection ?? UIScreen.main.traitCollection).verticalSizeClass == .regular ? 10 : 5    //5% for regular size, otherwise 2.5%
+        return preferences.defaultMarginBottom
     }
+
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentMarginBottom: Int {
-        get {
-            let defaults = defaultMarginBottom
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginBottom", default: defaults) ?? defaults
-        }
-        set (value) {
-            let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginBottom")
-            guard currentVMarginLinked == false else { return }
-            readerCenter?.currentPage?.byWritingMode(
-                horizontal: { self.readerCenter?.currentPage?.updateViewerLayout(delay: 0.2) },
-                vertical: { self.readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4) }
-            )
-        }
+        get { return preferences.currentMarginBottom }
+        set { preferences.currentMarginBottom = newValue }
     }
 
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentHMarginLinked: Bool {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "currentHMarginLinked", default: true) ?? true
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "currentHMarginLinked")
-        }
+        get { return preferences.currentHMarginLinked }
+        set { preferences.currentHMarginLinked = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var defaultMarginLeft: Int {
-        (self.readerCenter?.traitCollection ?? UIScreen.main.traitCollection).horizontalSizeClass == .regular ? 30 : 5    //15% for regular size, otherwise 2.5%
+        return preferences.defaultMarginLeft
     }
+
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentMarginLeft: Int {
-        get {
-            let defaults = self.defaultMarginLeft
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginLeft", default: defaults) ?? defaults
-        }
-        set (value) {
-            let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginLeft")
-            guard currentHMarginLinked == false else { return }
-            readerCenter?.currentPage?.byWritingMode(
-                horizontal: { self.readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4) },
-                vertical: { self.readerCenter?.currentPage?.updateViewerLayout(delay: 0.2) }
-            )
-        }
+        get { return preferences.currentMarginLeft }
+        set { preferences.currentMarginLeft = newValue }
     }
 
+    @available(*, deprecated, message: "Use preferences instead")
     public var defaultMarginRight: Int {
-        (self.readerCenter?.traitCollection ?? UIScreen.main.traitCollection).horizontalSizeClass == .regular ? 30 : 5     //15% for regular size, otherwise 2.5%
-    }
-    public var currentMarginRight: Int {
-        get {
-            let defaults = self.defaultMarginRight
-            return delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentMarginRight", default: defaults) ?? defaults
-        }
-        set (value) {
-            let newValue = max(0, min(50, value))
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue, for: "currentMarginRight")
-            guard currentHMarginLinked == false else { return }
-            readerCenter?.currentPage?.byWritingMode(
-                horizontal: { self.readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4) },
-                vertical: { self.readerCenter?.currentPage?.updateViewerLayout(delay: 0.2) }
-            )
-        }
-    }
-    
-    public static let DefaultLetterSpacing = 2
-    public var currentLetterSpacing: Int {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentLetterSpacing", default: 2) ?? 2
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentLetterSpacing")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
-        }
-    }
-    
-    public static let DefaultLineHeight = 3
-    public var currentLineHeight: Int {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentLineHeight", default: 3) ?? 3
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentLineHeight")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
-        }
+        return preferences.defaultMarginRight
     }
 
-    //in em
-    public static let DefaultTextIndent = 2
+    @available(*, deprecated, message: "Use preferences instead")
+    public var currentMarginRight: Int {
+        get { return preferences.currentMarginRight }
+        set { preferences.currentMarginRight = newValue }
+    }
+    
+    @available(*, deprecated, message: "Use preferences instead")
+    public var currentLetterSpacing: Int {
+        get { return preferences.currentLetterSpacing }
+        set { preferences.currentLetterSpacing = newValue }
+    }
+    
+    @available(*, deprecated, message: "Use preferences instead")
+    public var currentLineHeight: Int {
+        get { return preferences.currentLineHeight }
+        set { preferences.currentLineHeight = newValue }
+    }
+
+    @available(*, deprecated, message: "Use preferences instead")
     public var currentTextIndent: Int {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "currentTextIndent", default: 2) ?? 2
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value, for: "currentTextIndent")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.4)
-        }
+        get { return preferences.currentTextIndent }
+        set { preferences.currentTextIndent = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var doWrapPara: Bool {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "doWrapPara", default: false) ?? false
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "doWrapPara")
-        }
+        get { return preferences.doWrapPara }
+        set { preferences.doWrapPara = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var doClearClass: Bool {
-        get {
-            delegate?.folioReaderPreferenceProvider?(self).preference(boolFor: "doClearClass", default: true) ?? true
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setBool: value, for: "doClearClass")
-        }
+        get { return preferences.doClearClass }
+        set { preferences.doClearClass = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var styleOverride: StyleOverrideTypes {
-        get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "styleOverride", default: StyleOverrideTypes.PNode.rawValue),
-                  let value = StyleOverrideTypes(rawValue: rawValue) else {
-                return StyleOverrideTypes.PNode
-            }
-            return value
-        }
-        set (value) {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: value.rawValue, for: "styleOverride")
-            readerCenter?.currentPage?.updateRuntimStyle(delay: 0.2)
-        }
+        get { return preferences.styleOverride }
+        set { preferences.styleOverride = newValue }
     }
     
     @available(*, deprecated, message: "use delegate")
     @objc dynamic open var savedPositionForCurrentBook: FolioReaderReadPosition? {
-        get {
-            guard let bookId = self.readerCenter?.book.name?.deletingPathExtension else { return nil }
-            folioLogger("savedPositionForCurrentBook get")
-            return delegate?.folioReaderReadPositionProvider?(self).folioReaderReadPosition(self, bookId: bookId)
-        }
-        set {
-            guard let position = newValue,
-                  let bookId = self.readerCenter?.book.name?.deletingPathExtension else { return }
-            
-            guard self.isReaderReady || position.takePrecedence else { return }
-            
-            if let debug = readerConfig?.debug, debug.contains(.functionTrace) {
-                Thread.callStackSymbols.forEach {
-                    folioLogger($0)
-                }
-                if position.bookProgress < 5.0 {
-                    folioLogger(position.bookProgress.description)
-                }
-            }
-            
-            self.save(readPosition: position, for: bookId)
-        }
+        get { return preferences.savedPositionForCurrentBook }
+        set { preferences.savedPositionForCurrentBook = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var structuralStyle: FolioReaderStructuralStyle {
-        get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "structuralStyle", default: FolioReaderStructuralStyle.atom.rawValue),
-                  let value = FolioReaderStructuralStyle(rawValue: rawValue) else {
-                      return FolioReaderStructuralStyle.atom
-                  }
-            return value
-        }
-        set {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue.rawValue, for: "structuralStyle")
-        }
+        get { return preferences.structuralStyle }
+        set { preferences.structuralStyle = newValue }
     }
     
+    @available(*, deprecated, message: "Use preferences instead")
     public var structuralTrackingTocLevel: FolioReaderPositionTrackingStyle {
-        get {
-            guard let rawValue = delegate?.folioReaderPreferenceProvider?(self).preference(intFor: "structuralTrackingTocLevel", default: FolioReaderPositionTrackingStyle.linear.rawValue),
-                  let value = FolioReaderPositionTrackingStyle(rawValue: rawValue) else {
-                      return FolioReaderPositionTrackingStyle.linear
-                  }
-            return value
-        }
-        set {
-            delegate?.folioReaderPreferenceProvider?(self).preference(setInt: newValue.rawValue, for: "structuralTrackingTocLevel")
-        }
+        get { return preferences.structuralTrackingTocLevel }
+        set { preferences.structuralTrackingTocLevel = newValue }
     }
 }
 
@@ -705,162 +459,38 @@ extension FolioReader {
 
 extension FolioReader {
     
-    
+    @available(*, deprecated, message: "Use cssGenerator instead")
     func generateRuntimeStyle() -> String {
-        let letterSpacing = Float(currentLetterSpacing * 2 * currentFontSizeOnly) / Float(100)
-        let lineHeight = Decimal((currentLineHeight + 10) * 5) / 100 + 1    //1.5 ~ 2.05
-        let textIndent = (letterSpacing + Float(currentFontSizeOnly)) * Float(currentTextIndent)
-        let marginTopEm = Decimal(1)
-        let marginBottonEm = lineHeight - 1
-        
-        
-        var style = ""
-        if styleOverride != .None {
-            var tagSelector = "p"
-            if styleOverride.rawValue >= StyleOverrideTypes.PlusTD.rawValue {
-                tagSelector += ", td"
-            }
-            if styleOverride.rawValue >= StyleOverrideTypes.PlusSPAN.rawValue {
-                tagSelector += ", td, span"
-            }
-            
-        style += """
-            \(tagSelector) {
-                /*font-family: \(currentFont) !important;*/
-                /*font-size: \(currentFontSize) !important;*/
-                /*font-weight: \(currentFontWeight) !important;*/
-                /*letter-spacing: \(letterSpacing)px !important;*/
-                /*line-height: \(lineHeight) !important;*/
-                /*text-indent: \(textIndent)px !important;*/
-                /*text-align: justify !important;*/
-                /*margin: \(marginTopEm)em 0 \(marginBottonEm)em 0 !important;*/
-                /*-webkit-hyphens: auto !important;*/
-            }
-            
-            span {
-                /*letter-spacing: \(letterSpacing)px !important;*/
-                /*line-height: \(lineHeight) !important;*/
-            }
-            
-            """
-        }
-        if let pageWidth = readerCenter?.pageWidth/*, let pageHeight = readerCenter?.pageHeight*/ {
-            let marginTop = 0 //CGFloat(currentMarginTop) / 200 * pageHeight
-            let marginBottom = 0 //CGFloat(currentMarginBottom) / 200 * pageHeight
-            let marginLeft = CGFloat(currentMarginLeft) / 200 * pageWidth
-            let marginRight = CGFloat(currentMarginRight) / 200 * pageWidth
-            
-            style += """
-            
-            /*body {
-                padding: \(marginTop)px \(marginRight)px \(marginBottom)px \(marginLeft)px !important;
-                overflow: hidden !important;
-            }
-            
-            @page {
-                margin: \(marginTop)px \(marginRight)px \(marginBottom)px \(marginLeft)px !important;
-            }*/
-            
-            """
-        }
-        
-        
-        return style
+        return cssGenerator.generateRuntimeStyle()
     }
     
-    static let CssLevelTags : [StyleOverrideTypes: String] = [.PNode: "p", .PlusTD: "td", .PlusSPAN: "span", .AllText: ""]
-    static func CssLevels(type: String, def: String) -> [String] {
-        CssLevelTags.map {
-            let separator = $1.isEmpty ? "" : " "
-            return "html body.folioStyleL\($0.rawValue)\(type) \($1), body.folioStyleL\($0.rawValue)\(type)\(separator)\($1) { \(def) }"
-        }.sorted()
-    }
-    
-    static func CssImgLevels(type: String, def: String) -> [String] {
-        CssLevelTags.map {
-            let separator = $1.isEmpty ? "" : " "
-            return "html body.folioStyleL\($0.rawValue)\(type) \($1) img.folioImg, body.folioStyleL\($0.rawValue)\(type)\(separator)\($1) img.folioImg { \(def) }"
-        }.sorted()
-    }
-    
+    @available(*, deprecated, message: "Use cssGenerator instead")
     func cssFontFamilies() -> String {
-        UIFont.familyNames.map {
-            FolioReader.CssLevels(type: "FontFamily\($0.replacingOccurrences(of: " ", with: "_"))", def: "font-family: \"\($0)\" !important;")
-        }.flatMap { $0 }.joined(separator: "\n")
+        return cssGenerator.cssFontFamilies()
     }
     
+    @available(*, deprecated, message: "Use cssGenerator instead")
     func cssUserFontFaces() -> String {
-        guard let readerConfig = readerConfig else { return "" }
-        
-        return readerConfig.userFontDescriptors.compactMap { fontName, fontDescriptor -> String? in
-//                let ctFont = CTFontCreateWithName(fontName as CFString, CGFloat(currentFontSizeOnly), nil)
-//                let ctFontSymbolicTrait = CTFontGetSymbolicTraits(ctFont)
-//                let ctFontTraits = CTFontCopyTraits(ctFont)
-//                let ctFontURL = unsafeBitCast(CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontURLAttribute), to: CFURL.self)
-            guard let ctFontURL = CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontURLAttribute),
-                  CFGetTypeID(ctFontURL) == CFURLGetTypeID(),
-                  let fontURL = ctFontURL as? URL else {
-                      return nil
-                  }
-            
-            guard let ctFontFamilyName = CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontFamilyNameAttribute),
-                  CFGetTypeID(ctFontFamilyName) == CFStringGetTypeID(),
-                  let fontFamilyName = ctFontFamilyName as? String else {
-                      return nil
-                  }
-            
-            var isItalic = false
-            var isBold = false
-            
-            var cssFontWeight = "normal"
-            
-            if let ctFontTraits = CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute), CFGetTypeID(ctFontTraits) == CFDictionaryGetTypeID() {
-                if let ctFontSymbolicTrait = CFDictionaryGetValue(
-                    (ctFontTraits as! CFDictionary),
-                    unsafeBitCast(kCTFontSymbolicTrait, to: UnsafeRawPointer.self))  {
-                    
-                    var symTraitVal = UInt32()
-                    CFNumberGetValue(unsafeBitCast(ctFontSymbolicTrait, to: CFNumber.self), CFNumberType.intType, &symTraitVal)
-                    
-                    isItalic = symTraitVal & CTFontSymbolicTraits.traitItalic.rawValue > 0
-                    isBold = symTraitVal & CTFontSymbolicTraits.traitBold.rawValue > 0
-                    
-                    cssFontWeight = isBold ? "bold" : "normal"
-                }
-//                let isItalic = ctFontSymbolicTrait.contains(.traitItalic)
-//                let isBold = ctFontSymbolicTrait.contains(.traitBold)
-                
-                
-                if let weightRef = CFDictionaryGetValue(
-                    (ctFontTraits as! CFDictionary),
-                    unsafeBitCast(kCTFontWeightTrait, to: UnsafeRawPointer.self)) {
-                    
-                    var weightValue = Float()
-                    CFNumberGetValue(unsafeBitCast(weightRef, to: CFNumber.self), CFNumberType.floatType, &weightValue)
-                    if weightValue < -0.49 {
-                        cssFontWeight = "100"   //thin
-                    } else if weightValue < -0.29 {
-                        cssFontWeight = "200"   //extralight
-                    } else if weightValue < -0.19 {
-                        cssFontWeight = "300"   //light
-                    } else if weightValue < 0.01 {
-                        cssFontWeight = "400"   //normal
-                    } else if weightValue < 0.21 {
-                        cssFontWeight = "500"   //medium
-                    } else if weightValue < 0.31 {
-                        cssFontWeight = "600"   //semibold
-                    } else if weightValue < 0.41 {
-                        cssFontWeight = "700"   //bold
-                    } else if weightValue < 0.61 {
-                        cssFontWeight = "800"   //extrabold
-                    } else {
-                        cssFontWeight = "900"   //heavy
-                    }
-                }
-            }
-            
-            return "@font-face { font-family: \"\(fontFamilyName)\"; font-style: \(isItalic ? "italic" : "normal"); font-weight: \(cssFontWeight); src: url(\"/_fonts/\(fontURL.lastPathComponent)\");} "
-            
-        }.joined(separator: " ")
+        return cssGenerator.cssUserFontFaces()
+    }
+    
+    @available(*, deprecated, message: "Use ReaderCSSGenerator.CssLevels instead")
+    public static func CssLevels(type: String, def: String) -> [String] {
+        return ReaderCSSGenerator.CssLevels(type: type, def: def)
+    }
+
+    @available(*, deprecated, message: "Use ReaderCSSGenerator.CssImgLevels instead")
+    public static func CssImgLevels(type: String, def: String) -> [String] {
+        return ReaderCSSGenerator.CssImgLevels(type: type, def: def)
+    }
+
+    public var highlightProvider: FolioReaderHighlightProviding? {
+        guard let provider = self.delegate?.folioReaderHighlightProvider?(self) else { return nil }
+        return FolioReaderHighlightProviderWrapper(provider)
+    }
+
+    public var bookmarkProvider: FolioReaderBookmarkProviding? {
+        guard let provider = self.delegate?.folioReaderBookmarkProvider?(self) else { return nil }
+        return FolioReaderBookmarkProviderWrapper(provider)
     }
 }

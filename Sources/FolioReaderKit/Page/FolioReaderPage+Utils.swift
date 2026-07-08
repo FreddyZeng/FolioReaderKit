@@ -24,7 +24,7 @@ public extension FolioReaderPage {
     
     func waitForLayoutFinish(completion: @escaping () -> Void, retry: Int = 99) {
         if layoutAdapting != nil, retry > 0 {
-            delay(0.1) {
+            DispatchQueue.main.asyncAfter(delay: 0.1) {
                 self.waitForLayoutFinish(completion: completion, retry: retry - 1)
             }
         } else {

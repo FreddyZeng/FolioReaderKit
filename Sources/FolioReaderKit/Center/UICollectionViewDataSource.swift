@@ -20,14 +20,14 @@ extension FolioReaderCenter: UICollectionViewDataSource {
     }
 
     open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         let reuseableCell = collectionView.dequeueReusableCell(withReuseIdentifier: kReuseCellIdentifier, for: indexPath) as? FolioReaderPage
         return self.configure(readerPageCell: reuseableCell, atIndexPath: indexPath)
     }
 
     private func configure(readerPageCell cell: FolioReaderPage?, atIndexPath indexPath: IndexPath) -> UICollectionViewCell {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let cell = cell, let readerContainer = readerContainer else {
             return UICollectionViewCell()
@@ -54,22 +54,34 @@ extension FolioReaderCenter: UICollectionViewDataSource {
         // Configure the cell
         let resource = self.book.spine.spineReferences[indexPath.row].resource
 
+        let resourceHref = resource.href
         guard let fileName = self.book.name,
-              let resourceHref = resource.href
+              !resourceHref.isEmpty,
+              let opfResource = self.book.opfResource
         else { return cell }
         
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "http"
-        urlComponents.host = "localhost"
-        urlComponents.port = Int(readerContainer.webServer.port)
-        urlComponents.path = ["", fileName, self.book.opfResource.href.deletingLastPathComponent, resourceHref].joined(separator: "/")
+        guard let url = FolioReaderCenter.resourceURL(
+            fileName: fileName,
+            opfHref: opfResource.href,
+            resourceHref: resourceHref,
+            port: readerContainer.webServer.port
+        ) else { return cell }
         
-        guard let url = urlComponents.url else { return cell }
-        
-        folioLogger("webView.load url=\(url.absoluteString)")
+        FolioLogger.log("webView.load url=\(url.absoluteString)")
         cell.webView?.load(URLRequest(url: url))
         
         return cell
     }
 
+}
+
+extension FolioReaderCenter {
+    static func resourceURL(fileName: String, opfHref: String, resourceHref: String, port: UInt) -> URL? {
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "http"
+        urlComponents.host = "localhost"
+        urlComponents.port = Int(port)
+        urlComponents.path = ["", fileName, opfHref.deletingLastPathComponent, resourceHref].joined(separator: "/")
+        return urlComponents.url
+    }
 }

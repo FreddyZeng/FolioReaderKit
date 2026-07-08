@@ -4,13 +4,14 @@
 //
 
 import UIKit
+import FolioEPUBCore
 
 extension FolioReaderPage {
     /**
      Find and return the current chapter resource.
      */
     public func getChapter() -> FRResource? {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var foundResource: FRResource?
 
@@ -21,8 +22,8 @@ extension FolioReaderPage {
                 if let reference = book.spine.spineReferences[safe: (pageNumber - 1)], let resource = item.resource, resource == reference.resource {
                     foundResource = resource
                     break
-                } else if let children = item.children, children.isEmpty == false {
-                    search(children)
+                } else if !item.children.isEmpty {
+                    search(item.children)
                 }
             }
         }
@@ -37,7 +38,7 @@ extension FolioReaderPage {
      Find and return the current chapter name.
      */
     public func getChapterName() -> String? {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         var foundChapterName: String?
         
@@ -47,11 +48,10 @@ extension FolioReaderPage {
                 
                 if let reference = self.book.spine.spineReferences[safe: pageNumber - 1],
                     let resource = item.resource,
-                    resource == reference.resource,
-                    let title = item.title {
-                    foundChapterName = title
-                } else if let children = item.children, children.isEmpty == false {
-                    search(children)
+                    resource == reference.resource {
+                    foundChapterName = item.title
+                } else if !item.children.isEmpty {
+                    search(item.children)
                 }
             }
         }
@@ -65,9 +65,9 @@ extension FolioReaderPage {
 
         var tocRef = self.folioReader.readerCenter?.getChapterName(pageNumber: pageNumber)
         var bookTocIndex: Int? = nil
-        while( tocRef != nil ) {
-            bookTocIndex = self.book.bundleRootTableOfContents.firstIndex(of: tocRef!) ?? bookTocIndex
-            tocRef = tocRef?.parent
+        while let currentTocRef = tocRef {
+            bookTocIndex = self.book.bundleRootTableOfContents.firstIndex(of: currentTocRef) ?? bookTocIndex
+            tocRef = currentTocRef.parent
         }
         
         return bookTocIndex
@@ -91,8 +91,8 @@ extension FolioReaderPage {
                self.readerConfig.displayTitle,
                let bookTocIndex = self.getBundleRootTocIndex(),
                let bookToc = self.book.bundleRootTableOfContents[safe: bookTocIndex],
-               let bookTitle = bookToc.title,
                let bundleTitle = self.book.title {
+                let bookTitle = bookToc.title
                 if readerCenter.navigationItem.titleView == nil {
                     let titleView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 50))
                     readerCenter.navigationItem.titleView = titleView
@@ -171,10 +171,10 @@ extension FolioReaderPage {
         }
            
         var chapterTocReferences = [FRTocReference]()
-        while (firstChapterTocReference != nil) {
-            chapterTocReferences.append(firstChapterTocReference!)
-            firstChapterTocReference = firstChapterTocReference?.parent
-            if self.folioReader.structuralStyle != .atom, firstChapterTocReference?.level < self.folioReader.structuralTrackingTocLevel.rawValue - 1 {
+        while let currentRef = firstChapterTocReference {
+            chapterTocReferences.append(currentRef)
+            firstChapterTocReference = currentRef.parent
+            if self.folioReader.structuralStyle != .atom, (firstChapterTocReference?.level ?? 0) < self.folioReader.structuralTrackingTocLevel.rawValue - 1 {
                 break
             }
         }

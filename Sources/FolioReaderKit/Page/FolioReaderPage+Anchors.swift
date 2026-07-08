@@ -17,7 +17,7 @@ extension FolioReaderPage {
         guard !anchor.isEmpty else { return }
         
         guard let webView = webView, webView.isHidden == false, self.layoutAdapting == nil else {
-            delay(0.1) {
+            DispatchQueue.main.asyncAfter(delay: 0.1) {
                 self.handleAnchor(anchor, offsetInWindow: offsetInWindow, avoidBeginningAnchors: avoidBeginningAnchors, animated: animated, completion: completion)
             }
             return
@@ -29,7 +29,7 @@ extension FolioReaderPage {
             }
             self.byWritingMode {
                 switch self.readerConfig.scrollDirection {
-                case .horitonzalWithPagedContent:
+                case .horizontalWithPagedContent:
                     let page = floor(offset / webView.frame.width)
                     self.scrollPageToOffset(page * webView.frame.width, animated: animated)
                 default:
@@ -51,7 +51,7 @@ extension FolioReaderPage {
                 }
             } vertical: {
                 switch self.readerConfig.scrollDirection {
-                case .horitonzalWithPagedContent:
+                case .horizontalWithPagedContent:
                     let page = ceil(offset / webView.frame.width)
                     self.scrollPageToOffset(webView.scrollView.contentSize.width - (page+1) * webView.frame.width, animated: true)
                 default:
@@ -74,7 +74,7 @@ extension FolioReaderPage {
      - returns: The element offset ready to scroll
      */
     func getAnchorOffset(_ anchor: String, completion: @escaping ((CGFloat) -> ())) {
-        let horizontal = self.readerConfig.scrollDirection == .horitonzalWithPagedContent
+        let horizontal = self.readerConfig.scrollDirection == .horizontalWithPagedContent
         self.webView?.js("getAnchorOffset(\"\(anchor)\", \(horizontal.description))") { strOffset in
             guard let strOffset = strOffset else {
                 completion(CGFloat(0))

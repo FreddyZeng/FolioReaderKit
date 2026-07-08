@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import SwiftSoup
 
 class FolioReaderReferenceList: UITableViewController {
@@ -55,7 +56,8 @@ class FolioReaderReferenceList: UITableViewController {
         
         guard let epubArchive = await book.getThreadEpubArchive(),
               let spine = book.spine.spineReferences[safe: pageNumber - 1],
-              let opfURL = URL(fileURLWithPath: book.opfResource.href, isDirectory: false) as URL?,
+              let opfResource = book.opfResource,
+              let opfURL = URL(fileURLWithPath: opfResource.href, isDirectory: false) as URL?,
               let spineURL = URL(fileURLWithPath: spine.resource.href, isDirectory: false, relativeTo: opfURL) as URL?
         else { return [] }
         
@@ -170,7 +172,7 @@ class FolioReaderReferenceList: UITableViewController {
                     self.sections = self.sectionBookmarks.keys.sorted()
                     self.tableView.reloadData()
                     
-                    delay(0.2) {
+                    DispatchQueue.main.asyncAfter(delay: 0.2) {
                         self.scrollToVisible()
                     }
                 }
@@ -206,9 +208,12 @@ class FolioReaderReferenceList: UITableViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        if let addingBookmarkPos = addingBookmarkPos,
-           let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader) {
-            provider.folioReaderBookmark(self.folioReader, removed: addingBookmarkPos)
+        if let addingBookmarkPos = addingBookmarkPos {
+            let provider = self.folioReader.bookmarkProvider
+            let reader = self.folioReader
+            Task {
+                await provider?.removeBookmark(pos: addingBookmarkPos, for: reader)
+            }
         }
         
         super.viewWillDisappear(animated)
@@ -229,13 +234,13 @@ class FolioReaderReferenceList: UITableViewController {
         guard let tocItem = self.folioReader.readerCenter?.getChapterName(pageNumber: pageNumber) else {
             return "  Book Item \(pageNumber)"
         }
-        var title = [tocItem.title!]
+        var title = [tocItem.title]
         var parent = tocItem.parent
-        while (parent != nil) {
-            if parent?.title != nil {
-                title.append(parent!.title!)
+        while let currentParent = parent {
+            if !currentParent.title.isEmpty {
+                title.append(currentParent.title)
             }
-            parent = parent?.parent
+            parent = currentParent.parent
         }
         return "  " + title.reversed().joined(separator: ", ")
     }
@@ -253,50 +258,54 @@ class FolioReaderReferenceList: UITableViewController {
         let dateString = dateFormatter.string(from: bookmark.date)
 
         // Date
-        var dateLabel: UILabel!
+        // Date
+        var dateLabel: UILabel?
         if cell.contentView.viewWithTag(456) == nil {
-            dateLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
-            dateLabel.tag = 456
-            dateLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            dateLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-            cell.contentView.addSubview(dateLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 16))
+            label.tag = 456
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.font = UIFont(name: "Avenir-Medium", size: 12)
+            cell.contentView.addSubview(label)
+            dateLabel = label
         } else {
             dateLabel = cell.contentView.viewWithTag(456) as? UILabel
         }
 
-        dateLabel.text = dateString.uppercased()
-        dateLabel.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
-        dateLabel.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel.frame.height)
+        dateLabel?.text = dateString.uppercased()
+        dateLabel?.textColor = self.folioReader.isNight(UIColor(white: 5, alpha: 0.3), UIColor.lightGray)
+        dateLabel?.frame = CGRect(x: 20, y: 20, width: view.frame.width-40, height: dateLabel?.frame.height ?? 16)
         
         if let pos = bookmark.pos, let _ = self.folioReader.readerCenter?.bookmarkErrors[pos] {
-            var errorLabel: UILabel!
+            var errorLabel: UILabel?
             if cell.contentView.viewWithTag(4567) == nil {
-                errorLabel = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
-                errorLabel.tag = 4567
-                errorLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-                errorLabel.font = UIFont(name: "Avenir-Medium", size: 12)
-                cell.contentView.addSubview(errorLabel)
+                let label = UILabel(frame: CGRect(x: view.frame.width-40, y: 0, width: 40, height: 16))
+                label.tag = 4567
+                label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+                label.font = UIFont(name: "Avenir-Medium", size: 12)
+                cell.contentView.addSubview(label)
+                errorLabel = label
             } else {
                 errorLabel = cell.contentView.viewWithTag(4567) as? UILabel
             }
-            errorLabel.text = "Cannot Locate, Touch to Fix"
-            errorLabel.textColor = UIColor.systemRed
-            errorLabel.sizeToFit()
-            errorLabel.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel.frame.height)
+            errorLabel?.text = "Cannot Locate, Touch to Fix"
+            errorLabel?.textColor = UIColor.systemRed
+            errorLabel?.sizeToFit()
+            errorLabel?.frame = CGRect(x: view.frame.width-180, y: 20, width: 160, height: errorLabel?.frame.height ?? 16)
         } else {
             cell.contentView.viewWithTag(4567)?.removeFromSuperview()
         }
 
         // Text
-        var bookmarkLabel: UILabel!
+        var bookmarkLabel: UILabel?
         if cell.contentView.viewWithTag(123) == nil {
-            bookmarkLabel = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            bookmarkLabel.tag = 123
-            bookmarkLabel.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
-            bookmarkLabel.numberOfLines = 0
-            bookmarkLabel.lineBreakMode = .byWordWrapping
-            bookmarkLabel.textColor = UIColor.black
-            cell.contentView.addSubview(bookmarkLabel)
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            label.tag = 123
+            label.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
+            label.numberOfLines = 0
+            label.lineBreakMode = .byWordWrapping
+            label.textColor = UIColor.black
+            cell.contentView.addSubview(label)
+            bookmarkLabel = label
         } else {
             bookmarkLabel = cell.contentView.viewWithTag(123) as? UILabel
         }
@@ -305,7 +314,7 @@ class FolioReaderReferenceList: UITableViewController {
         let titleAttributedString = NSMutableAttributedString(string: bookmark.title)
         
         let titleRange = NSRange(location: 0, length: nsTitle.length)
-        titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: titleRange)
+        titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: titleRange)
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
@@ -318,51 +327,54 @@ class FolioReaderReferenceList: UITableViewController {
             let firstRange = nsTitle.range(of: refText)
             if firstRange.length > 0 {
                 titleAttributedString.addAttribute(.kern, value: NSNumber(1.4), range: firstRange)
-                titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Black", size: 17)!, range: firstRange)
+                titleAttributedString.addAttribute(.font, value: UIFont(name: "Avenir-Black", size: 17) ?? .boldSystemFont(ofSize: 17), range: firstRange)
             }
         }
         
-        bookmarkLabel.attributedText = titleAttributedString
-        bookmarkLabel.sizeToFit()
-        bookmarkLabel.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: bookmarkLabel.frame.height)
+        bookmarkLabel?.attributedText = titleAttributedString
+        bookmarkLabel?.sizeToFit()
+        let labelHeight = bookmarkLabel?.frame.height ?? 0
+        bookmarkLabel?.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: labelHeight)
         
-        var bookmarkTitleEdit: UITextField!
-        if let view = cell.contentView.viewWithTag(1234){
-            bookmarkTitleEdit = view as? UITextField
+        var bookmarkTitleEdit: UITextField?
+        if let view = cell.contentView.viewWithTag(1234) as? UITextField {
+            bookmarkTitleEdit = view
         } else {
-            bookmarkTitleEdit = UITextField(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            bookmarkTitleEdit.tag = 1234
-            bookmarkTitleEdit.autoresizingMask = .flexibleWidth
-            bookmarkTitleEdit.textColor = .black
-            cell.contentView.addSubview(bookmarkTitleEdit)
+            let tf = UITextField(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            tf.tag = 1234
+            tf.autoresizingMask = .flexibleWidth
+            tf.textColor = .black
+            cell.contentView.addSubview(tf)
+            bookmarkTitleEdit = tf
         }
         
         let isEditingItem = (bookmark.pos == self.editingBookmarkPos) || (bookmark.pos == self.addingBookmarkPos)
-        bookmarkTitleEdit.isHidden = !isEditingItem
-        bookmarkTitleEdit.backgroundColor = isEditingItem ? .white : .clear
+        bookmarkTitleEdit?.isHidden = !isEditingItem
+        bookmarkTitleEdit?.backgroundColor = isEditingItem ? .white : .clear
         
         if isEditingItem {
-            bookmarkTitleEdit.becomeFirstResponder()
+            bookmarkTitleEdit?.becomeFirstResponder()
         }
         
-        bookmarkTitleEdit.text = bookmark.title
-        bookmarkTitleEdit.sizeToFit()
-        bookmarkTitleEdit.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: bookmarkLabel.frame.height)
+        bookmarkTitleEdit?.text = bookmark.title
+        bookmarkTitleEdit?.sizeToFit()
+        bookmarkTitleEdit?.frame = CGRect(x: 20, y: 46, width: view.frame.width-40, height: labelHeight)
         
-        var bookmarkTitleSaveButton: UIButton!
-        if let view = cell.contentView.viewWithTag(987) {
-            bookmarkTitleSaveButton = view as? UIButton
+        var bookmarkTitleSaveButton: UIButton?
+        if let view = cell.contentView.viewWithTag(987) as? UIButton {
+            bookmarkTitleSaveButton = view
         } else {
-            bookmarkTitleSaveButton = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
-            bookmarkTitleSaveButton.tag = 987
-            bookmarkTitleSaveButton.setTitle("Save", for: .normal)
-            bookmarkTitleSaveButton.setTitleColor(self.readerConfig.tintColor, for: .normal)
-            bookmarkTitleSaveButton.addTarget(self, action: #selector(saveBookmarkTitleAction(_:)), for: .primaryActionTriggered)
-            cell.contentView.addSubview(bookmarkTitleSaveButton)
+            let btn = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width-40, height: 0))
+            btn.tag = 987
+            btn.setTitle("Save", for: .normal)
+            btn.setTitleColor(self.readerConfig.tintColor, for: .normal)
+            btn.addTarget(self, action: #selector(saveBookmarkTitleAction(_:)), for: .primaryActionTriggered)
+            cell.contentView.addSubview(btn)
+            bookmarkTitleSaveButton = btn
         }
-        bookmarkTitleSaveButton.sizeToFit()
-        bookmarkTitleSaveButton.isHidden = !isEditingItem
-        bookmarkTitleSaveButton.frame = CGRect(x: view.frame.width-60, y: 20, width: 40, height: dateLabel.frame.height)
+        bookmarkTitleSaveButton?.sizeToFit()
+        bookmarkTitleSaveButton?.isHidden = !isEditingItem
+        bookmarkTitleSaveButton?.frame = CGRect(x: view.frame.width-60, y: 20, width: 40, height: dateLabel?.frame.height ?? 16)
 
         cell.layoutMargins = UIEdgeInsets.zero
         cell.preservesSuperviewLayoutMargins = false
@@ -381,7 +393,7 @@ class FolioReaderReferenceList: UITableViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         text.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraph, range: range)
-        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16)!, range: range)
+        text.addAttribute(NSAttributedString.Key.font, value: UIFont(name: "Avenir-Light", size: 16) ?? .systemFont(ofSize: 16), range: range)
 
         let s = text.boundingRect(with: CGSize(width: view.frame.width-40, height: CGFloat.greatestFiniteMagnitude),
                                   options: [NSStringDrawingOptions.usesLineFragmentOrigin, NSStringDrawingOptions.usesFontLeading],
@@ -417,14 +429,24 @@ class FolioReaderReferenceList: UITableViewController {
                 return
             }
 
-            folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader).folioReaderBookmark(folioReader, removed: pos)
-            
+            let provider = folioReader.bookmarkProvider
+            let reader = folioReader
+            Task {
+                await provider?.removeBookmark(pos: pos, for: reader)
+            }
+
             sectionBookmarks[sections[indexPath.section]]?.remove(at: indexPath.row)
-            if sectionBookmarks[sections[indexPath.section]]?.isEmpty == true {
+            let isOnlyRowInSection = (sectionBookmarks[sections[indexPath.section]]?.isEmpty == true)
+            if isOnlyRowInSection {
                 sectionBookmarks.removeValue(forKey: sections[indexPath.section])
                 sections.remove(at: indexPath.section)
             }
-            tableView.deleteRows(at: [indexPath], with: .fade)
+            switch folioReaderListDeleteAction(isOnlyRowInSection: isOnlyRowInSection, indexPath: indexPath) {
+            case .deleteRow(let indexPath):
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            case .deleteSection(let section):
+                tableView.deleteSections(IndexSet(integer: section), with: .fade)
+            }
         }
     }
     
@@ -486,41 +508,51 @@ class FolioReaderReferenceList: UITableViewController {
     
     func addBookmark(completion: (() -> Void)? = nil) {
         guard let currentPage = self.folioReader.readerCenter?.currentPage,
-              let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader)
+              let provider = self.folioReader.bookmarkProvider
         else {
             completion?()
             return
         }
+        
+        let reader = self.folioReader
         
         currentPage.getWebViewScrollPosition { position in
             let bookmark = FolioReaderBookmark()
             bookmark.pos_type = "epubcfi"
             bookmark.page = currentPage.pageNumber
             bookmark.pos = position.cfi
-            bookmark.bookId = self.readerConfig.identifier
+            bookmark.bookId = self.readerConfig.identifier ?? ""
             bookmark.title = "[\(position.chapterName)] \(position.snippet.prefix(32))..."
             bookmark.date = Date()
             
-            provider.folioReaderBookmark(self.folioReader, added: bookmark) { error in
-                if let error = error {
-                    var message = "Unknown Error"
-                    switch error as! FolioReaderBookmarkError {
-                    case .emptyError(_):
-                        message = "Cannot generate location marker"
-                    case .duplicateError(let msg):
-                        message = "There exists a bookmark with the same location with title \(msg)"
-                    case .runtimeError(let msg):
-                        message = msg
+            Task {
+                do {
+                    try await provider.addBookmark(bookmark, for: reader)
+                    await MainActor.run {
+                        self.loadSections()
+                        self.addingBookmarkPos = bookmark.pos
+                        self.tableView.reloadData()
+                        completion?()
                     }
-                    self.presentAddingBookmarkFailure(message)
-                } else {
-                    self.loadSections()
-                    self.addingBookmarkPos = bookmark.pos
-                    
-                    self.tableView.reloadData()
+                } catch {
+                    await MainActor.run {
+                        var message = "Unknown Error"
+                        if let bookmarkError = error as? FolioReaderBookmarkError {
+                            switch bookmarkError {
+                            case .emptyError(_):
+                                message = "Cannot generate location marker"
+                            case .duplicateError(let msg):
+                                message = "There exists a bookmark with the same location with title \(msg)"
+                            case .runtimeError(let msg):
+                                message = msg
+                            }
+                        } else {
+                            message = error.localizedDescription
+                        }
+                        self.presentAddingBookmarkFailure(message)
+                        completion?()
+                    }
                 }
-                
-                completion?()
             }
         }
     }
@@ -532,9 +564,11 @@ class FolioReaderReferenceList: UITableViewController {
               let editView = cellContentView.viewWithTag(1234) as? UITextField,
               let title = editView.text else { return }
         
-        guard let provider = self.folioReader.delegate?.folioReaderBookmarkProvider?(self.folioReader) else { return }
-        
-        provider.folioReaderBookmark(self.folioReader, updated: editingPos, title: title)
+        let provider = self.folioReader.bookmarkProvider
+        let reader = self.folioReader
+        Task {
+            await provider?.updateBookmark(pos: editingPos, title: title, for: reader)
+        }
         
         addingBookmarkPos = nil
         editingBookmarkPos = nil

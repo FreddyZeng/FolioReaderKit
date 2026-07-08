@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import AEXML
 import ReadiumZIPFoundation
 
@@ -118,7 +119,8 @@ class FolioReaderBookList: UICollectionViewController {
         
         if self.folioReader.structuralStyle == .bundle {
             //prepare cover image
-            let opfURL = URL(fileURLWithPath: book.opfResource.href, isDirectory: false)
+            guard let opfResource = book.opfResource else { return }
+            let opfURL = URL(fileURLWithPath: opfResource.href, isDirectory: false)
             
             Task {
                 guard let bookId = self.folioReader.readerConfig?.identifier,
@@ -158,10 +160,10 @@ class FolioReaderBookList: UICollectionViewController {
         super.viewDidAppear(animated)
         
         // Jump to the current book
-        delay(0.2) {
+        DispatchQueue.main.asyncAfter(delay: 0.2) {
             guard let index = self.tocItems.firstIndex(where: { self.highlightResourceIds.contains($0.resource?.id ?? "___NIL___") }) else { return }
             guard let indexPath = { () -> IndexPath? in
-            switch self.folioReader.currentNavigationMenuBookListSyle {
+            switch self.folioReader.currentNavigationMenuBookListStyle {
             case .Grid:
                 return IndexPath(row: index, section: 0)
             case .List:
@@ -184,7 +186,7 @@ class FolioReaderBookList: UICollectionViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         
-        switch self.folioReader.currentNavigationMenuBookListSyle {
+        switch self.folioReader.currentNavigationMenuBookListStyle {
         case .Grid:
             let minWidth = 185.0
             
@@ -209,7 +211,7 @@ class FolioReaderBookList: UICollectionViewController {
 
     // MARK: - collection view data source
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        switch self.folioReader.currentNavigationMenuBookListSyle {
+        switch self.folioReader.currentNavigationMenuBookListStyle {
         case .Grid:
             return 1
         case .List:
@@ -218,7 +220,7 @@ class FolioReaderBookList: UICollectionViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        switch self.folioReader.currentNavigationMenuBookListSyle {
+        switch self.folioReader.currentNavigationMenuBookListStyle {
         case .Grid:
             return tocItems.count
         case .List:
@@ -231,7 +233,7 @@ class FolioReaderBookList: UICollectionViewController {
 
         cell.setup(withConfiguration: self.readerConfig)
         guard let tocReference = { () -> FRTocReference? in
-            switch self.folioReader.currentNavigationMenuBookListSyle{
+            switch self.folioReader.currentNavigationMenuBookListStyle{
             case .Grid:
                 return tocItems[indexPath.row]
             case .List:
@@ -286,7 +288,7 @@ class FolioReaderBookList: UICollectionViewController {
         cell.coverImage.image = nil
         let titleLabelText = cell.titleLabel.text
         
-        guard self.folioReader.currentNavigationMenuBookListSyle == .Grid else { return cell }
+        guard self.folioReader.currentNavigationMenuBookListStyle == .Grid else { return cell }
 
         Task {
             guard let bookId = self.folioReader.readerConfig?.identifier,
@@ -295,7 +297,8 @@ class FolioReaderBookList: UICollectionViewController {
                   let tocPage = resource.spineIndices.first
             else { return }
 
-            let opfURL = URL(fileURLWithPath: self.book.opfResource.href, isDirectory: false)
+            guard let opfResource = self.book.opfResource else { return }
+            let opfURL = URL(fileURLWithPath: opfResource.href, isDirectory: false)
             var imgNodes = [AEXMLElement]()
             var coverURL = opfURL
 
@@ -372,7 +375,7 @@ class FolioReaderBookList: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
         let tocReference = { () -> FRTocReference in
-            switch self.folioReader.currentNavigationMenuBookListSyle {
+            switch self.folioReader.currentNavigationMenuBookListStyle {
             case .Grid:
                 return self.tocItems[indexPath.row]
             case .List:

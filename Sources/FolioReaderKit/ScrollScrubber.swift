@@ -8,25 +8,6 @@
 
 import UIKit
 
-func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-    switch (lhs, rhs) {
-    case let (l?, r?):
-        return l < r
-    case (nil, _?):
-        return true
-    default:
-        return false
-    }
-}
-
-func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-    switch (lhs, rhs) {
-    case let (l?, r?):
-        return l > r
-    default:
-        return rhs < lhs
-    }
-}
 
 enum ScrollType: Int {
     case page
@@ -55,10 +36,10 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     var visible = false
     var usingSlider = false
     let slider = UISlider()
-    var hideTimer: Timer!
-    var scrollStart: CGFloat!
-    var scrollDelta: CGFloat!
-    var scrollDeltaTimer: Timer!
+    var hideTimer: Timer?
+    var scrollStart: CGFloat?
+    var scrollDelta: CGFloat = 0
+    var scrollDeltaTimer: Timer?
 
     fileprivate weak var readerContainer: FolioReaderContainer?
 
@@ -189,10 +170,8 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     func cancelHide() {
 
-        if hideTimer != nil {
-            hideTimer.invalidate()
-            hideTimer = nil
-        }
+        hideTimer?.invalidate()
+        hideTimer = nil
 
         if visible == false {
             slider.layer.removeAllAnimations()
@@ -203,16 +182,14 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
 
-        if scrollDeltaTimer != nil {
-            scrollDeltaTimer.invalidate()
-            scrollDeltaTimer = nil
-        }
+        scrollDeltaTimer?.invalidate()
+        scrollDeltaTimer = nil
 
         scrollStart = scrollView.contentOffset.forDirection(withConfiguration: readerConfig)
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard readerConfig.scrollDirection != .horitonzalWithPagedContent else { return }
+        guard readerConfig.scrollDirection != .horizontalWithPagedContent else { return }
 
         if visible && usingSlider == false {
             setSliderVal()
@@ -221,7 +198,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         if (slider.alpha > 0) {
             self.show()
         } else if let currentPage = delegate?.currentPage,
-                  scrollStart != nil {
+                  let scrollStart = scrollStart {
             scrollDelta = currentPage.byWritingMode(
                 scrollView.contentOffset.forDirection(withConfiguration: readerConfig) - scrollStart,
                 scrollStart - scrollView.contentOffset.x)
@@ -240,15 +217,14 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     }
 
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        scrollDeltaTimer = Timer(timeInterval:0.5, target: self, selector: #selector(ScrollScrubber.resetScrollDelta), userInfo: nil, repeats: false)
-        RunLoop.current.add(scrollDeltaTimer, forMode: RunLoop.Mode.common)
+        let timer = Timer(timeInterval:0.5, target: self, selector: #selector(ScrollScrubber.resetScrollDelta), userInfo: nil, repeats: false)
+        scrollDeltaTimer = timer
+        RunLoop.current.add(timer, forMode: RunLoop.Mode.common)
     }
 
     @objc func resetScrollDelta() {
-        if scrollDeltaTimer != nil {
-            scrollDeltaTimer.invalidate()
-            scrollDeltaTimer = nil
-        }
+        scrollDeltaTimer?.invalidate()
+        scrollDeltaTimer = nil
 
         scrollStart = delegate?.currentPage?.byWritingMode(
             (scrollView()?.contentOffset.forDirection(withConfiguration: readerConfig) ?? 0),

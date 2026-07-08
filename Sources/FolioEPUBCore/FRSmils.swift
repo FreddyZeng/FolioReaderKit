@@ -7,23 +7,23 @@
 //
 
 
-import UIKit
+import Foundation
 
-struct FRSmilFile {
-    var resource: FRResource
-    var data = [FRSmilElement]()
+public struct FRSmilFile {
+    public var resource: FRResource
+    public var data = [FRSmilElement]()
 
-    init(resource: FRResource){
+    public init(resource: FRResource){
         self.resource = resource;
     }
 
     // MARK: - shortcuts
 
-    func ID() -> String {
+    public func ID() -> String {
         return self.resource.id;
     }
 
-    func href() -> String {
+    public func href() -> String {
         return self.resource.href;
     }
 
@@ -32,7 +32,7 @@ struct FRSmilFile {
     /**
      Returns a smil <par> tag which contains info about parallel audio and text to be played
      */
-    func parallelAudioForFragment(_ fragment: String!) -> FRSmilElement! {
+    public func parallelAudioForFragment(_ fragment: String!) -> FRSmilElement! {
         return findParElement(forTextSrc: fragment, inData: data)
     }
 
@@ -55,7 +55,7 @@ struct FRSmilFile {
     /**
      Returns a smil <par> element after the given fragment
      */
-    func nextParallelAudioForFragment(_ fragment: String) -> FRSmilElement! {
+    public func nextParallelAudioForFragment(_ fragment: String) -> FRSmilElement! {
         return findNextParElement(forTextSrc: fragment, inData: data)
     }
 
@@ -79,7 +79,7 @@ struct FRSmilFile {
     }
 
 
-    func childWithName(_ name:String) -> FRSmilElement! {
+    public func childWithName(_ name:String) -> FRSmilElement! {
         for el in data {
             if( el.name == name ){
                 return el
@@ -88,7 +88,7 @@ struct FRSmilFile {
         return nil;
     }
 
-    func childrenWithNames(_ name:[String]) -> [FRSmilElement]! {
+    public func childrenWithNames(_ name:[String]) -> [FRSmilElement]! {
         var matched = [FRSmilElement]()
         for el in data {
             if( name.contains(el.name) ){
@@ -98,7 +98,7 @@ struct FRSmilFile {
         return matched;
     }
 
-    func childrenWithName(_ name:String) -> [FRSmilElement]! {
+    public func childrenWithName(_ name:String) -> [FRSmilElement]! {
         return childrenWithNames([name])
     }
 }
@@ -106,21 +106,25 @@ struct FRSmilFile {
 /**
  Holds array of `FRSmilFile`
  */
-class FRSmils: NSObject {
-    var basePath            : String!
-    var smils               = [String: FRSmilFile]()
+public class FRSmils: NSObject {
+    public var basePath            = ""
+    public var smils               = [String: FRSmilFile]()
+
+    public override init() {
+        super.init()
+    }
 
     /**
      Adds a smil to the smils.
      */
-    func add(_ smil: FRSmilFile) {
+    public func add(_ smil: FRSmilFile) {
         self.smils[smil.resource.href] = smil
     }
 
     /**
      Gets the resource with the given href.
      */
-    func findByHref(_ href: String) -> FRSmilFile? {
+    public func findByHref(_ href: String) -> FRSmilFile? {
         for smil in smils.values {
             if smil.resource.href == href {
                 return smil
@@ -132,7 +136,7 @@ class FRSmils: NSObject {
     /**
      Gets the resource with the given id.
      */
-    func findById(_ ID: String) -> FRSmilFile? {
+    public func findById(_ ID: String) -> FRSmilFile? {
         for smil in smils.values {
             if smil.resource.id == ID {
                 return smil

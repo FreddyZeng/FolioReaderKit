@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 /**
  MediaType is used to tell the type of content a resource is.
@@ -37,10 +37,7 @@ public func == (lhs: MediaType, rhs: MediaType) -> Bool {
 }
 
 
-/**
- Manages mediatypes that are used by epubs.
- */
-extension MediaType {
+public extension MediaType {
     static let xhtml = MediaType(name: "application/xhtml+xml", defaultExtension: "xhtml", extensions: ["htm", "html", "xhtml", "xml"])
     static let epub = MediaType(name: "application/epub+zip", defaultExtension: "epub")
     static let ncx = MediaType(name: "application/x-dtbncx+xml", defaultExtension: "ncx")
@@ -92,7 +89,7 @@ extension MediaType {
      Gets the MediaType based on the file extension.
      */
     static func by(fileName: String) -> MediaType? {
-        let ext = "." + (fileName as NSString).pathExtension
+        let ext = "." + fileName.pathExtension
         return mediatypes.filter({ $0.extensions.contains(ext) }).first
     }
 

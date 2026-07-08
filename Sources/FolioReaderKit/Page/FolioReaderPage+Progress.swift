@@ -8,7 +8,7 @@ import UIKit
 extension FolioReaderPage {
     func updatePageInfo(completion: (() -> Void)? = nil) {
         if readerConfig.debug.contains(.functionTrace) {
-            folioLogger("ENTER");
+            FolioLogger.log("ENTER");
         }
 
         self.webView?.js("getReadingTime(\"\(book.metadata.language)\")") { readingTime in
@@ -47,7 +47,7 @@ extension FolioReaderPage {
     }
     
     func updatePages(updateWebViewScrollPosition: Bool = true) {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let readerCenter = self.folioReader.readerCenter, let webView = self.webView else { return }
 
@@ -66,7 +66,7 @@ extension FolioReaderPage {
             webView.scrollView.contentOffset.x //+ webView.frame.width
         )
         
-        folioLogger("updatePages pageNumber=\(self.pageNumber!) totalPages=\(self.totalPages!) contentSize=\(contentSize) pageSize=\(pageSize)")
+        FolioLogger.log("updatePages pageNumber=\(self.pageNumber) totalPages=\(self.totalPages ?? 0) contentSize=\(contentSize) pageSize=\(pageSize)")
         self.currentPage = pageForOffset(pageOffSet, pageHeight: pageSize)
         
         self.updateCurrentChapterName()
@@ -78,7 +78,7 @@ extension FolioReaderPage {
     }
     
     func pageForOffset(_ offset: CGFloat, pageHeight height: CGFloat) -> Int {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard (height != 0) else {
             return 0
@@ -100,7 +100,7 @@ extension FolioReaderPage {
 
     
     func getPageProgress() -> Double {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
 
         guard let readerCenter = self.folioReader.readerCenter,
               let webView = webView else {
@@ -134,7 +134,7 @@ extension FolioReaderPage {
     }
     
     func getBookProgress() -> Double {
-        if readerConfig.debug.contains(.functionTrace) { folioLogger("ENTER") }
+        if readerConfig.debug.contains(.functionTrace) { FolioLogger.log("ENTER") }
         
         guard book.spine.size > 0 else { return .zero }
     

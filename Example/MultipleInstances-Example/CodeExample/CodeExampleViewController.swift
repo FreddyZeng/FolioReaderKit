@@ -7,7 +7,9 @@
 //
 
 import UIKit
+import FolioEPUBCore
 import FolioReaderKit
+import ReadiumGCDWebServer
 
 class CodeExampleViewController: UIViewController {
 
@@ -56,9 +58,23 @@ class CodeExampleViewController: UIViewController {
         let readerConfiguration = self.readerConfiguration(forEpub: epub)
         switch epub {
         case .bookOne:
-            epubReaderOne.presentReader(parentViewController: self, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
+            epubReaderOne.presentReader(
+                parentViewController: self,
+                withEpubPath: bookPath,
+                andConfig: readerConfiguration,
+                animated: true,
+                folioReaderCenterDelegate: nil,
+                webServer: ReadiumGCDWebServer()
+            )
         case .bookTwo:
-            epubReaderTwo.presentReader(parentViewController: self, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
+            epubReaderTwo.presentReader(
+                parentViewController: self,
+                withEpubPath: bookPath,
+                andConfig: readerConfiguration,
+                animated: true,
+                folioReaderCenterDelegate: nil,
+                webServer: ReadiumGCDWebServer()
+            )
         }
     }
     
@@ -69,12 +85,16 @@ class CodeExampleViewController: UIViewController {
                 return
         }
 
-        do {
-            if let image = try FolioReader.getCoverImage(bookPath) {
-                button?.setBackgroundImage(image, for: .normal)
+        Task {
+            do {
+                let data = try await FREpubParserArchive.parseCoverImage(bookPath)
+                guard let image = UIImage(data: data) else { return }
+                await MainActor.run {
+                    button?.setBackgroundImage(image, for: .normal)
+                }
+            } catch {
+                print(error.localizedDescription)
             }
-        } catch {
-            print(error.localizedDescription)
         }
     }
 }

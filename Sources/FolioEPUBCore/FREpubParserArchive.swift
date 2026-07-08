@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Folio Reader. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import AEXML
 import ReadiumZIPFoundation
 
@@ -16,7 +16,7 @@ open class FREpubParserArchive: NSObject {
     let book: FRBook
     let archive: Archive
     
-    init(book: FRBook, archive: Archive) {
+    public init(book: FRBook, archive: Archive) {
         self.book = book
         self.archive = archive
     }
@@ -27,7 +27,7 @@ open class FREpubParserArchive: NSObject {
     ///   - epubPath: Epub path on the disk.
     /// - Returns: The book cover as UIImage object
     /// - Throws: `FolioReaderError`
-    public static func parseCoverImage(_ epubPath: String) async throws -> UIImage {
+    public static func parseCoverImage(_ epubPath: String) async throws -> Data {
         let archive: Archive
         do {
             archive = try await Archive(url: URL(fileURLWithPath: epubPath), accessMode: .read)
@@ -41,7 +41,7 @@ open class FREpubParserArchive: NSObject {
             throw FolioReaderError.coverNotAvailable
         }
 
-        guard let opfResourceHref = book.opfResource.href else {
+        guard let opfResourceHref = book.opfResource?.href else {
             throw FolioReaderError.coverNotAvailable
         }
         
@@ -57,11 +57,7 @@ open class FREpubParserArchive: NSObject {
             accumulator.append(data)
         }
 
-        guard let image = UIImage(data: accumulator.result) else {
-            throw FolioReaderError.invalidImage(path: coverImage.href)
-        }
-
-        return image
+        return accumulator.result
     }
 
     /// Parse the book Author name from an epub file.
@@ -139,7 +135,7 @@ open class FREpubParserArchive: NSObject {
     /// - Parameter bookBasePath: The base book path
     /// - Throws: `FolioReaderError`
     private func readOpf() async throws {
-        guard let opfPath = book.opfResource.href,
+        guard let opfPath = book.opfResource?.href,
               let opfEntry = book.archiveEntriesCache[opfPath] else  { throw FolioReaderError.errorInOpf }
         
         var identifier: String?
@@ -163,9 +159,9 @@ open class FREpubParserArchive: NSObject {
         // Parse and save each "manifest item"
         xmlDoc.root["manifest"]["item"].all?.forEach {
             let resource = FRResource()
-            resource.id = $0.attributes["id"]
+            resource.id = $0.attributes["id"] ?? ""
             resource.properties = $0.attributes["properties"]
-            resource.href = $0.attributes["href"]
+            resource.href = $0.attributes["href"] ?? ""
             resource.mediaType = MediaType.by(name: $0.attributes["media-type"] ?? "", fileName: resource.href)
             resource.mediaOverlay = $0.attributes["media-overlay"]
             
@@ -242,8 +238,10 @@ open class FREpubParserArchive: NSObject {
     /// - Parameter resource: A `FRResource` to read the smill
     private func readSmilFile(_ resource: FRResource) async {
         do {
-            guard let smilPath = resource.href,
-                  let smilEntry = book.archiveEntriesCache[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(smilPath)] else { return }
+            let smilPath = resource.href
+            guard !smilPath.isEmpty,
+                  let opfResourceHref = book.opfResource?.href,
+                  let smilEntry = book.archiveEntriesCache[opfResourceHref.deletingLastPathComponent.appendingPathComponent(smilPath)] else { return }
             
             let smilAccumulator = DataAccumulator()
             let crc = try await archive.extract(smilEntry) { data in
@@ -290,9 +288,11 @@ open class FREpubParserArchive: NSObject {
     private func findTableOfContents() async throws -> [FRTocReference] {
         var tableOfContent = [FRTocReference]()
         var tocItems: [AEXMLElement]?
-        guard let tocResource = book.tocResource,
-              let tocPath = tocResource.href,
-              let tocEntry = book.archiveEntriesCache[book.opfResource.href.deletingLastPathComponent.appendingPathComponent(tocPath)] else { return tableOfContent }
+        guard let tocResource = book.tocResource else { return tableOfContent }
+        let tocPath = tocResource.href
+        guard !tocPath.isEmpty,
+              let opfResourceHref = book.opfResource?.href,
+              let tocEntry = book.archiveEntriesCache[opfResourceHref.deletingLastPathComponent.appendingPathComponent(tocPath)] else { return tableOfContent }
         
 
         do {
@@ -334,11 +334,11 @@ open class FREpubParserArchive: NSObject {
     /// - Parameter element: An `AEXMLElement`, usually the `<body>`
     /// - Returns: If found the `<nav>` `AEXMLElement`
     @discardableResult func findNavTag(_ element: AEXMLElement) -> AEXMLElement? {
-        for element in element.children {
-            if let nav = element["nav"].first {
+        for child in element.children {
+            if let nav = child["nav"].first {
                 return nav
-            } else {
-                findNavTag(element)
+            } else if let found = findNavTag(child) {
+                return found
             }
         }
         return nil

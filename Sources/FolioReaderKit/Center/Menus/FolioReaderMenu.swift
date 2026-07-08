@@ -14,7 +14,7 @@ class FolioReaderMenu: UIViewController, UIGestureRecognizerDelegate {
     var readerConfig: FolioReaderConfig
     var folioReader: FolioReader
     
-    let segmentFont = UIFont(name: "Avenir-Light", size: 17)!
+    let segmentFont = UIFont(name: "Avenir-Light", size: 17) ?? .systemFont(ofSize: 17)
     let separaterTag = -9999
     
     init(folioReader: FolioReader, readerConfig: FolioReaderConfig) {
@@ -40,10 +40,10 @@ class FolioReaderMenu: UIViewController, UIGestureRecognizerDelegate {
             }
             if let label = subview as? UILabel,
                label.textColor != .systemRed {
-                label.textColor = folioReader.isNight(UIColor.lightText, UIColor.darkText)
+                label.textColor = self.readerConfig.themeModeTextColor[self.folioReader.themeMode]
             }
             if let button = subview as? UIButton {
-                button.setTitleColor(folioReader.isNight(UIColor.lightText, self.folioReader.readerConfig?.tintColor), for: .normal)
+                button.setTitleColor(self.readerConfig.themeModeTextColor[self.folioReader.themeMode], for: .normal)
             }
         }
     }
